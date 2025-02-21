@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{EA31F646-F757-4436-B3D2-D54AE82DB920}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LanCloud</RootNamespace>
+    <AssemblyName>LanCloud</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Domain\FileRef\FileRefDirectoryDto.cs" />
+    <Compile Include="Domain\FileRef\FileRefDto.cs" />
+    <Compile Include="Domain\FileRef\FileRefMetadata.cs" />
+    <Compile Include="Domain\FileRef\FileRefStripeMetadata.cs" />
+    <Compile Include="Domain\FileRef\IFileRef.cs" />
+    <Compile Include="Domain\FileRef\IFileRefDirectory.cs" />
+    <Compile Include="Domain\FileRef\LocalFileRefDirectory.cs" />
+    <Compile Include="Domain\FileRef\LocalFileRef.cs" />
+    <Compile Include="Domain\FileRef\PathTranslator.cs" />
+    <Compile Include="Domain\FileRef\RemoteFileRef.cs" />
+    <Compile Include="Domain\FileRef\RemoteFileRefDirectory.cs" />
+    <Compile Include="Domain\FileStripe\LocalFileStripe.cs" />
+    <Compile Include="Domain\FileStripe\FileStripeDto.cs" />
+    <Compile Include="Domain\FileStripe\IFileStripe.cs" />
+    <Compile Include="Domain\FileStripe\RemoteFileStripe.cs" />
+    <Compile Include="Domain\IO\Appender\FileRefAppender.cs" />
+    <Compile Include="Domain\IO\Reader\FileStripeReader.cs" />
+    <Compile Include="Domain\IO\Reader\ReconstructBuffer.cs" />
+    <Compile Include="Domain\IO\Reader\FileRefReader.cs" />
+    <Compile Include="Domain\IO\Writer\DataBuffer.cs" />
+    <Compile Include="Domain\IO\Writer\FileStripeWriter.cs" />
+    <Compile Include="Domain\IO\Writer\FileRefWriter.cs" />
+    <Compile Include="Domain\IO\Writer\HashBuffer.cs" />
+    <Compile Include="Domain\IO\Writer\ParityBuffer.cs" />
+    <Compile Include="Domain\Share\IShareStripe.cs" />
+    <Compile Include="Domain\Share\RemoteShareStripe.cs" />
+    <Compile Include="Domain\Share\ShareDto.cs" />
+    <Compile Include="Domain\Share\ShareStripeDto.cs" />
+    <Compile Include="Domain\Authentication\User.cs" />
+    <Compile Include="Domain\Authentication\UserCollection.cs" />
+    <Compile Include="Models\Share\Requests\CloseFileStripeSessionRequest.cs" />
+    <Compile Include="Models\Share\Requests\CreateFileStripeSessionRequest.cs" />
+    <Compile Include="Models\Share\Requests\FindFileStripesRequest.cs" />
+    <Compile Include="Models\Share\Requests\StoreFileStripeChunkRequest.cs" />
+    <Compile Include="Models\Share\Responses\CloseFileStripeSessionResponse.cs" />
+    <Compile Include="Models\Share\Responses\CreateFileStripeSessionResponse.cs" />
+    <Compile Include="Models\Share\Responses\StoreFileStripeChunkResponse.cs" />
+    <Compile Include="Models\SingleBuffer.cs" />
+    <Compile Include="Models\DoubleBuffer.cs" />
+    <Compile Include="Domain\Share\IShare.cs" />
+    <Compile Include="Domain\Share\LocalShare.cs" />
+    <Compile Include="Forms\StatusForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\StatusForm.Designer.cs">
+      <DependentUpon>StatusForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Services\AuthenticationService.cs" />
+    <Compile Include="Models\Configs\LocalShareBitConfig.cs" />
+    <Compile Include="Enums\ApplicationMessageEnum.cs" />
+    <Compile Include="Enums\ShareMessageEnum.cs" />
+    <Compile Include="Models\Configs\ApplicationConfig.cs" />
+    <Compile Include="Services\FileRefService.cs" />
+    <Compile Include="Services\HashService.cs" />
+    <Compile Include="Domain\Share\LocalShareStripe.cs" />
+    <Compile Include="Domain\Application\LocalApplication.cs" />
+    <Compile Include="Models\Configs\LocalShareConfig.cs" />
+    <Compile Include="Models\Configs\RemoteApplicationConfig.cs" />
+    <Compile Include="Domain\Application\RemoteApplication.cs" />
+    <Compile Include="Domain\Share\RemoteShare.cs" />
+    <Compile Include="Services\ConfigService.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Domain\VirtualFtp\VirtualFtpServer.cs" />
+    <Compile Include="Services\IndexesService.cs" />
+    <Compile Include="Services\LogService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.8">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.8 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LanCloud.Servers.Ftp\LanCloud.Servers.Ftp.csproj">
+      <Project>{c0e5fc5b-aa67-437f-a704-c0e34638c5d4}</Project>
+      <Name>LanCloud.Servers.Ftp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LanCloud.Shared.Log\LanCloud.Shared.Log.csproj">
+      <Project>{02268493-F812-4EDA-A386-DDCB2E787152}</Project>
+      <Name>LanCloud.Shared.Log</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LanCloud.Servers.Wjp\LanCloud.Servers.Wjp.csproj">
+      <Project>{B1C7D4D1-82B0-4F35-BDE2-0ED0744B4910}</Project>
+      <Name>LanCloud.Servers.Wjp</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Forms\StatusForm.resx">
+      <DependentUpon>StatusForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Models\Application\Requests\" />
+    <Folder Include="Models\Application\Responses\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
