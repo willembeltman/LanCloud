@@ -1,7 +1,7 @@
 ﻿# LanCloud – Distributed RAID-like Storage over LAN
 LanCloud is a C# project inspired by concepts from Storage Spaces Direct and blockchain-based redundancy, aiming to create a lightweight, distributed storage system across multiple machines on a local network.
 
-##💡 Core Concept
+## 💡 Core Concept
 LanCloud splits and distributes data across several machines with XOR-based RAID-5-style redundancy. You define how many backup copies you want, and the system automatically spreads the data across available nodes in the most optimal way.
 
 ## 🚀 What’s Working Now
