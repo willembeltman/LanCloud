@@ -24,12 +24,12 @@ namespace LanCloud.Servers.Rpc
 
         private IPEndPoint LocalEndPoint { get; }
         public IRpcHandler Handler { get; }
-        public IRpcApplication Application { get; }
+        public IApplication Application { get; }
         public ILogger Logger { get; }
         private TcpListener Listener { get; }
         private List<RpcClientConnection> _ActiveConnections { get; } = new List<RpcClientConnection>();
 
-        public RpcServer(IPAddress ipAddress, int port, IRpcHandler handler, IRpcApplication application, ILogger logger)
+        public RpcServer(IPAddress ipAddress, int port, IRpcHandler handler, IApplication application, ILogger logger)
         {
             LocalEndPoint = new IPEndPoint(ipAddress, port);
             Handler = handler;

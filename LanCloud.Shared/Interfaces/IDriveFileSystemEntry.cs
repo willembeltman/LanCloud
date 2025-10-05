@@ -3,7 +3,7 @@ using System.IO;
 
 namespace LanCloud.Shared.Interfaces
 {
-    public interface ILanCloudFileSystemEntry
+    public interface IDriveFileSystemEntry
     {
         FileAttributes Attributes { get; }
         DateTime? CreationTime { get; }

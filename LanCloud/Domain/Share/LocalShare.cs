@@ -11,9 +11,8 @@ using System.Net;
 using System.Linq;
 using LanCloud.Domain.FileStripe;
 using System.Collections.Generic;
-using LanCloud.Services;
 using LanCloud.Models.Share.Responses;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Helpers;
 
 namespace LanCloud.Domain.Share
 {

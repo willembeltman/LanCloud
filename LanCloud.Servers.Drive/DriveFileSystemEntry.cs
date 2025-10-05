@@ -4,9 +4,9 @@ using System.IO;
 
 namespace LanCloud.VirtualDrive
 {
-    public sealed class LanCloudFileSystemEntry : ILanCloudFileSystemEntry
+    public sealed class DriveFileSystemEntry : IDriveFileSystemEntry
     {
-        public LanCloudFileSystemEntry(
+        public DriveFileSystemEntry(
             string path,
             string name,
             bool isDirectory,

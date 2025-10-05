@@ -21,7 +21,7 @@ namespace LanCloud.Servers.Rpc
             }
         }
 
-        public RpcProxy(IRpcProxyConfig config, IRpcApplication application, ILogger logger)
+        public RpcProxy(IRpcProxyConfig config, IApplication application, ILogger logger)
         {
             Config = config;
             Application = application;
@@ -31,7 +31,7 @@ namespace LanCloud.Servers.Rpc
             Thread.Start();
         }
         private IRpcProxyConfig Config { get; }
-        public IRpcApplication Application { get; }
+        public IApplication Application { get; }
         public ILogger Logger { get; }
         private Thread Thread { get; }
 

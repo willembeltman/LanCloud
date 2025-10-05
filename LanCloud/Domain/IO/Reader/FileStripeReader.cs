@@ -13,7 +13,7 @@ namespace LanCloud.Domain.IO.Reader
 {
     public class FileStripeReader : IDisposable
     {
-        public FileStripeReader(ReconstructBuffer reconstructBuffer, IFileStripe fileStripe, ILogger logger)
+        public FileStripeReader(ReconstructBuffer reconstructBuffer, IFileStripe fileStripe, int bufferSize, ILogger logger)
         {
             if (fileStripe == null)
             {
@@ -25,7 +25,7 @@ namespace LanCloud.Domain.IO.Reader
             FileStripe = fileStripe;
             Logger = logger;
 
-            Buffer = new DoubleBuffer(Application.FileStripeBufferSize);
+            Buffer = new DoubleBuffer(bufferSize, 1);
 
             Stopwatch = Stopwatch.StartNew();
             Stream = FileStripe.OpenRead();

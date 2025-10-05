@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-namespace LanCloud.Services
+namespace LanCloud.Helpers
 {
-    public static class IndexesService
+    public static class IndexesHelper
     {
         public static bool Matches(this int[] thisOne, int[] compareTo)
         {

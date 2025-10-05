@@ -8,9 +8,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanCloud.Log", "LanCloud.Lo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanCloud.Servers.Ftp", "LanCloud.Servers.Ftp\LanCloud.Servers.Ftp.csproj", "{C0E5FC5B-AA67-437F-A704-C0E34638C5D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanCloud.Servers.Wjp", "LanCloud.Servers.Wjp\LanCloud.Servers.Wjp.csproj", "{B1C7D4D1-82B0-4F35-BDE2-0ED0744B4910}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanCloud.Servers.Rpc", "LanCloud.Servers.Rpc\LanCloud.Servers.Rpc.csproj", "{B1C7D4D1-82B0-4F35-BDE2-0ED0744B4910}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanCloud.Servers.VirtualDrive", "LanCloud.Servers.VirtualDrive\LanCloud.Servers.VirtualDrive.csproj", "{DD0A7F83-5DD0-42A7-B017-8958527CEAB6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanCloud.Servers.Drive", "LanCloud.Servers.Drive\LanCloud.Servers.Drive.csproj", "{DD0A7F83-5DD0-42A7-B017-8958527CEAB6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanCloud.Shared", "LanCloud.Shared\LanCloud.Shared.csproj", "{27D4B109-AAEF-48B2-91C7-5A2AFBB5FB2C}"
 EndProject

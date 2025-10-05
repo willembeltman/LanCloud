@@ -10,14 +10,14 @@ using FileAccess = DokanNet.FileAccess;
 
 namespace LanCloud.VirtualDrive
 {
-    internal sealed class LanCloudDriveOperations : IDokanOperations
+    internal sealed class DriveOperations : IDokanOperations
     {
-        private readonly ILanCloudFileSystem _fileSystem;
-        private readonly LanCloudDriveMountOptions _options;
+        private readonly IDriveFileSystem _fileSystem;
+        private readonly DriveMountOptions _options;
         private readonly ConcurrentDictionary<long, OpenFileHandle> _handles = new ConcurrentDictionary<long, OpenFileHandle>();
         private long _handleId;
 
-        public LanCloudDriveOperations(ILanCloudFileSystem fileSystem, LanCloudDriveMountOptions options)
+        public DriveOperations(IDriveFileSystem fileSystem, DriveMountOptions options)
         {
             _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -302,7 +302,7 @@ namespace LanCloud.VirtualDrive
                 FileName = Path.GetFileName(fileName)
             };
 
-            ILanCloudFileSystemEntry entry = null;
+            IDriveFileSystemEntry entry = null;
             if (_fileSystem.FileExists(path))
             {
                 entry = _fileSystem.GetFile(path);
@@ -606,7 +606,7 @@ namespace LanCloud.VirtualDrive
             public bool IsDirectoryHandle { get; }
             public Stream Stream => _stream ?? throw new InvalidOperationException("Directory handles do not expose streams.");
 
-            public bool EnsureOffset(long offset, ILanCloudFileSystem fileSystem)
+            public bool EnsureOffset(long offset, IDriveFileSystem fileSystem)
             {
                 if (_stream == null)
                 {

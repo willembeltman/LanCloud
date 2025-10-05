@@ -26,12 +26,12 @@ namespace LanCloud.Servers.Ftp
         private List<ClientConnection> ActiveConnections;
 
         private IPEndPoint LocalEndPoint { get; }
-        public IFtpHandler FtpHandler { get; }
-        public IFtpApplication Application { get; }
+        public IFtpFileSystem FtpHandler { get; }
+        public IApplication Application { get; }
         private TcpListener Listener { get; }
         public ILogger Logger { get; }
 
-        public FtpServer(IPAddress ipAddress, int port, IFtpHandler commandHandler, IFtpApplication application, ILogger logger)
+        public FtpServer(IPAddress ipAddress, int port, IFtpFileSystem commandHandler, IApplication application, ILogger logger)
         {
             LocalEndPoint = new IPEndPoint(ipAddress, port);
             FtpHandler = commandHandler;

@@ -1,8 +1,8 @@
 namespace LanCloud.VirtualDrive
 {
-    public sealed class LanCloudDriveMountOptions
+    public sealed class DriveMountOptions
     {
-        public LanCloudDriveMountOptions(string mountPoint, string volumeLabel, bool readOnly = false)
+        public DriveMountOptions(string mountPoint, string volumeLabel, bool readOnly = false)
         {
             MountPoint = mountPoint;
             VolumeLabel = volumeLabel;

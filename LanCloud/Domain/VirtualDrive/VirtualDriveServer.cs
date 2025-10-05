@@ -1,24 +1,53 @@
+﻿using DokanNet;
+using LanCloud.Domain.Application;
+using LanCloud.Domain.FileRef;
+using LanCloud.Models.Configs;
+using LanCloud.Shared.Interfaces;
+using LanCloud.VirtualDrive;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using LanCloud.Domain.Application;
-using LanCloud.Domain.FileRef;
-using LanCloud.Shared.Interfaces;
-using LanCloud.VirtualDrive;
 
 namespace LanCloud.Domain.VirtualDrive
 {
-    public sealed class LanCloudFileSystemAdapter : ILanCloudFileSystem
+    public class VirtualDriveServer : IDriveFileSystem, IDisposable
     {
-        private readonly LocalApplication _application;
-        private readonly ILogger _logger;
-
-        public LanCloudFileSystemAdapter(LocalApplication application, ILogger logger)
+        public VirtualDriveServer(LocalApplication application, ILogger logger)
         {
-            _application = application ?? throw new ArgumentNullException(nameof(application));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            Application = application;
+            Logger = logger;
+
+            var mountPoint = string.IsNullOrWhiteSpace(Config.VirtualDriveMountPoint)
+                ? "N:\\"
+                : Config.VirtualDriveMountPoint;
+            var volumeLabel = string.IsNullOrWhiteSpace(Config.VirtualDriveVolumeLabel)
+                ? "LANCloud"
+                : Config.VirtualDriveVolumeLabel;
+
+            try
+            {
+                var mountOptions = new DriveMountOptions(mountPoint, volumeLabel, Config.VirtualDriveReadOnly);
+                DriveServer = new DriveServer(mountOptions, this, application, logger);
+                DriveServer.Start();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                DriveServer?.Dispose();
+                DriveServer = null;
+            }
+
+            Logger.Info($"Loaded");
         }
+
+        public LocalApplication Application { get; }
+        public ILogger Logger { get; }
+        public DriveServer DriveServer { get; }
+
+        public ApplicationConfig Config => Application.Config;
+        public DokanStatus MountStatus => DriveServer.MountStatus;
+        public bool IsRunning => DriveServer.MountStatus == DokanNet.DokanStatus.Success;
 
         private string NormalizePath(string path)
         {
@@ -33,33 +62,37 @@ namespace LanCloud.Domain.VirtualDrive
                 path = "/" + path;
             }
 
-            return path.TrimEnd('/');
+            var normalizedPath = path.TrimEnd('/');
+            return normalizedPath;
         }
-
         private DirectoryInfo ResolveDirectoryInfo(string path)
         {
             path = NormalizePath(path);
-            var fullName = PathTranslator.TranslateDirectoryPathToFullName(_application.RealRoot, path);
-            return new DirectoryInfo(fullName);
+            var fullName = PathTranslator.TranslateDirectoryPathToFullName(Application.RealRoot, path);
+            var dirInfo = new DirectoryInfo(fullName);
+            return dirInfo;
         }
-
         private FileInfo ResolveFileInfo(string path)
         {
             path = NormalizePath(path);
-            var fullName = PathTranslator.TranslatePathToFullName(_application.RealRoot, path);
-            return new FileInfo(fullName);
+            var fullName = PathTranslator.TranslatePathToFullName(Application.RealRoot, path);
+            var fileInfo = new FileInfo(fullName);
+            return fileInfo;
         }
-
         public bool DirectoryExists(string path)
-            => ResolveDirectoryInfo(path).Exists;
+        {
+            var dir = ResolveDirectoryInfo(path);
+            var exist = dir.Exists;
+            return exist;
+        }
 
         public bool FileExists(string path)
         {
-            var file = new LocalFileRef(_application, NormalizePath(path), _logger);
-            return file.Exists;
+            var file = new LocalFileRef(Application, NormalizePath(path), Logger);
+            var exist = file.Exists;
+            return exist;
         }
-
-        public ILanCloudFileSystemEntry GetDirectory(string path)
+        public IDriveFileSystemEntry GetDirectory(string path)
         {
             var directoryInfo = ResolveDirectoryInfo(path);
             if (!directoryInfo.Exists)
@@ -68,26 +101,26 @@ namespace LanCloud.Domain.VirtualDrive
             }
 
             var normalized = NormalizePath(path);
-            return new LanCloudFileSystemEntry(
+            var entry = new DriveFileSystemEntry(
                 normalized,
-                directoryInfo.Name,
+                "",
                 isDirectory: true,
                 length: null,
                 creationTime: directoryInfo.CreationTime,
                 lastAccessTime: directoryInfo.LastAccessTime,
                 lastWriteTime: directoryInfo.LastWriteTime,
                 attributes: FileAttributes.Directory);
+            return entry;
         }
-
-        public ILanCloudFileSystemEntry GetFile(string path)
+        public IDriveFileSystemEntry GetFile(string path)
         {
-            var file = new LocalFileRef(_application, NormalizePath(path), _logger);
+            var file = new LocalFileRef(Application, NormalizePath(path), Logger);
             if (!file.Exists || file.Metadata == null)
             {
                 return null;
             }
 
-            return new LanCloudFileSystemEntry(
+            var entry = new DriveFileSystemEntry(
                 file.Path,
                 file.Name,
                 isDirectory: false,
@@ -96,18 +129,18 @@ namespace LanCloud.Domain.VirtualDrive
                 lastAccessTime: file.RealInfo.LastAccessTime,
                 lastWriteTime: file.RealInfo.LastWriteTime,
                 attributes: FileAttributes.Archive);
+            return entry;
         }
-
-        public IEnumerable<ILanCloudFileSystemEntry> EnumerateDirectory(string path)
+        public IEnumerable<IDriveFileSystemEntry> EnumerateDirectory(string path)
         {
-            var directory = new LocalFileRefDirectory(_application, NormalizePath(path), _logger);
+            var directory = new LocalFileRefDirectory(Application, NormalizePath(path), Logger);
             if (!directory.Exists)
             {
-                return Enumerable.Empty<LanCloudFileSystemEntry>();
+                return Enumerable.Empty<DriveFileSystemEntry>();
             }
 
             var directories = directory.GetDirectories()
-                .Select(dir => new LanCloudFileSystemEntry(
+                .Select(dir => new DriveFileSystemEntry(
                     dir.Path,
                     dir.Name,
                     isDirectory: true,
@@ -119,7 +152,7 @@ namespace LanCloud.Domain.VirtualDrive
 
             var files = directory.GetFiles()
                 .Where(file => file.Metadata != null)
-                .Select(file => new LanCloudFileSystemEntry(
+                .Select(file => new DriveFileSystemEntry(
                     file.Path,
                     file.Name,
                     isDirectory: false,
@@ -129,30 +162,28 @@ namespace LanCloud.Domain.VirtualDrive
                     lastWriteTime: file.RealInfo.LastWriteTime,
                     attributes: FileAttributes.Archive));
 
-            return directories.Concat(files);
+            var response = directories.Concat(files);
+            return response;
         }
-
         public void CreateDirectory(string path)
         {
-            var directory = new LocalFileRefDirectory(_application, NormalizePath(path), _logger);
+            var directory = new LocalFileRefDirectory(Application, NormalizePath(path), Logger);
             if (!directory.Exists)
             {
                 directory.Create();
             }
         }
-
         public void DeleteDirectory(string path)
         {
-            var directory = new LocalFileRefDirectory(_application, NormalizePath(path), _logger);
+            var directory = new LocalFileRefDirectory(Application, NormalizePath(path), Logger);
             if (directory.Exists)
             {
                 directory.Delete();
             }
         }
-
         public void MoveDirectory(string sourcePath, string destinationPath)
         {
-            var directory = new LocalFileRefDirectory(_application, NormalizePath(sourcePath), _logger);
+            var directory = new LocalFileRefDirectory(Application, NormalizePath(sourcePath), Logger);
             if (!directory.Exists)
             {
                 return;
@@ -160,10 +191,9 @@ namespace LanCloud.Domain.VirtualDrive
 
             directory.MoveTo(NormalizePath(destinationPath));
         }
-
         public void MoveFile(string sourcePath, string destinationPath)
         {
-            var file = new LocalFileRef(_application, NormalizePath(sourcePath), _logger);
+            var file = new LocalFileRef(Application, NormalizePath(sourcePath), Logger);
             if (!file.Exists)
             {
                 return;
@@ -171,17 +201,15 @@ namespace LanCloud.Domain.VirtualDrive
 
             file.MoveTo(NormalizePath(destinationPath));
         }
-
         public Stream OpenRead(string path)
         {
-            var file = new LocalFileRef(_application, NormalizePath(path), _logger);
+            var file = new LocalFileRef(Application, NormalizePath(path), Logger);
             return file.OpenRead() ?? throw new IOException($"File {path} could not be opened for reading.");
         }
-
         public Stream OpenWrite(string path, FileMode mode)
         {
             var normalized = NormalizePath(path);
-            var file = new LocalFileRef(_application, normalized, _logger);
+            var file = new LocalFileRef(Application, normalized, Logger);
 
             switch (mode)
             {
@@ -195,16 +223,14 @@ namespace LanCloud.Domain.VirtualDrive
                     throw new NotSupportedException($"FileMode {mode} is not supported.");
             }
         }
-
         public void DeleteFile(string path)
         {
-            var file = new LocalFileRef(_application, NormalizePath(path), _logger);
+            var file = new LocalFileRef(Application, NormalizePath(path), Logger);
             if (file.Exists)
             {
                 file.Delete();
             }
         }
-
         public void SetDirectoryTimestamps(string path, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime)
         {
             var info = ResolveDirectoryInfo(path);
@@ -226,7 +252,6 @@ namespace LanCloud.Domain.VirtualDrive
                 info.LastWriteTime = lastWriteTime.Value;
             }
         }
-
         public void SetFileTimestamps(string path, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime)
         {
             var info = ResolveFileInfo(path);
@@ -248,15 +273,18 @@ namespace LanCloud.Domain.VirtualDrive
                 info.LastWriteTime = lastWriteTime.Value;
             }
         }
-
         public void GetDiskFreeSpace(out long freeBytesAvailable, out long totalNumberOfBytes, out long totalNumberOfFreeBytes)
         {
-            var rootPath = _application.RealRoot.FullName;
+            var rootPath = Application.RealRoot.FullName;
             var drive = new DriveInfo(Path.GetPathRoot(rootPath));
             freeBytesAvailable = drive.AvailableFreeSpace;
             totalNumberOfBytes = drive.TotalSize;
             totalNumberOfFreeBytes = drive.TotalFreeSpace;
         }
+
+        public void Dispose()
+        {
+            DriveServer.Dispose();
+        }
     }
 }
-

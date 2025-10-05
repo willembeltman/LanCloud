@@ -8,7 +8,7 @@ using System.Net;
 
 namespace LanCloud.Domain.VirtualFtp
 {
-    public class VirtualFtpServer : IFtpHandler, IDisposable
+    public class VirtualFtpServer : IFtpFileSystem, IDisposable
     {
         public VirtualFtpServer(LocalApplication application, ILogger logger)
         {

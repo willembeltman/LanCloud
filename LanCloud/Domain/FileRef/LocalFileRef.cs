@@ -3,7 +3,7 @@ using LanCloud.Domain.FileStripe;
 using LanCloud.Domain.IO.Appender;
 using LanCloud.Domain.IO.Reader;
 using LanCloud.Domain.IO.Writer;
-using LanCloud.Services;
+using LanCloud.Helpers;
 using LanCloud.Shared.Interfaces;
 using System;
 using System.IO;
@@ -42,11 +42,11 @@ namespace LanCloud.Domain.FileRef
         {
             get
             {
-                return _Metadata = _Metadata ?? FileRefService.Load(RealInfo);
+                return _Metadata = _Metadata ?? FileRefHelper.Load(RealInfo);
             }
             set
             {
-                _Metadata = FileRefService.Save(RealInfo, value);
+                _Metadata = FileRefHelper.Save(RealInfo, value);
             }
         }
 
@@ -58,13 +58,13 @@ namespace LanCloud.Domain.FileRef
         public Stream Create()
         {
             Metadata = new FileRefMetadata(this);
-            return new FileRefWriter(this, Logger);
+            return new FileRefWriter(this, Application.FileStripeBufferSize, Logger);
         }
 
         public Stream OpenRead()
         {
             if (Metadata == null) return null;
-            return new FileRefReader(this, Logger);
+            return new FileRefReader(this, Application.FileStripeBufferSize, Logger);
         }
 
         public Stream OpenAppend()

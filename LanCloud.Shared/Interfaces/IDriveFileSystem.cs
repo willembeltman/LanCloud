@@ -4,13 +4,13 @@ using System.IO;
 
 namespace LanCloud.Shared.Interfaces
 {
-    public interface ILanCloudFileSystem
+    public interface IDriveFileSystem
     {
         bool DirectoryExists(string path);
         bool FileExists(string path);
-        ILanCloudFileSystemEntry GetDirectory(string path);
-        ILanCloudFileSystemEntry GetFile(string path);
-        IEnumerable<ILanCloudFileSystemEntry> EnumerateDirectory(string path);
+        IDriveFileSystemEntry GetDirectory(string path);
+        IDriveFileSystemEntry GetFile(string path);
+        IEnumerable<IDriveFileSystemEntry> EnumerateDirectory(string path);
         void CreateDirectory(string path);
         void DeleteDirectory(string path);
         void MoveDirectory(string sourcePath, string destinationPath);

@@ -1,7 +1,7 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.FileRef;
+using LanCloud.Helpers;
 using LanCloud.Models;
-using LanCloud.Services;
 using LanCloud.Shared.Interfaces;
 using System;
 using System.IO;
@@ -11,7 +11,7 @@ namespace LanCloud.Domain.IO.Writer
 {
     public class FileRefWriter : Stream
     {
-        public FileRefWriter(LocalFileRef pathInfo, ILogger logger)
+        public FileRefWriter(LocalFileRef pathInfo, int bufferSize, ILogger logger)
         {
             PathInfo = pathInfo;
             Logger = logger;
@@ -20,12 +20,12 @@ namespace LanCloud.Domain.IO.Writer
             DataStripeWriters = Application.LocalShareStripes
                 .Where(a => a.Indexes.Length == 1)
                 .GroupBy(a => a.Indexes.First())
-                .Select(sharepart => new DataBuffer(this, sharepart.Key, sharepart.ToArray(), Logger))
+                .Select(sharepart => new DataStripeWriter(this, bufferSize, sharepart.Key, sharepart.ToArray(), Logger))
                 .ToArray();
             ParityStripeWriters = Application.LocalShareStripes
                 .Where(a => a.Indexes.Length > 1)
                 .GroupBy(a => a.Indexes.ToUniqueKey())
-                .Select(sharepart => new ParityBuffer(this, sharepart.ToArray(), Logger))
+                .Select(sharepart => new ParityStripeWriter(this, bufferSize, sharepart.ToArray(), Logger))
                 .ToArray();
 
             AllIndexes = Application.LocalShareStripes
@@ -34,15 +34,15 @@ namespace LanCloud.Domain.IO.Writer
                 .Select(a => a.Key)
                 .OrderBy(a => a)
                 .ToArray();
-            Buffer = new DoubleBuffer(AllIndexes.Length);
+            Buffer = new DoubleBuffer(bufferSize, AllIndexes.Length);
 
             Logger.Info($"Opened virtual ftp file: {pathInfo.Name}");
         }
 
         public LocalFileRef PathInfo { get; }
         public ILogger Logger { get; }
-        public DataBuffer[] DataStripeWriters { get; }
-        public ParityBuffer[] ParityStripeWriters { get; }
+        public DataStripeWriter[] DataStripeWriters { get; }
+        public ParityStripeWriter[] ParityStripeWriters { get; }
         public HashBuffer HashWriter { get; }
         public int[] AllIndexes { get; }
         public DoubleBuffer Buffer { get; }

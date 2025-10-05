@@ -15,8 +15,8 @@ namespace LanCloud.Servers.Ftp
     {
         public ClientConnection(
             TcpClient client,
-            IFtpHandler commandHandler,
-            IFtpApplication application,
+            IFtpFileSystem commandHandler,
+            IApplication application,
             ILogger logger,
             string certificateFilename = null)
         {
@@ -37,8 +37,8 @@ namespace LanCloud.Servers.Ftp
         ILogger Logger { get; }
         string Name { get; }
         TcpClient ControlClient { get; }
-        public IFtpHandler FtpHandler { get; }
-        public IFtpApplication Application { get; }
+        public IFtpFileSystem FtpHandler { get; }
+        public IApplication Application { get; }
         TcpClient DataClient { get; set; }
         TcpListener PassiveListener { get; set; }
         NetworkStream ControlStream { get; set; }

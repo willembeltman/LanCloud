@@ -8,17 +8,17 @@ using System.Threading;
 
 namespace LanCloud.Domain.IO.Writer
 {
-    public class DataBuffer
+    public class ParityStripeWriter
     {
-        public DataBuffer(FileRefWriter fileRefWriter, int index, LocalShareStripe[] localShareStripes, ILogger logger)
+        public ParityStripeWriter(FileRefWriter fileRefWriter, int bufferSize, LocalShareStripe[] localShareParts, ILogger logger)
         {
             FileRefWriter = fileRefWriter;
-            Index = index;
-            LocalShareStripes = localShareStripes;
+            LocalShareParts = localShareParts;
             Logger = logger;
 
-            Buffer = new DoubleBuffer(1);
-            FileStripeWriters = localShareStripes
+            Buffer = new DoubleBuffer(bufferSize, 1);
+            Indexes = localShareParts.First().Indexes;
+            FileStripeWriters = localShareParts
                 .Select(localSharePart => new FileStripeWriter(Buffer, fileRefWriter, localSharePart, logger))
                 .ToArray();
 
@@ -27,11 +27,10 @@ namespace LanCloud.Domain.IO.Writer
         }
 
         public FileRefWriter FileRefWriter { get; }
-        public int Index { get; }
-        public LocalShareStripe[] LocalShareStripes { get; }
+        public LocalShareStripe[] LocalShareParts { get; }
         public ILogger Logger { get; }
-
         public DoubleBuffer Buffer { get; }
+        public int[] Indexes { get; }
         public FileStripeWriter[] FileStripeWriters { get; }
 
         public Thread Thread { get; }
@@ -63,12 +62,28 @@ namespace LanCloud.Domain.IO.Writer
         private void WriteBufferToStream(byte[] data, int datalength, int width)
         {
             var sublength = Convert.ToDouble(datalength) / width;
-            var start = Convert.ToInt32(sublength * Index);
-            var end = Convert.ToInt32(sublength * (Index + 1));
-            var length = end - start;
+            var maxlength = 0;
+            var buffer = Buffer.WriteBuffer;
 
-            Array.Copy(data, start, Buffer.WriteBuffer, 0, length);
-            Buffer.WriteBufferPosition = length;
+            // Prepare buffer
+            Array.Clear(buffer, 0, buffer.Length);
+
+            // XOR data from indexes on to own buffer
+            foreach (var index in Indexes)
+            {
+                var start = Convert.ToInt32(sublength * index);
+                var end = Convert.ToInt32(sublength * (index + 1));
+                var length = end - start;
+                if (length > maxlength) maxlength = length;
+
+                for (var i = 0; i < length; i++)
+                {
+                    buffer[i] ^= data[start + i];
+                }
+            }
+
+            // Set position
+            Buffer.WriteBufferPosition = maxlength;
 
             FlipBuffer();
         }
@@ -84,6 +99,7 @@ namespace LanCloud.Domain.IO.Writer
             foreach (var fileStripeWriter in FileStripeWriters)
                 fileStripeWriter.StartNext.Set();
         }
+
 
         public LocalFileStripe[] Stop(long length, string hash)
         {

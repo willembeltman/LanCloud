@@ -121,23 +121,26 @@ namespace LanCloud.Forms
 
             if (Application.VirtualFtpServer != null)
             {
+                var ftpState = 
+                    $"{Application.VirtualFtpServer.HostName}:{Application.VirtualFtpServer.Port} " +
+                    $"{Application.VirtualFtpServer.FtpServer.Status}";
+
                 var virtualFtpServerNode = new TreeNode("Virtual FTP Server");
-                virtualFtpServerNode.Nodes.Add(new TreeNode($"{Application.VirtualFtpServer.HostName}:{Application.VirtualFtpServer.Port} {Application.VirtualFtpServer.FtpServer.Status}"));
+                virtualFtpServerNode.Nodes.Add(new TreeNode(ftpState));
                 treeView1.Nodes.Add(virtualFtpServerNode);
             }
 
             if (Application.VirtualDriveServer != null)
             {
-                var mountPoint = string.IsNullOrWhiteSpace(Application.Config.VirtualDriveMountPoint)
-                    ? "N:\\"
-                    : Application.Config.VirtualDriveMountPoint;
-                var driveState = Application.VirtualDriveServer.IsRunning
-                    ? $"Mounted at {mountPoint} ({Application.VirtualDriveServer.MountStatus})"
-                    : $"Mount {Application.VirtualDriveServer.MountStatus}";
+                var driveState = 
+                    (Application.VirtualDriveServer.IsRunning
+                    ?   $"Mounted at {Application.Config.VirtualDriveMountPoint} " +
+                        $"({Application.VirtualDriveServer.MountStatus}) "
+                    :   $"{Application.VirtualDriveServer.MountStatus} ") +
+                    $"{Application.VirtualDriveServer.DriveServer.Status}";
 
-                var virtualDriveNode = new TreeNode("Virtual Drive");
+                var virtualDriveNode = new TreeNode("Virtual Drive Server");
                 virtualDriveNode.Nodes.Add(new TreeNode(driveState));
-                virtualDriveNode.Nodes.Add(new TreeNode(Application.Config.VirtualDriveReadOnly ? "Read-only" : "Read/Write"));
                 treeView1.Nodes.Add(virtualDriveNode);
             }
 

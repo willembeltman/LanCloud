@@ -42,7 +42,7 @@ namespace LanCloud.Servers.Rpc
         public RpcServer Server { get; }
         public Thread Thread { get; }
 
-        public IRpcApplication Application => Server.Application;
+        public IApplication Application => Server.Application;
 
         private void Start()
         {

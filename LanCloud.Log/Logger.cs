@@ -57,7 +57,7 @@ namespace LanCloud.Shared.Log
         public ConcurrentQueue<string> Queue { get; } = new ConcurrentQueue<string>();
         public bool LogInfo { get; set; }
 
-        public bool DebugEnabled => throw new NotImplementedException();
+        public bool DebugEnabled => true;
 
 
         public void Debug(string message, params object[] args)

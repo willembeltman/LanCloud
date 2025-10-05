@@ -2,9 +2,9 @@
 using System;
 using System.IO;
 
-namespace LanCloud.Services
+namespace LanCloud.Helpers
 {
-    public static class FileRefService
+    public static class FileRefHelper
     {
         public static FileRefMetadata Save(FileInfo fileInfo, FileRefMetadata fileRef)
         {
@@ -52,6 +52,5 @@ namespace LanCloud.Services
                 return new FileRefMetadata(Length, Hash, Bits);
             }
         }
-
     }
 }

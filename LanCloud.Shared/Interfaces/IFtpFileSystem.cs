@@ -3,7 +3,7 @@ using System.IO;
 
 namespace LanCloud.Shared.Interfaces
 {
-    public interface IFtpHandler
+    public interface IFtpFileSystem
     {
         IFtpUser ValidateUser(string userName, string password);
 

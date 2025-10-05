@@ -1,7 +1,7 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.FileRef;
+using LanCloud.Helpers;
 using LanCloud.Models;
-using LanCloud.Services;
 using LanCloud.Shared.Interfaces;
 using System;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace LanCloud.Domain.IO.Reader
 {
     public class ReconstructBuffer :  IDisposable
     {
-        public ReconstructBuffer(FileRefReader fileRefReader, ILogger logger)
+        public ReconstructBuffer(FileRefReader fileRefReader, int bufferSize, ILogger logger)
         {
             FileRefReader = fileRefReader;
             Logger = logger;
@@ -22,7 +22,7 @@ namespace LanCloud.Domain.IO.Reader
                     var fileStripe = Application
                         .FindFileStripes(PathInfo.Extention, FileRef, fileRefBit)
                         .FirstOrDefault();
-                    return new FileStripeReader(this, fileStripe, Logger);
+                    return new FileStripeReader(this, fileStripe, bufferSize, Logger);
                 })
                 .Where(fileStripe => fileStripe.Exception == null)
                 .OrderBy(a => a.Indexes.Length)
@@ -34,7 +34,7 @@ namespace LanCloud.Domain.IO.Reader
                 .Select(a => a.Key)
                 .OrderBy(a => a)
                 .ToArray();
-            Buffer = new DoubleBuffer(AllIndexes.Length);
+            Buffer = new DoubleBuffer(bufferSize, AllIndexes.Length);
 
             Thread = new Thread(new ThreadStart(Start));
             Thread.Start();
