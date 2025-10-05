@@ -1,10 +1,10 @@
 ﻿using LanCloud.Domain.Share;
-using LanCloud.Servers.Wjp;
+using LanCloud.Shared.Interfaces;
 using System.Linq;
 
 namespace LanCloud.Models.Dtos
 {
-    public class ShareDto : IWjpProxyConfig
+    public class ShareDto : IRpcProxyConfig
     {
         public ShareDto() { }
         public ShareDto(LocalShare localShare)

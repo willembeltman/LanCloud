@@ -2,7 +2,7 @@
 using LanCloud.Models.Dtos;
 using LanCloud.Models.Share.Requests;
 using LanCloud.Models.Share.Responses;
-using LanCloud.Shared.Log;
+using LanCloud.Shared.Interfaces;
 using Newtonsoft.Json;
 
 namespace LanCloud.Domain.Share

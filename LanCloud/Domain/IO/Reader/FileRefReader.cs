@@ -1,5 +1,5 @@
 ﻿using LanCloud.Domain.FileRef;
-using LanCloud.Shared.Log;
+using LanCloud.Shared.Interfaces;
 using System;
 using System.IO;
 

@@ -1,4 +1,4 @@
-﻿using LanCloud.Domain.Application;
+using LanCloud.Domain.Application;
 using System;
 using System.Linq;
 using System.Windows.Forms;
@@ -119,22 +119,27 @@ namespace LanCloud.Forms
                 treeView1.Nodes.Add(remoteApplicationsNode);
             }
 
-            var virtualFtpServerNode = new TreeNode($"Virtual Ftp Server");
-            virtualFtpServerNode.Nodes.Add(new TreeNode($"{Application.VirtualFtpServer.HostName}:{Application.VirtualFtpServer.Port} {Application.VirtualFtpServer.FtpServer.Status}"));
-            treeView1.Nodes.Add(virtualFtpServerNode);
+            if (Application.VirtualFtpServer != null)
+            {
+                var virtualFtpServerNode = new TreeNode("Virtual FTP Server");
+                virtualFtpServerNode.Nodes.Add(new TreeNode($"{Application.VirtualFtpServer.HostName}:{Application.VirtualFtpServer.Port} {Application.VirtualFtpServer.FtpServer.Status}"));
+                treeView1.Nodes.Add(virtualFtpServerNode);
+            }
 
-            //var connections3 = Application.VirtualFtpServer.FtpServer.GetActiveConnections();
-            //if (connections3.Any())
-            //{
-            //    var connectionsNode = new TreeNode("Connections");
-            //    foreach (var connection in connections3)
-            //    {
-            //        // Tweede laag onder Child 1
-            //        connectionsNode.Nodes.Add(new TreeNode($"{connection.Name}: {connection.Status}"));
-            //    }
-            //    applicationInnerNode.Nodes.Add(connectionsNode);
-            //}
+            if (Application.VirtualDriveServer != null)
+            {
+                var mountPoint = string.IsNullOrWhiteSpace(Application.Config.VirtualDriveMountPoint)
+                    ? "N:\\"
+                    : Application.Config.VirtualDriveMountPoint;
+                var driveState = Application.VirtualDriveServer.IsRunning
+                    ? $"Mounted at {mountPoint} ({Application.VirtualDriveServer.MountStatus})"
+                    : $"Mount {Application.VirtualDriveServer.MountStatus}";
 
+                var virtualDriveNode = new TreeNode("Virtual Drive");
+                virtualDriveNode.Nodes.Add(new TreeNode(driveState));
+                virtualDriveNode.Nodes.Add(new TreeNode(Application.Config.VirtualDriveReadOnly ? "Read-only" : "Read/Write"));
+                treeView1.Nodes.Add(virtualDriveNode);
+            }
 
             // Open de boomstructuur
             treeView1.ExpandAll();
@@ -152,3 +157,4 @@ namespace LanCloud.Forms
         }
     }
 }
+

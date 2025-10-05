@@ -1,22 +1,24 @@
-﻿using LanCloud.Domain.FileRef;
+using LanCloud.Domain.FileRef;
 using LanCloud.Domain.FileStripe;
 using LanCloud.Domain.Share;
 using LanCloud.Domain.VirtualFtp;
+using LanCloud.Domain.VirtualDrive;
 using LanCloud.Enums;
 using LanCloud.Models.Configs;
 using LanCloud.Models.Dtos;
-using LanCloud.Servers.Ftp;
-using LanCloud.Servers.Wjp;
-using LanCloud.Shared.Log;
+using LanCloud.Servers.Rpc;
+using LanCloud.VirtualDrive;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using LanCloud.Shared.Interfaces;
 
 namespace LanCloud.Domain.Application
 {
-    public class LocalApplication : IDisposable, IWjpApplication, IFtpApplication, IWjpHandler
+    public class LocalApplication : IDisposable, IRpcApplication, IFtpApplication, IRpcHandler
     {
         #region Status
 
@@ -59,18 +61,71 @@ namespace LanCloud.Domain.Application
 
             if (LocalApplicationServerConfig != null)
             {
-                LocalApplicationServer = new WjpServer(IPAddress.Any, LocalApplicationServerConfig.Port, this, this, logger);
+                LocalApplicationServer = new RpcServer(IPAddress.Any, LocalApplicationServerConfig.Port, this, this, logger);
             }
 
-            VirtualFtpServer = new VirtualFtp.VirtualFtpServer(this, logger);
+            var surfaces = new List<string>();
+
+            if (Config.EnableFtpServer)
+            {
+                VirtualFtpServer = new VirtualFtp.VirtualFtpServer(this, logger);
+                surfaces.Add("ftp");
+            }
+
+            if (Config.EnableVirtualDrive)
+            {
+                var mountPoint = string.IsNullOrWhiteSpace(Config.VirtualDriveMountPoint)
+                    ? "N:\\"
+                    : Config.VirtualDriveMountPoint;
+                var volumeLabel = string.IsNullOrWhiteSpace(Config.VirtualDriveVolumeLabel)
+                    ? "LANCloud"
+                    : Config.VirtualDriveVolumeLabel;
+
+                try
+                {
+                    VirtualDriveFileSystem = new LanCloudFileSystemAdapter(this, logger);
+                    var driveOptions = new LanCloudDriveMountOptions(mountPoint, volumeLabel, Config.VirtualDriveReadOnly);
+                    //var dokanLogger = new DokanLoggerAdapter(logger);
+                    VirtualDriveServer = new LanCloudDriveServer(VirtualDriveFileSystem, driveOptions, logger);
+                    VirtualDriveServer.Start();
+                    if (VirtualDriveServer.MountStatus == DokanNet.DokanStatus.Success)
+                    {
+                        surfaces.Add("drive");
+                    }
+                    else
+                    {
+                        logger.Error($"Virtual drive mount failed ({VirtualDriveServer.MountStatus})");
+                        VirtualDriveServer.Dispose();
+                        VirtualDriveServer = null;
+                        VirtualDriveFileSystem = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex);
+                    VirtualDriveServer?.Dispose();
+                    VirtualDriveServer = null;
+                    VirtualDriveFileSystem = null;
+                }
+            }
+
+            ActiveSurfaces = surfaces.AsReadOnly();
 
             if (LocalApplicationServerConfig != null)
             {
-                Status = Logger.Info($"OK");
+                var suffix = surfaces.Count > 0 ? $" ({string.Join(", ", surfaces)})" : string.Empty;
+                Status = Logger.Info($"OK{suffix}");
             }
             else
             {
-                Status = Logger.Info($"OK without sharing");
+                if (surfaces.Count == 0)
+                {
+                    Status = Logger.Info($"OK without sharing");
+                }
+                else
+                {
+                    Status = Logger.Info($"OK ({string.Join(", ", surfaces)})");
+                }
             }
         }
 
@@ -83,12 +138,15 @@ namespace LanCloud.Domain.Application
         public LocalShare[] LocalShares { get; }
         public RemoteApplication[] RemoteApplications { get; }
         public RemoteApplicationConfig LocalApplicationServerConfig { get; }
-        public WjpServer LocalApplicationServer { get; }
+        public RpcServer LocalApplicationServer { get; }
         public VirtualFtpServer VirtualFtpServer { get; }
+        public LanCloudFileSystemAdapter VirtualDriveFileSystem { get; private set; }
+        public LanCloudDriveServer VirtualDriveServer { get; private set; }
+        public IReadOnlyCollection<string> ActiveSurfaces { get; private set; }
 
         public string HostName => Config.HostName;
         public int FileStripeBufferSize => Config.FileStripeBufferSize;
-        public int WjpBufferSize => Config.WjpBufferMultiplier * Config.FileStripeBufferSize;
+        public int RpcBufferSize => Config.RpcBufferMultiplier * Config.FileStripeBufferSize;
         public int FtpBufferSize => Config.FtpBufferMultiplier * Config.FileStripeBufferSize;
         public int? Port => LocalApplicationServerConfig?.Port;
         public LocalShareStripe[] LocalShareStripes => LocalShares?
@@ -136,6 +194,16 @@ namespace LanCloud.Domain.Application
 
         public void Dispose()
         {
+            try
+            {
+                VirtualDriveServer?.Dispose();
+                VirtualFtpServer?.Dispose();
+            }
+            catch
+            {
+                // swallow shutdown exceptions
+            }
+
             LocalApplicationServer?.Dispose();
             foreach (var item in RemoteApplications)
                 item.Dispose();
@@ -148,3 +216,10 @@ namespace LanCloud.Domain.Application
 
     }
 }
+
+
+
+
+
+
+

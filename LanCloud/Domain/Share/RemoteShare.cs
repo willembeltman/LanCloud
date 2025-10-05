@@ -2,16 +2,14 @@
 using LanCloud.Domain.FileStripe;
 using LanCloud.Enums;
 using LanCloud.Models.Dtos;
-using LanCloud.Models.Share.Requests;
-using LanCloud.Models.Share.Responses;
-using LanCloud.Servers.Wjp;
-using LanCloud.Shared.Log;
+using LanCloud.Servers.Rpc;
+using LanCloud.Shared.Interfaces;
 using Newtonsoft.Json;
 using System.Linq;
 
 namespace LanCloud.Domain.Share
 {
-    public class RemoteShare : WjpProxy, IShare
+    public class RemoteShare : RpcProxy, IShare
     {
         public RemoteShare(RemoteApplication remoteApplication, ShareDto config, ILogger logger) : base(config, remoteApplication.LocalApplication, logger)
         {

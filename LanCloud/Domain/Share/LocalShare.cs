@@ -1,4 +1,4 @@
-﻿using LanCloud.Shared.Log;
+﻿using LanCloud.Shared.Interfaces;
 using LanCloud.Models.Configs;
 using LanCloud.Domain.Application;
 using System;
@@ -6,17 +6,18 @@ using System.IO;
 using LanCloud.Enums;
 using LanCloud.Models.Share.Requests;
 using Newtonsoft.Json;
-using LanCloud.Servers.Wjp;
+using LanCloud.Servers.Rpc;
 using System.Net;
 using System.Linq;
 using LanCloud.Domain.FileStripe;
 using System.Collections.Generic;
 using LanCloud.Services;
 using LanCloud.Models.Share.Responses;
+using LanCloud.Shared.Interfaces;
 
 namespace LanCloud.Domain.Share
 {
-    public class LocalShare : IWjpHandler, IDisposable, IShare
+    public class LocalShare : IRpcHandler, IDisposable, IShare
     {
         private string _Status { get; set; }
         public string Status
@@ -49,7 +50,7 @@ namespace LanCloud.Domain.Share
 
             if (Application.LocalApplicationServerConfig != null)
             {
-                Server = new WjpServer(IPAddress.Any, Port, this, Application, Logger);
+                Server = new RpcServer(IPAddress.Any, Port, this, Application, Logger);
             }
 
             Status = Logger.Info($"OK");
@@ -66,7 +67,7 @@ namespace LanCloud.Domain.Share
         public string RootFullName => Config.DirectoryName;
         public DirectoryInfo Root => new DirectoryInfo(RootFullName);
 
-        public WjpServer Server { get; private set; }
+        public RpcServer Server { get; private set; }
 
         public LocalFileStripe FindFileStripe(string extention, string hash, long length, int[] indexes)
         {

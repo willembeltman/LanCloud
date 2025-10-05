@@ -1,12 +1,12 @@
-﻿using LanCloud.Shared.Log;
+﻿using LanCloud.Shared.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
-namespace LanCloud.Servers.Wjp
+namespace LanCloud.Servers.Rpc
 {
-    public class WjpServer : IDisposable
+    public class RpcServer : IDisposable
     {
         private string _Status { get; set; }
         public string Status
@@ -23,13 +23,13 @@ namespace LanCloud.Servers.Wjp
         private bool Listening = false;
 
         private IPEndPoint LocalEndPoint { get; }
-        public IWjpHandler Handler { get; }
-        public IWjpApplication Application { get; }
+        public IRpcHandler Handler { get; }
+        public IRpcApplication Application { get; }
         public ILogger Logger { get; }
         private TcpListener Listener { get; }
-        private List<WjpClientConnection> _ActiveConnections { get; } = new List<WjpClientConnection>();
+        private List<RpcClientConnection> _ActiveConnections { get; } = new List<RpcClientConnection>();
 
-        public WjpServer(IPAddress ipAddress, int port, IWjpHandler handler, IWjpApplication application, ILogger logger)
+        public RpcServer(IPAddress ipAddress, int port, IRpcHandler handler, IRpcApplication application, ILogger logger)
         {
             LocalEndPoint = new IPEndPoint(ipAddress, port);
             Handler = handler;
@@ -54,22 +54,22 @@ namespace LanCloud.Servers.Wjp
 
                 var client = Listener.EndAcceptTcpClient(result);
 
-                new WjpClientConnection(this, client, Handler, Logger);
+                new RpcClientConnection(this, client, Handler, Logger);
             }
         }
-        public WjpClientConnection[] GetActiveConnections()
+        public RpcClientConnection[] GetActiveConnections()
         {
-            WjpClientConnection[] res;
+            RpcClientConnection[] res;
             lock (this)
                 res = _ActiveConnections.ToArray();
             return res;
         }
-        public void AddConnection(WjpClientConnection connection)
+        public void AddConnection(RpcClientConnection connection)
         {
             lock(this)
                 _ActiveConnections.Add(connection);
         }
-        public void RemoveConnection(WjpClientConnection connection)
+        public void RemoveConnection(RpcClientConnection connection)
         {
             lock (this) 
                 _ActiveConnections.Remove(connection);
@@ -91,7 +91,7 @@ namespace LanCloud.Servers.Wjp
 
                     var conns = _ActiveConnections.ToArray();
 
-                    foreach (WjpClientConnection conn in conns)
+                    foreach (RpcClientConnection conn in conns)
                     {
                         conn.Dispose();
                     }

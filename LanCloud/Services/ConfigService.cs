@@ -1,5 +1,5 @@
-﻿using LanCloud.Models.Configs;
-using LanCloud.Shared.Log;
+using LanCloud.Models.Configs;
+using LanCloud.Shared.Interfaces;
 using Newtonsoft.Json;
 using System.IO;
 
@@ -23,11 +23,16 @@ namespace LanCloud.Services
                 Logger.Info("No config found, creating dummy config");
                 var config = new ApplicationConfig()
                 {
-                    HostName = "WJPC2",
+                    HostName = "RpcC2",
                     RefDirectoryName = "E:\\Test\\Ref",
                     FileStripeBufferSize = 1024 * 4,
                     FtpBufferMultiplier = 1,
-                    WjpBufferMultiplier = 4,
+                    RpcBufferMultiplier = 4,
+                    EnableFtpServer = true,
+                    EnableVirtualDrive = true,
+                    VirtualDriveMountPoint = "N:\\",
+                    VirtualDriveVolumeLabel = "LANCloud",
+                    VirtualDriveReadOnly = false,
                     Servers = new RemoteApplicationConfig[]
                     {
                         new RemoteApplicationConfig()
@@ -112,6 +117,19 @@ namespace LanCloud.Services
                     (config.Shares == null || config.Shares.Length == 0))
                     throw new System.Exception("Nothing is configured, please setup LanCloud.config file.");
 
+                if (string.IsNullOrWhiteSpace(config.VirtualDriveMountPoint))
+                {
+                    config.VirtualDriveMountPoint = "N:\\";
+                }
+                if (string.IsNullOrWhiteSpace(config.VirtualDriveVolumeLabel))
+                {
+                    config.VirtualDriveVolumeLabel = "LANCloud";
+                }
+                if (!config.EnableFtpServer && !config.EnableVirtualDrive)
+                {
+                    config.EnableVirtualDrive = true;
+                }
+
                 return config;
             }
         }
@@ -133,3 +151,4 @@ namespace LanCloud.Services
         }
     }
 }
+

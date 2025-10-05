@@ -1,14 +1,14 @@
-﻿using LanCloud.Shared.Log;
+﻿using LanCloud.Shared;
+using LanCloud.Shared.Interfaces;
 using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using static System.Net.Mime.MediaTypeNames;
 
-namespace LanCloud.Servers.Wjp
+namespace LanCloud.Servers.Rpc
 {
-    public class WjpClientConnection : IDisposable
+    public class RpcClientConnection : IDisposable
     {
         private string _Status { get; set; }
         public string Status
@@ -21,7 +21,7 @@ namespace LanCloud.Servers.Wjp
             }
         }
 
-        public WjpClientConnection(WjpServer server, TcpClient client, IWjpHandler handler, ILogger logger)
+        public RpcClientConnection(RpcServer server, TcpClient client, IRpcHandler handler, ILogger logger)
         {
             Server = server;
             Client = client;
@@ -37,12 +37,12 @@ namespace LanCloud.Servers.Wjp
 
         public string Name { get; }
         public TcpClient Client { get; }
-        public IWjpHandler Handler { get; }
+        public IRpcHandler Handler { get; }
         public ILogger Logger { get; }
-        public WjpServer Server { get; }
+        public RpcServer Server { get; }
         public Thread Thread { get; }
 
-        public IWjpApplication Application => Server.Application;
+        public IRpcApplication Application => Server.Application;
 
         private void Start()
         {
@@ -56,10 +56,10 @@ namespace LanCloud.Servers.Wjp
                 var requestMessageType = 0;
                 var requestJson = string.Empty;
                 var requestDataLength = 0;
-                byte[] requestData = new byte[Server.Application.WjpBufferSize];
+                byte[] requestData = new byte[Server.Application.RpcBufferSize];
                 var responseJson = string.Empty;
                 var responseDataLength = 0;
-                byte[] responseData = new byte[Server.Application.WjpBufferSize];
+                byte[] responseData = new byte[Server.Application.RpcBufferSize];
                 try
                 {
                     Status = Logger.Info($"Connected");

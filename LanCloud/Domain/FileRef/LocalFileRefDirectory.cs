@@ -1,6 +1,5 @@
 ﻿using LanCloud.Domain.Application;
-using LanCloud.Models;
-using LanCloud.Shared.Log;
+using LanCloud.Shared.Interfaces;
 using System;
 using System.IO;
 using System.Linq;

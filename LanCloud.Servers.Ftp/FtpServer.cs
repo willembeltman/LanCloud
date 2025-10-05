@@ -1,5 +1,4 @@
-﻿using LanCloud.Servers.Ftp.Interfaces;
-using LanCloud.Shared.Log;
+﻿using LanCloud.Shared.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Net;

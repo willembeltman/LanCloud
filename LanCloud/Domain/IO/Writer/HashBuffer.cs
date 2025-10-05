@@ -1,4 +1,4 @@
-﻿using LanCloud.Shared.Log;
+﻿using LanCloud.Shared.Interfaces;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Text;

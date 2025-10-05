@@ -13,7 +13,7 @@ namespace LanCloud
         static void Main(string[] args)
         {
             var currentDirectory = Environment.CurrentDirectory;
-            var logService = new LogService(currentDirectory);
+            var logService = new LoggerService(currentDirectory);
             using (var logger = logService.Create())
             {
                 var configService = new ConfigService(currentDirectory, logger);

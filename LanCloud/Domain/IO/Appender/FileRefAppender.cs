@@ -1,11 +1,12 @@
 ﻿using LanCloud.Domain.FileRef;
+using LanCloud.Shared.Interfaces;
 using System;
 
 namespace LanCloud.Domain.IO.Appender
 {
     public class FileRefAppender : System.IO.Stream
     {
-        public FileRefAppender(LocalFileRef virtualFileInfo, Shared.Log.ILogger logger)
+        public FileRefAppender(LocalFileRef virtualFileInfo, ILogger logger)
         {
             VirtualFileInfo = virtualFileInfo;
         }

@@ -1,4 +1,4 @@
-﻿using LanCloud.Shared.Log;
+﻿using LanCloud.Shared.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -6,9 +6,9 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace LanCloud.Servers.Wjp
+namespace LanCloud.Servers.Rpc
 {
-    public class WjpProxy : IDisposable
+    public class RpcProxy : IDisposable
     {
         private string _Status { get; set; }
         public string Status
@@ -21,7 +21,7 @@ namespace LanCloud.Servers.Wjp
             }
         }
 
-        public WjpProxy(IWjpProxyConfig config, IWjpApplication application, ILogger logger)
+        public RpcProxy(IRpcProxyConfig config, IRpcApplication application, ILogger logger)
         {
             Config = config;
             Application = application;
@@ -30,12 +30,12 @@ namespace LanCloud.Servers.Wjp
             Thread = new Thread(new ThreadStart(Start));
             Thread.Start();
         }
-        private IWjpProxyConfig Config { get; }
-        public IWjpApplication Application { get; }
+        private IRpcProxyConfig Config { get; }
+        public IRpcApplication Application { get; }
         public ILogger Logger { get; }
         private Thread Thread { get; }
 
-        ConcurrentQueue<WjpProxyQueueItem> Queue { get; } = new ConcurrentQueue<WjpProxyQueueItem>();
+        ConcurrentQueue<RpcProxyQueueItem> Queue { get; } = new ConcurrentQueue<RpcProxyQueueItem>();
         AutoResetEvent Enqueued { get; } = new AutoResetEvent(false);
         public bool Stop { get; set; }
         public bool Connected { get; private set; }
@@ -77,7 +77,7 @@ namespace LanCloud.Servers.Wjp
 
                             if (Enqueued.WaitOne(1000))
                             {
-                                while (Queue.TryDequeue(out WjpProxyQueueItem requestItem))
+                                while (Queue.TryDequeue(out RpcProxyQueueItem requestItem))
                                 {
                                     writer.Write(requestItem.RequestMessageType);
                                     writer.Write(requestItem.RequestJson);
@@ -125,7 +125,7 @@ namespace LanCloud.Servers.Wjp
 
         public void SendRequest(int requestMessageType, string requestJson, byte[] requestData, int requestDataLength, out string responseJson, byte[] responseData, out int responseDataLength)
         {
-            var queueItem = new WjpProxyQueueItem(requestMessageType, requestJson, requestData, requestDataLength, responseData);
+            var queueItem = new RpcProxyQueueItem(requestMessageType, requestJson, requestData, requestDataLength, responseData);
             Queue.Enqueue(queueItem);
             Enqueued.Set();
             if (!queueItem.Done.WaitOne(100000))

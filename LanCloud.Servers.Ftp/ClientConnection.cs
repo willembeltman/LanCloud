@@ -1,7 +1,4 @@
-﻿using LanCloud.Servers.Ftp.Enums;
-using LanCloud.Servers.Ftp.Interfaces;
-using LanCloud.Shared.Log;
-using LanCloud.Models;
+﻿using LanCloud.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -10,6 +7,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Diagnostics;
+using LanCloud.Shared.Interfaces;
 
 namespace LanCloud.Servers.Ftp
 {

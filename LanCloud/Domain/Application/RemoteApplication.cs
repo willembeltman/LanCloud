@@ -1,15 +1,15 @@
-﻿using LanCloud.Servers.Wjp;
+﻿using LanCloud.Servers.Rpc;
 using Newtonsoft.Json;
-using LanCloud.Shared.Log;
 using LanCloud.Models.Configs;
 using LanCloud.Models.Dtos;
 using System.Linq;
 using LanCloud.Domain.Share;
 using LanCloud.Enums;
+using LanCloud.Shared.Interfaces;
 
 namespace LanCloud.Domain.Application
 {
-    public class RemoteApplication : WjpProxy
+    public class RemoteApplication : RpcProxy
     {
         public RemoteApplication(
             LocalApplication localApplication,

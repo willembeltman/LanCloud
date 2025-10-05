@@ -1,10 +1,10 @@
 ﻿using System.Threading;
 
-namespace LanCloud.Servers.Wjp
+namespace LanCloud.Servers.Rpc
 {
-    public class WjpProxyQueueItem
+    public class RpcProxyQueueItem
     {
-        public WjpProxyQueueItem(int requestMessageType, string requestJson, byte[] requestData, int requestDataLength, byte[] responseData)
+        public RpcProxyQueueItem(int requestMessageType, string requestJson, byte[] requestData, int requestDataLength, byte[] responseData)
         {
             RequestMessageType = requestMessageType;
             RequestJson = requestJson;

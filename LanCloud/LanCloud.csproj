@@ -29,6 +29,8 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -52,13 +54,53 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DokanNet, Version=2.3.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DokanNet.2.3.0.1\lib\net48\DokanNet.dll</HintPath>
+    </Reference>
+    <Reference Include="LTRData.Extensions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\LTRData.Extensions.1.0.19\lib\net48\LTRData.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="LTRData.Extensions.Native, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\LTRData.Extensions.Native.1.0.19\lib\net48\LTRData.Extensions.Native.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.9, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.9\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.FileSystem.AccessControl, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.FileSystem.AccessControl.5.0.0\lib\net461\System.IO.FileSystem.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.AccessControl, Version=6.0.0.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.6.0.1\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.5.0.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -67,6 +109,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Domain\\VirtualDrive\\DokanLoggerAdapter.cs" />
     <Compile Include="Domain\FileRef\FileRefDirectoryDto.cs" />
     <Compile Include="Domain\FileRef\FileRefDto.cs" />
     <Compile Include="Domain\FileRef\FileRefMetadata.cs" />
@@ -132,7 +175,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Domain\VirtualFtp\VirtualFtpServer.cs" />
     <Compile Include="Services\IndexesService.cs" />
-    <Compile Include="Services\LogService.cs" />
+    <Compile Include="Services\LoggerService.cs" />
+    <Compile Include="Domain\\VirtualDrive\\LanCloudFileSystemAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -151,20 +195,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LanCloud.Servers.Ftp\LanCloud.Servers.Ftp.csproj">
-      <Project>{c0e5fc5b-aa67-437f-a704-c0e34638c5d4}</Project>
-      <Name>LanCloud.Servers.Ftp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LanCloud.Shared.Log\LanCloud.Shared.Log.csproj">
-      <Project>{02268493-F812-4EDA-A386-DDCB2E787152}</Project>
-      <Name>LanCloud.Shared.Log</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LanCloud.Servers.Wjp\LanCloud.Servers.Wjp.csproj">
-      <Project>{B1C7D4D1-82B0-4F35-BDE2-0ED0744B4910}</Project>
-      <Name>LanCloud.Servers.Wjp</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Forms\StatusForm.resx">
       <DependentUpon>StatusForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -173,7 +203,36 @@
     <Folder Include="Models\Application\Requests\" />
     <Folder Include="Models\Application\Responses\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LanCloud.Servers.Ftp\LanCloud.Servers.Ftp.csproj">
+      <Project>{c0e5fc5b-aa67-437f-a704-c0e34638c5d4}</Project>
+      <Name>LanCloud.Servers.Ftp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LanCloud.Servers.Wjp\LanCloud.Servers.Wjp.csproj">
+      <Project>{b1c7d4d1-82b0-4f35-bde2-0ed0744b4910}</Project>
+      <Name>LanCloud.Servers.Wjp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LanCloud.Log\LanCloud.Log.csproj">
+      <Project>{02268493-f812-4eda-a386-ddcb2e787152}</Project>
+      <Name>LanCloud.Log</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LanCloud.Servers.VirtualDrive\LanCloud.Servers.VirtualDrive.csproj">
+      <Project>{dd0a7f83-5dd0-42a7-b017-8958527ceab6}</Project>
+      <Name>LanCloud.Servers.VirtualDrive</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LanCloud.Shared\LanCloud.Shared.csproj">
+      <Project>{27d4b109-aaef-48b2-91c7-5a2afbb5fb2c}</Project>
+      <Name>LanCloud.Shared</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

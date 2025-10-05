@@ -1,8 +1,8 @@
-﻿using LanCloud.Servers.Wjp;
+﻿using LanCloud.Shared.Interfaces;
 
 namespace LanCloud.Models.Configs
 {
-    public class RemoteApplicationConfig : IWjpProxyConfig
+    public class RemoteApplicationConfig : IRpcProxyConfig
     {
         public string HostName { get; set; }
         public int Port { get; set; }
