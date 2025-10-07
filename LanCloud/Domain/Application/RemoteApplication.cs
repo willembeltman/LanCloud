@@ -5,7 +5,7 @@ using LanCloud.Models.Dtos;
 using System.Linq;
 using LanCloud.Domain.Share;
 using LanCloud.Enums;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.Application
 {

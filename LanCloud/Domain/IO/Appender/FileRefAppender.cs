@@ -1,5 +1,5 @@
 ﻿using LanCloud.Domain.FileRef;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using System;
 
 namespace LanCloud.Domain.IO.Appender

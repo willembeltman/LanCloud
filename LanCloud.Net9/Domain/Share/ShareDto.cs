@@ -1,0 +1,21 @@
+﻿using LanCloud.Domain.Share;
+using LanCloud.Interfaces;
+
+namespace LanCloud.Models.Dtos;
+
+public class ShareDto : IRpcProxyConfig
+{
+    public ShareDto() { }
+    public ShareDto(LocalShare localShare)
+    {
+        HostName = localShare.HostName;
+        Port = localShare.Port;
+        ShareStripes = localShare.LocalShareStripes
+            .Select(a => new ShareStripeDto(a))
+            .ToArray();
+    }
+
+    public string HostName { get; set; }
+    public int Port { get; set; }
+    public ShareStripeDto[] ShareStripes { get; set; }
+}

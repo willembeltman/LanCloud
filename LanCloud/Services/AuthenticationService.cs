@@ -1,8 +1,8 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.Authentication;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 
-namespace LanCloud
+namespace LanCloud.Services
 {
     public class AuthenticationService
     {

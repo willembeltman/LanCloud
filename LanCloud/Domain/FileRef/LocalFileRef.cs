@@ -4,7 +4,7 @@ using LanCloud.Domain.IO.Appender;
 using LanCloud.Domain.IO.Reader;
 using LanCloud.Domain.IO.Writer;
 using LanCloud.Helpers;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using System;
 using System.IO;
 using System.Linq;

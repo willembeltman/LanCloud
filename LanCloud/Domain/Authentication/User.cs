@@ -1,4 +1,4 @@
-﻿using LanCloud.Shared.Interfaces;
+﻿using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.Authentication
 {

@@ -1,5 +1,5 @@
 ﻿using LanCloud.Domain.Share;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using System.Linq;
 
 namespace LanCloud.Models.Dtos

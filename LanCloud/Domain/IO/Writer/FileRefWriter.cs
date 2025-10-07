@@ -2,7 +2,7 @@
 using LanCloud.Domain.FileRef;
 using LanCloud.Helpers;
 using LanCloud.Models;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using System;
 using System.IO;
 using System.Linq;

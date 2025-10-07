@@ -2,7 +2,7 @@
 using LanCloud.Domain.FileStripe;
 using LanCloud.Domain.Share;
 using LanCloud.Models;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using System;
 using System.Linq;
 using System.Threading;

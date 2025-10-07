@@ -1,7 +1,7 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.FileStripe;
 using LanCloud.Models;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

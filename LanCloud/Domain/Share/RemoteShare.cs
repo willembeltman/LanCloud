@@ -3,7 +3,7 @@ using LanCloud.Domain.FileStripe;
 using LanCloud.Enums;
 using LanCloud.Models.Dtos;
 using LanCloud.Servers.Rpc;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using Newtonsoft.Json;
 using System.Linq;
 

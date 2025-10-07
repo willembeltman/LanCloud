@@ -1,7 +1,7 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.FileRef;
 using LanCloud.Servers.Ftp;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using System;
 using System.IO;
 using System.Net;

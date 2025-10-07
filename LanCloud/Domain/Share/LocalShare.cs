@@ -1,4 +1,4 @@
-﻿using LanCloud.Shared.Interfaces;
+﻿using LanCloud.Interfaces;
 using LanCloud.Models.Configs;
 using LanCloud.Domain.Application;
 using System;

@@ -1,4 +1,4 @@
-﻿using LanCloud.Shared.Interfaces;
+﻿using LanCloud.Interfaces;
 using System;
 using LanCloud.Models.Configs;
 using System.Linq;

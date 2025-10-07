@@ -2,8 +2,8 @@
 using LanCloud.Domain.Application;
 using LanCloud.Domain.FileRef;
 using LanCloud.Models.Configs;
-using LanCloud.Shared.Interfaces;
-using LanCloud.VirtualDrive;
+using LanCloud.Interfaces;
+using LanCloud.Servers.VirtualDrive;
 using System;
 using System.Collections.Generic;
 using System.IO;

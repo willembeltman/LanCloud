@@ -1,5 +1,5 @@
 using LanCloud.Models.Configs;
-using LanCloud.Shared.Interfaces;
+using LanCloud.Interfaces;
 using Newtonsoft.Json;
 using System.IO;
 
