@@ -3,32 +3,30 @@ using LanCloud.Domain.FileStripe;
 using LanCloud.Domain.IO.Appender;
 using LanCloud.Domain.IO.Reader;
 using LanCloud.Domain.IO.Writer;
-using LanCloud.Helpers;
 using LanCloud.Interfaces;
+using LanCloud.Repositories;
 
 namespace LanCloud.Domain.FileRef;
 
 public class LocalFileRef : IFileRef
 {
-    public LocalFileRef(LocalApplication application, string path, ILogger logger)
+    public LocalFileRef(LocalApplication application, string path)
     {
         Application = application;
         Path = path;
-        Logger = logger;
         var realFullName = PathTranslator.TranslatePathToFullName(application.RealRoot, path);
         RealInfo = new FileInfo(realFullName);
     }
-    public LocalFileRef(LocalApplication application, FileInfo realInfo, ILogger logger)
+    public LocalFileRef(LocalApplication application, FileInfo realInfo)
     {
         Application = application;
         RealInfo = realInfo;
-        Logger = logger;
         Path = PathTranslator.TranslateFullnameToPath(application.RealRoot, realInfo);
     }
 
     public LocalApplication Application { get; }
     public string Path { get; }
-    public ILogger Logger { get; }
+    public ILogger Logger => Application.Logger;
     public FileInfo RealInfo { get; }
 
     public string Name => PathTranslator.TranslatePathToName(Path);
@@ -40,14 +38,14 @@ public class LocalFileRef : IFileRef
         get
         {
             return _Metadata = _Metadata ?? 
-                FileRefHelper.Load(RealInfo) ?? 
+                FileRefRepository.Load(RealInfo) ?? 
                 throw new Exception("Cannot load file metadata");
         }
         set
         {
             if (value != null)
             {
-                _Metadata = FileRefHelper.Save(RealInfo, value);
+                _Metadata = FileRefRepository.Save(RealInfo, value);
             }
             else
             {
@@ -65,26 +63,26 @@ public class LocalFileRef : IFileRef
     public Stream Create()
     {
         Metadata = new FileRefMetadata(this);
-        return new FileRefWriter(this, Application.FileStripeBufferSize, Logger);
+        return new FileRefWriter(this, Application.FileStripeBufferSize);
     }
 
-    public Stream? OpenRead()
+    public Stream OpenRead()
     {
-        if (Metadata == null) return null;
-        return new FileRefReader(this, Application.FileStripeBufferSize, Logger);
+        if (Metadata == null) throw new Exception("No Metadata");
+        return new FileRefReader(this, Application.FileStripeBufferSize);
     }
 
-    public Stream? OpenAppend()
+    public Stream OpenAppend()
     {
-        if (Metadata == null) return null;
-        return new FileRefAppender(this, Logger);
+        if (Metadata == null) throw new Exception("No Metadata");
+        return new FileRefAppender(this);
     }
 
     public void MoveTo(string toPath)
     {
         if (Metadata == null) return;
         if (Metadata.Stripes == null) return;
-        var to = new LocalFileRef(Application, toPath, Logger);
+        var to = new LocalFileRef(Application, toPath);
 
         if (Extention != to.Extention)
         {

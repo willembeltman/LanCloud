@@ -1,41 +1,36 @@
 ﻿using LanCloud.Domain.FileStripe;
 using LanCloud.Domain.Share;
 using LanCloud.Interfaces;
-using LanCloud.Models;
 
 namespace LanCloud.Domain.IO.Writer;
 
 public class DataStripeWriter
 {
-    public DataStripeWriter(FileRefWriter fileRefWriter, int bufferSize, int index, LocalShareStripe[] localShareStripes, ILogger logger)
+    public DataStripeWriter(FileRefWriter fileRefWriter, int bufferSize, int index, LocalShareStripe[] localShareStripes)
     {
         FileRefWriter = fileRefWriter;
+        Buffer = new DoubleBuffer(bufferSize, 1);
         Index = index;
         LocalShareStripes = localShareStripes;
-        Logger = logger;
-
-        Buffer = new DoubleBuffer(bufferSize, 1);
-        FileStripeWriters = localShareStripes
-            .Select(localSharePart => new FileStripeWriter(Buffer, fileRefWriter, localSharePart, logger))
+                FileStripeWriters = localShareStripes
+            .Select(localSharePart => new FileStripeWriter(fileRefWriter, localSharePart, Buffer))
             .ToArray();
 
         Thread = new Thread(new ThreadStart(Start));
         Thread.Start();
     }
 
-    public FileRefWriter FileRefWriter { get; }
-    public int Index { get; }
-    public LocalShareStripe[] LocalShareStripes { get; }
-    public ILogger Logger { get; }
+    private readonly FileRefWriter FileRefWriter;
+    private readonly DoubleBuffer Buffer;
+    private readonly int Index;
+    private readonly LocalShareStripe[] LocalShareStripes;
+    private readonly FileStripeWriter[] FileStripeWriters;
+    private readonly Thread Thread;
+    private bool KillSwitch = false;
 
-    public DoubleBuffer Buffer { get; }
-    public FileStripeWriter[] FileStripeWriters { get; }
-
-    public Thread Thread { get; }
 
     public AutoResetEvent WritingIsDone { get; } = new AutoResetEvent(true);
     public AutoResetEvent StartNext { get; } = new AutoResetEvent(false);
-    private bool KillSwitch { get; set; } = false;
 
     private void Start()
     {
@@ -56,7 +51,6 @@ public class DataStripeWriter
             }
         }
     }
-
     private void WriteBufferToStream(byte[] data, int datalength, int width)
     {
         var sublength = Convert.ToDouble(datalength) / width;

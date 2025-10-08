@@ -1,28 +1,25 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.FileRef;
-using LanCloud.Helpers;
 using LanCloud.Interfaces;
-using LanCloud.Models;
 
 namespace LanCloud.Domain.IO.Writer;
 
 public class FileRefWriter : Stream
 {
-    public FileRefWriter(LocalFileRef pathInfo, int bufferSize, ILogger logger)
+    public FileRefWriter(LocalFileRef fileRef, int bufferSize)
     {
-        PathInfo = pathInfo;
-        Logger = logger;
+        FileRef = fileRef;
 
-        HashWriter = new HashBuffer(this, Logger);
+        HashWriter = new HashWriter(this);
         DataStripeWriters = Application.LocalShareStripes
             .Where(a => a.Indexes.Length == 1)
             .GroupBy(a => a.Indexes.First())
-            .Select(sharepart => new DataStripeWriter(this, bufferSize, sharepart.Key, sharepart.ToArray(), Logger))
+            .Select(sharepart => new DataStripeWriter(this, bufferSize, sharepart.Key, sharepart.ToArray()))
             .ToArray();
         ParityStripeWriters = Application.LocalShareStripes
             .Where(a => a.Indexes.Length > 1)
             .GroupBy(a => a.Indexes.ToUniqueKey())
-            .Select(sharepart => new ParityStripeWriter(this, bufferSize, sharepart.ToArray(), Logger))
+            .Select(sharepart => new ParityStripeWriter(this, bufferSize, sharepart.ToArray()))
             .ToArray();
 
         AllIndexes = Application.LocalShareStripes
@@ -33,24 +30,24 @@ public class FileRefWriter : Stream
             .ToArray();
         Buffer = new DoubleBuffer(bufferSize, AllIndexes.Length);
 
-        Logger.Info($"Opened virtual ftp file: {pathInfo.Name}");
+        fileRef.Logger.Info($"Opened virtual ftp file: {fileRef.Name}");
     }
 
-    public LocalFileRef PathInfo { get; }
-    public ILogger Logger { get; }
-    public DataStripeWriter[] DataStripeWriters { get; }
-    public ParityStripeWriter[] ParityStripeWriters { get; }
-    public HashBuffer HashWriter { get; }
-    public int[] AllIndexes { get; }
+    public LocalFileRef FileRef { get; }
     public DoubleBuffer Buffer { get; }
-    public bool Disposed { get; private set; }
-    public override long Position { get; set; }
+    private DataStripeWriter[] DataStripeWriters;
+    private ParityStripeWriter[] ParityStripeWriters;
+    private HashWriter HashWriter;
+    private int[] AllIndexes;
+    private bool Disposed;
 
+    public override long Position { get; set; }
     public override bool CanRead => false;
     public override bool CanSeek => false;
     public override bool CanWrite => true;
 
-    public LocalApplication Application => PathInfo.Application;
+    public LocalApplication Application => FileRef.Application;
+    public ILogger Logger => FileRef.Logger;
 
     public override void Write(byte[] buffer, int offset, int count)
     {
@@ -142,7 +139,7 @@ public class FileRefWriter : Stream
                 .ToArray();
 
             // En dan de waardes updaten
-            PathInfo.Metadata = new FileRefMetadata(length, hash, stripes);
+            FileRef.Metadata = new FileRefMetadata(length, hash, stripes);
         }
 
         base.Dispose(disposing);

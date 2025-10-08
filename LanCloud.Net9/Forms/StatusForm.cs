@@ -14,12 +14,12 @@ public partial class StatusForm : Form
         InitializeComponent();
     }
 
-    private void StatusForm_FormClosing(object sender, FormClosingEventArgs e)
+    private void StatusForm_FormClosing(object? sender, FormClosingEventArgs e)
     {
         KillSwitch = true;
     }
 
-    private void Application_OnStateChanged(object sender, EventArgs e)
+    private void Application_OnStateChanged(object? sender, EventArgs e)
     {
         if (!KillSwitch)
         {
@@ -45,15 +45,15 @@ public partial class StatusForm : Form
         var applicationNode = new TreeNode($"Local Application");
 
         var name = "";
-        if (Application.LocalApplicationConfig != null)
+        if (Application.ApplicationConfig != null)
         {
-            name = $"{Application.LocalApplicationConfig.HostName}:{Application.LocalApplicationConfig.Port} ";
+            name = $"{Application.ApplicationConfig.HostName}:{Application.ApplicationConfig.Port} ";
         }
 
         var applicationInnerNode = new TreeNode($"{Application.HostName} {name}{Application.Status}");
         applicationNode.Nodes.Add(applicationInnerNode);
 
-        var connections2 = Application.LocalApplicationServer?.GetActiveConnections();
+        var connections2 = Application.RpcServer?.GetActiveConnections();
         if (connections2?.Any() == true)
         {
             var connectionsNode = new TreeNode("Connections");

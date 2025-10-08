@@ -5,7 +5,7 @@ namespace LanCloud.Domain.IO.Appender;
 
 public class FileRefAppender : System.IO.Stream
 {
-    public FileRefAppender(LocalFileRef virtualFileInfo, ILogger logger)
+    public FileRefAppender(LocalFileRef virtualFileInfo)
     {
         VirtualFileInfo = virtualFileInfo;
     }

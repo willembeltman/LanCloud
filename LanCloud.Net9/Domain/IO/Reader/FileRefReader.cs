@@ -5,16 +5,15 @@ namespace LanCloud.Domain.IO.Reader;
 
 public class FileRefReader : Stream
 {
-    public FileRefReader(LocalFileRef pathInfo, int bufferSize, ILogger logger)
+    public FileRefReader(LocalFileRef pathInfo, int bufferSize)
     {
         PathInfo = pathInfo;
-        Logger = logger;
 
-        ReconstructBuffer = new ReconstructBuffer(this, bufferSize, logger);
+        ReconstructBuffer = new ReconstructBuffer(this, bufferSize);
     }
 
     public LocalFileRef PathInfo { get; }
-    public ILogger Logger { get; }
+    public ILogger Logger => PathInfo.Logger;
     public ReconstructBuffer ReconstructBuffer { get; }
 
     public override long Position { get; set; }

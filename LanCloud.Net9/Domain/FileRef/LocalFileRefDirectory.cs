@@ -5,26 +5,23 @@ namespace LanCloud.Domain.FileRef;
 
 public class LocalFileRefDirectory : IFileRefDirectory
 {
-    public LocalFileRefDirectory(LocalApplication application, string path, ILogger logger)
+    public LocalFileRefDirectory(LocalApplication application, string path)
     {
         Application = application;
         Path = path;
-        Logger = logger;
         var realFullName = PathTranslator.TranslateDirectoryPathToFullName(application.RealRoot, path);
         RealInfo = new DirectoryInfo(realFullName);
     }
-    public LocalFileRefDirectory(LocalApplication application, DirectoryInfo realInfo, ILogger logger)
+    public LocalFileRefDirectory(LocalApplication application, DirectoryInfo realInfo)
     {
         Application = application;
         RealInfo = realInfo;
-        Logger = logger;
         Path = PathTranslator.TranslateDirectoryFullNameToPath(application.RealRoot, realInfo);
     }
 
     public LocalApplication Application { get; }
     public string Path { get; }
     private DirectoryInfo RealInfo { get; }
-    public ILogger Logger { get; }
 
     public bool Exists => RealInfo.Exists;
     public string Name => RealInfo.Name;
@@ -43,12 +40,12 @@ public class LocalFileRefDirectory : IFileRefDirectory
     public LocalFileRefDirectory[] GetDirectories()
         => RealInfo
             .GetDirectories()
-            .Select(dirinfo => new LocalFileRefDirectory(Application, dirinfo, Logger))
+            .Select(dirinfo => new LocalFileRefDirectory(Application, dirinfo))
             .ToArray();
     public LocalFileRef[] GetFiles()
         => RealInfo
             .GetFiles("*.fileref")
-            .Select(realInfo => new LocalFileRef(Application, realInfo, Logger))
+            .Select(realInfo => new LocalFileRef(Application, realInfo))
             .ToArray();
     
     IFileRefDirectory[] IFileRefDirectory.GetDirectories() => GetDirectories();

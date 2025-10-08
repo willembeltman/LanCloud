@@ -1,16 +1,16 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.FileStripe;
-using LanCloud.Enums;
-using LanCloud.Interfaces;
+using LanCloud.Domain.Rpc;
 using LanCloud.Models.Dtos;
-using LanCloud.Servers.Rpc;
+using LanCloud.Models.Dtos.Requests;
+using LanCloud.Models.Enums;
 using Newtonsoft.Json;
 
 namespace LanCloud.Domain.Share;
 
 public class RemoteShare : RpcProxy, IShare
 {
-    public RemoteShare(RemoteApplication remoteApplication, ShareDto config) : base(config, remoteApplication.LocalApplication)
+    public RemoteShare(RemoteApplication remoteApplication, ShareDto config) : base(config, remoteApplication.Application)
     {
         ShareStripes = config.ShareStripes
             .Select(a => new RemoteShareStripe(this, a))

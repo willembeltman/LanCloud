@@ -1,14 +1,11 @@
 using LanCloud.Domain.FileRef;
 using LanCloud.Domain.FileStripe;
+using LanCloud.Domain.Rpc;
 using LanCloud.Domain.Share;
-using LanCloud.Domain.VirtualDrive;
-using LanCloud.Domain.VirtualFtp;
-using LanCloud.Enums;
 using LanCloud.Interfaces;
-using LanCloud.Models.Configs;
+using LanCloud.Models.Config;
 using LanCloud.Models.Dtos;
-using LanCloud.Servers.Rpc;
-using LanCloud.Services;
+using LanCloud.Models.Enums;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -41,27 +38,27 @@ public class LocalApplication : IDisposable, IRpcHandler
         Config = config;
         Logger = logger;
 
-        Authentication = new AuthenticationService(this, logger);
+        Authentication = new Authentication(this);
         RealRootFullName = Config.RefDirectoryName.TrimEnd('\\');
         RealRoot = new DirectoryInfo(RealRootFullName);
 
-        LocalApplicationConfig = config.Servers.FirstOrDefault(a => a.IsThisComputer);
+        ApplicationConfig = config.Servers.FirstOrDefault(a => a.IsThisComputer);
 
-        int port = LocalApplicationConfig?.Port ?? 8080;
+        int port = ApplicationConfig?.Port ?? 8080;
         LocalShares = Config.Shares
-            .Select(share => new LocalShare(this, share, ++port, Logger))
+            .Select(share => new LocalShare(this, share, ++port))
             .ToArray();
 
         RemoteApplications = Config.Servers
             .Where(a => a.IsThisComputer == false)
-            .Select(remoteconfig => new RemoteApplication(this, remoteconfig, logger))
+            .Select(remoteconfig => new RemoteApplication(this, remoteconfig))
             .ToArray();
 
-        FileSystem = new FileSystemService(this, logger);
+        FileSystem = new FileSystem(this, logger);
 
-        if (LocalApplicationConfig != null)
+        if (ApplicationConfig != null)
         {
-            LocalApplicationServer = new RpcServer(this, this, IPAddress.Any, LocalApplicationConfig.Port);
+            RpcServer = new RpcServer(this, this, IPAddress.Any, ApplicationConfig.Port);
         }
 
         if (Config.EnableVirtualDrive)
@@ -82,12 +79,12 @@ public class LocalApplication : IDisposable, IRpcHandler
 
     public string RealRootFullName { get; }
     public DirectoryInfo RealRoot { get; }
-    public AuthenticationService Authentication { get; }
+    public Authentication Authentication { get; }
     public LocalShare[] LocalShares { get; }
     public RemoteApplication[] RemoteApplications { get; }
-    public FileSystemService FileSystem { get; }
-    public RemoteApplicationConfig? LocalApplicationConfig { get; }
-    public RpcServer? LocalApplicationServer { get; }
+    public FileSystem FileSystem { get; }
+    public RemoteApplicationConfig? ApplicationConfig { get; }
+    public RpcServer? RpcServer { get; }
     public VirtualFtpServer? VirtualFtpServer { get; }
     public VirtualDriveServer? VirtualDriveServer { get; }
 
@@ -96,7 +93,7 @@ public class LocalApplication : IDisposable, IRpcHandler
     public int RpcBufferSize => Config.RpcBufferMultiplier * Config.FileStripeBufferSize;
     public int FtpBufferSize => Config.FtpBufferMultiplier * Config.FileStripeBufferSize;
     public int VirtualDriveBufferSize => Config.VirtualDriveBufferMultiplier * Config.FileStripeBufferSize;
-    public int? Port => LocalApplicationConfig?.Port;
+    public int? Port => ApplicationConfig?.Port;
     public LocalShareStripe[] LocalShareStripes => LocalShares
         .SelectMany(a => a.LocalShareStripes)
         .ToArray();
@@ -151,7 +148,7 @@ public class LocalApplication : IDisposable, IRpcHandler
             // swallow shutdown exceptions
         }
 
-        LocalApplicationServer?.Dispose();
+        RpcServer?.Dispose();
         foreach (var item in RemoteApplications)
             item.Dispose();
         if (LocalShares != null)

@@ -1,27 +1,23 @@
 ﻿using LanCloud.Domain.FileStripe;
-using LanCloud.Interfaces;
-using LanCloud.Models.Configs;
+using LanCloud.Models.Config;
 
 namespace LanCloud.Domain.Share;
 
 public class LocalShareStripe : IShareStripe
 {
-    public LocalShareStripe(LocalShare localShare, LocalShareBitConfig partConfig, ILogger logger)
+    public LocalShareStripe(LocalShare localShare, LocalShareBitConfig partConfig)
     {
         LocalShare = localShare;
         PartConfig = partConfig;
-        Logger = logger;
 
         Indexes = PartConfig.Indexes;
     }
 
     public LocalShare LocalShare { get; }
     public LocalShareBitConfig PartConfig { get; }
-    public ILogger Logger { get; }
 
     public int[] Indexes { get; }
     public IShare Share => LocalShare;
-
 
     public LocalFileStripe CreateFileStripeSession(string extention)
     {

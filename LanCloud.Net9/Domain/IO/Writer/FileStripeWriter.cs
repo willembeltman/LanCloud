@@ -1,31 +1,27 @@
 ﻿using LanCloud.Domain.FileStripe;
 using LanCloud.Domain.Share;
 using LanCloud.Interfaces;
-using LanCloud.Models;
 
 namespace LanCloud.Domain.IO.Writer;
 
 public class FileStripeWriter
 {
-    public FileStripeWriter(DoubleBuffer buffer, FileRefWriter fileRefWriter, LocalShareStripe localSharePart, ILogger logger)
+    public FileStripeWriter(FileRefWriter fileRefWriter, LocalShareStripe localSharePart, DoubleBuffer buffer)
     {
-        Buffer = buffer;
         FileRefWriter = fileRefWriter;
         LocalShareStripe = localSharePart;
-        Logger = logger;
+        Buffer = buffer;
 
-        FileStripe = LocalShareStripe.CreateFileStripeSession(FileRefWriter.PathInfo.Extention);
+        FileStripe = LocalShareStripe.CreateFileStripeSession(FileRefWriter.FileRef.Extention);
 
         Thread = new Thread(new ThreadStart(Start));
         Thread.Start();
 
-        Logger.Info($"Opened {FileStripe.Info.Name} as output for parts: {string.Join(" xor ", Indexes.OrderBy(a => a).Select(a => $"#{a}"))}");
+        fileRefWriter.Logger.Info($"Opened {FileStripe.Info.Name} as output for parts: {string.Join(" xor ", Indexes.OrderBy(a => a).Select(a => $"#{a}"))}");
     }
 
     public FileRefWriter FileRefWriter { get; }
     public LocalShareStripe LocalShareStripe { get; }
-    public ILogger Logger { get; }
-
     public DoubleBuffer Buffer { get; }
     public LocalFileStripe FileStripe { get; }
 

@@ -1,5 +1,4 @@
-﻿using LanCloud.Helpers;
-using System.Data;
+﻿using System.Data;
 
 namespace LanCloud.Domain.FileStripe;
 
@@ -75,6 +74,6 @@ public class LocalFileStripe : IFileStripe
     }
     public static string CreateTempFileName(string extention, int[] indexes)
     {
-        return $"{extention}.{Guid.NewGuid().ToString()}.{indexes.ToUniqueKey()}.tempbit";
+        return $"{extention}.{Guid.NewGuid().ToString()}.{indexes.ToUniqueKey()}.tempstripe";
     }
 }

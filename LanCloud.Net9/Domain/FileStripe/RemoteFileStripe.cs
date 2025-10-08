@@ -1,4 +1,5 @@
 ﻿using LanCloud.Domain.FileStripe;
+using LanCloud.Models.Dtos;
 
 namespace LanCloud.Domain.Share;
 

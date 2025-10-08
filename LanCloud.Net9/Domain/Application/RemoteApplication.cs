@@ -1,9 +1,9 @@
-﻿using LanCloud.Domain.Share;
-using LanCloud.Enums;
+﻿using LanCloud.Domain.Rpc;
+using LanCloud.Domain.Share;
 using LanCloud.Interfaces;
-using LanCloud.Models.Configs;
+using LanCloud.Models.Config;
 using LanCloud.Models.Dtos;
-using LanCloud.Servers.Rpc;
+using LanCloud.Models.Enums;
 using Newtonsoft.Json;
 
 namespace LanCloud.Domain.Application;
@@ -11,11 +11,9 @@ namespace LanCloud.Domain.Application;
 public class RemoteApplication : RpcProxy
 {
     public RemoteApplication(
-        LocalApplication localApplication,
-        RemoteApplicationConfig config,
-        ILogger logger) : base(config, localApplication)
+        LocalApplication application,
+        RemoteApplicationConfig config) : base(config, application)
     {
-        LocalApplication = localApplication;
         Config = config;
 
         RemoteShares = new RemoteShare[0];
@@ -23,7 +21,6 @@ public class RemoteApplication : RpcProxy
         StateChanged += RemoteApplication_StateChanged;
     }
 
-    public LocalApplication LocalApplication { get; }
     public RemoteApplicationConfig Config { get; }
 
     public RemoteShare[] RemoteShares { get; private set; }
@@ -50,7 +47,7 @@ public class RemoteApplication : RpcProxy
     {
         string responseJson = "";
         int responseDataLength = 0;
-        SendRequest((int)ApplicationMessageEnum.GetShares, null, null, 0, out responseJson, null, out responseDataLength);
+        SendRequest((int)ApplicationMessageEnum.GetShares, string.Empty, [], 0, out responseJson, null, out responseDataLength);
         var response = JsonConvert.DeserializeObject<ShareDto[]>(responseJson);
         if (response == null) throw new Exception();
         return response;

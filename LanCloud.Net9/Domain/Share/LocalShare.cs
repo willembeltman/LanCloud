@@ -1,36 +1,23 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.FileStripe;
-using LanCloud.Enums;
-using LanCloud.Helpers;
+using LanCloud.Domain.Rpc;
 using LanCloud.Interfaces;
-using LanCloud.Models.Configs;
-using LanCloud.Models.Share.Requests;
-using LanCloud.Models.Share.Responses;
-using LanCloud.Servers.Rpc;
+using LanCloud.Models.Config;
+using LanCloud.Models.Dtos;
+using LanCloud.Models.Dtos.Requests;
+using LanCloud.Models.Dtos.Responses;
+using LanCloud.Models.Enums;
 using Newtonsoft.Json;
 using System.Net;
 
 namespace LanCloud.Domain.Share;
 
-public class LocalShare : IRpcHandler, IDisposable, IShare
+public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
 {
-    private string _Status { get; set; }
-    public string Status
+    public LocalShare(LocalApplication application, LocalShareConfig config, int port) : base(application)
     {
-        get => _Status;
-        set
-        {
-            _Status = value;
-            Application.StatusChanged();
-        }
-    }
-
-    public LocalShare(LocalApplication application, LocalShareConfig config, int port, ILogger logger)
-    {
-        Application = application;
         Config = config;
         Port = port;
-        Logger = logger;
 
         if (!Root.Exists) Root.Create();
 
@@ -40,29 +27,26 @@ public class LocalShare : IRpcHandler, IDisposable, IShare
             .ToDictionary(a => a.Name);
 
         LocalShareStripes = config.Parts
-            .Select(part => new LocalShareStripe(this, part, logger))
+            .Select(part => new LocalShareStripe(this, part))
             .ToArray();
 
-        if (Application.LocalApplicationConfig != null)
+        if (Application.ApplicationConfig != null)
         {
             Server = new RpcServer(this, Application, IPAddress.Any, Port);
         }
 
-        Status = Logger.Info($"OK");
+        Status = application.Logger.Info($"OK");
     }
-
-    public LocalApplication Application { get; }
     public LocalShareConfig Config { get; }
     public int Port { get; }
-    public ILogger Logger { get; }
     private Dictionary<string, LocalFileStripe> LocalFileStripeInfos { get; }
     public LocalShareStripe[] LocalShareStripes { get; }
 
-    public string HostName => Application.LocalApplicationConfig?.HostName;
-    public string RootFullName => Config.DirectoryName;
+    public string HostName => Application.ApplicationConfig?.HostName ?? string.Empty;
+    public string RootFullName => Config.DirectoryName ?? string.Empty;
     public DirectoryInfo Root => new DirectoryInfo(RootFullName);
 
-    public RpcServer Server { get; private set; }
+    public RpcServer? Server { get; private set; }
 
     public LocalFileStripe? FindFileStripe(string extention, string hash, long length, int[] indexes)
     {
@@ -88,7 +72,7 @@ public class LocalShare : IRpcHandler, IDisposable, IShare
         }
     }
 
-    public void ProcessRequest(int requestMessageType, string requestJson, byte[] requestData, int requestDataLength, out string responseJson, byte[] responseData, out int responseDataLength)
+    public void ProcessRequest(int requestMessageType, string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
     {
         switch (requestMessageType)
         {
@@ -109,7 +93,7 @@ public class LocalShare : IRpcHandler, IDisposable, IShare
         }
     }
 
-    private void Handle_FindFileStripe(string requestJson, byte[] requestData, int requestDataLength, out string responseJson, byte[] responseData, out int responseDataLength)
+    private void Handle_FindFileStripe(string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
     {
         var request = JsonConvert.DeserializeObject<FindFileStripesRequest>(requestJson);
         var localFileStripe = FindFileStripe(request.Extention, request.Hash, request.Length, request.Indexes);
