@@ -13,11 +13,10 @@ public class RemoteFileRefDirectory : IFileRefDirectory
     public RemoteApplication Application { get; }
     public FileRefDirectoryDto FileRefDirectoryDto { get; }
 
-    public string? Path => FileRefDirectoryDto.Path;
+    public string Path => FileRefDirectoryDto.Path;
     public bool Exists => FileRefDirectoryDto.Exists;
-    public DateTime? LastWriteTime => FileRefDirectoryDto.LastWriteTime;
-
-    public string? Name => PathTranslator.TranslatePathToName(Path);
+    public DateTime LastWriteTime => FileRefDirectoryDto.LastWriteTime;
+    public string Name => PathTranslator.TranslatePathToName(Path);
 
     public void Create()
     {

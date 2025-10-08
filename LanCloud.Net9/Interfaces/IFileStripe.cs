@@ -3,10 +3,10 @@
 public interface IFileStripe
 {
     string Extention { get; }
-    string Hash { get; }
-    long Length { get; }
     int[] Indexes { get; }
     bool IsTemp { get; }
+    string? Hash { get; }
+    long? Length { get; }
 
     FileStream OpenRead();
 }

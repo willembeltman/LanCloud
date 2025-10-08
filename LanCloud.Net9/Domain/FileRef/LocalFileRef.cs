@@ -8,7 +8,7 @@ using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.FileRef;
 
-public class LocalFileRef : IFtpFile, IFileRef
+public class LocalFileRef : IFileRef
 {
     public LocalFileRef(LocalApplication application, string path, ILogger logger)
     {
@@ -31,15 +31,17 @@ public class LocalFileRef : IFtpFile, IFileRef
     public ILogger Logger { get; }
     public FileInfo RealInfo { get; }
 
-    public string? Name => PathTranslator.TranslatePathToName(Path);
-    public string? Extention => PathTranslator.TranslatePathToExtention(Path);
+    public string Name => PathTranslator.TranslatePathToName(Path);
+    public string Extention => PathTranslator.TranslatePathToExtention(Path);
 
     FileRefMetadata? _Metadata { get; set; }
-    public FileRefMetadata? Metadata
+    public FileRefMetadata Metadata
     {
         get
         {
-            return _Metadata = _Metadata ?? FileRefHelper.Load(RealInfo);
+            return _Metadata = _Metadata ?? 
+                FileRefHelper.Load(RealInfo) ?? 
+                throw new Exception("Cannot load file metadata");
         }
         set
         {
@@ -57,8 +59,8 @@ public class LocalFileRef : IFtpFile, IFileRef
 
     public DateTime LastWriteTime => RealInfo.LastWriteTime;
     public bool Exists => RealInfo.Exists;
-    public long? Length => Metadata?.Length;
-    public string? Hash => Metadata?.Hash;
+    public long Length => Metadata!.Length;
+    public string Hash => Metadata!.Hash;
 
     public Stream Create()
     {
@@ -88,7 +90,9 @@ public class LocalFileRef : IFtpFile, IFileRef
         {
             var fileStripes = Metadata.Stripes
                 .SelectMany(fileRefStripe => Application.FindFileStripes(Extention, Metadata, fileRefStripe))
-                .Select(a => new { OldFileStripe = a, NewFileStripe = new LocalFileStripe(a.Info.Directory!, to.Extention, a.Indexes, a.Length, a.Hash) })
+                .Select(a => new {
+                    OldFileStripe = a, 
+                    NewFileStripe = new LocalFileStripe(a.Info.Directory!, to.Extention, a.Indexes, a.Length!.Value, a.Hash!) })
                 .ToArray();
 
             foreach (var fileStripe in fileStripes)

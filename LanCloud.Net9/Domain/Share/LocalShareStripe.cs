@@ -20,7 +20,6 @@ public class LocalShareStripe : IShareStripe
     public ILogger Logger { get; }
 
     public int[] Indexes { get; }
-
     public IShare Share => LocalShare;
 
 

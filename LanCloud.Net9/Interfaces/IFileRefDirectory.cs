@@ -2,14 +2,16 @@
 
 public interface IFileRefDirectory
 {
-    string? Path { get; }
     bool Exists { get; }
-    DateTime? LastWriteTime { get; }
-    string? Name { get; }
+
+    string Path { get; }
+    DateTime LastWriteTime { get; }
+    string Name { get; }
 
     void Create();
     void Delete();
+    void MoveTo(string pathTo);
+
     IFileRefDirectory[] GetDirectories();
     IFileRef[] GetFiles();
-    void MoveTo(string pathTo);
 }

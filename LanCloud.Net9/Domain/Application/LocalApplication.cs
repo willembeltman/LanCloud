@@ -14,7 +14,7 @@ using System.Net;
 
 namespace LanCloud.Domain.Application;
 
-public class LocalApplication : IDisposable, IApplication, IRpcHandler
+public class LocalApplication : IDisposable, IRpcHandler
 {
     #region Status
 
@@ -41,8 +41,6 @@ public class LocalApplication : IDisposable, IApplication, IRpcHandler
         Config = config;
         Logger = logger;
 
-        Status = Logger.Info($"Constructing");
-
         Authentication = new AuthenticationService(this, logger);
         RealRootFullName = Config.RefDirectoryName.TrimEnd('\\');
         RealRoot = new DirectoryInfo(RealRootFullName);
@@ -59,19 +57,21 @@ public class LocalApplication : IDisposable, IApplication, IRpcHandler
             .Select(remoteconfig => new RemoteApplication(this, remoteconfig, logger))
             .ToArray();
 
+        FileSystem = new FileSystemService(this, logger);
+
         if (LocalApplicationConfig != null)
         {
-            LocalApplicationServer = new RpcServer(IPAddress.Any, LocalApplicationConfig.Port, this, this, logger);
+            LocalApplicationServer = new RpcServer(this, this, IPAddress.Any, LocalApplicationConfig.Port);
         }
 
         if (Config.EnableVirtualDrive)
         {
-            VirtualDriveServer = new VirtualDriveServer(this, logger);
+            VirtualDriveServer = new VirtualDriveServer(this);
         }
 
         if (Config.EnableFtpServer)
         {
-            VirtualFtpServer = new VirtualFtpServer(this, logger);
+            VirtualFtpServer = new VirtualFtpServer(this);
         }
 
         Status = Logger.Info($"OK");
@@ -85,6 +85,7 @@ public class LocalApplication : IDisposable, IApplication, IRpcHandler
     public AuthenticationService Authentication { get; }
     public LocalShare[] LocalShares { get; }
     public RemoteApplication[] RemoteApplications { get; }
+    public FileSystemService FileSystem { get; }
     public RemoteApplicationConfig? LocalApplicationConfig { get; }
     public RpcServer? LocalApplicationServer { get; }
     public VirtualFtpServer? VirtualFtpServer { get; }
@@ -103,12 +104,11 @@ public class LocalApplication : IDisposable, IApplication, IRpcHandler
 
     public LocalFileStripe[] FindFileStripes(string extention, FileRefMetadata fileRef, FileRefStripeMetadata fileRefBit)
     {
-        if (fileRef.Length == null) return [];
         var fileStripes = LocalShares
             .Select(a =>
             {
                 if (fileRef.Hash == null) return null;
-                return a.FindFileStripe(extention, fileRef.Hash, fileRef.Length.Value, fileRefBit.Indexes);
+                return a.FindFileStripe(extention, fileRef.Hash, fileRef.Length, fileRefBit.Indexes);
             })
             .Where(a => a != null)
             .Select(a => a!)

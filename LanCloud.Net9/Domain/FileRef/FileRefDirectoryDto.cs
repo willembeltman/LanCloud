@@ -10,7 +10,7 @@ public class FileRefDirectoryDto
         LastWriteTime = fileRefDirectory.LastWriteTime;
     }
 
-    public string? Path { get; set; }
+    public string Path { get; set; } = string.Empty;
     public bool Exists { get; set; }
-    public DateTime? LastWriteTime { get; set; }
+    public DateTime LastWriteTime { get; set; }
 }

@@ -1,4 +1,5 @@
-﻿using LanCloud.Interfaces;
+﻿using LanCloud.Domain.Application;
+using LanCloud.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 
@@ -22,17 +23,16 @@ public class RpcServer : IDisposable
 
     private IPEndPoint LocalEndPoint { get; }
     public IRpcHandler Handler { get; }
-    public IApplication Application { get; }
-    public ILogger Logger { get; }
+    public LocalApplication Application { get; }
+    public ILogger Logger => Application.Logger;
     private TcpListener Listener { get; }
     private List<RpcClientConnection> _ActiveConnections { get; } = new List<RpcClientConnection>();
 
-    public RpcServer(IPAddress ipAddress, int port, IRpcHandler handler, IApplication application, ILogger logger)
+    public RpcServer(IRpcHandler handler, LocalApplication application, IPAddress ipAddress, int port)
     {
-        LocalEndPoint = new IPEndPoint(ipAddress, port);
         Handler = handler;
         Application = application;
-        Logger = logger;
+        LocalEndPoint = new IPEndPoint(ipAddress, port);
 
         Listener = new TcpListener(LocalEndPoint);
 
@@ -52,7 +52,7 @@ public class RpcServer : IDisposable
 
             var client = Listener.EndAcceptTcpClient(result);
 
-            new RpcClientConnection(this, client, Handler, Logger);
+            new RpcClientConnection(this, client);
         }
     }
     public RpcClientConnection[] GetActiveConnections()

@@ -3,7 +3,7 @@ using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.FileRef;
 
-public class LocalFileRefDirectory : IFtpDirectory, IFileRefDirectory
+public class LocalFileRefDirectory : IFileRefDirectory
 {
     public LocalFileRefDirectory(LocalApplication application, string path, ILogger logger)
     {
@@ -26,9 +26,9 @@ public class LocalFileRefDirectory : IFtpDirectory, IFileRefDirectory
     private DirectoryInfo RealInfo { get; }
     public ILogger Logger { get; }
 
-    public string Name => RealInfo.Name;
-    public DateTime? LastWriteTime => RealInfo.Exists ? RealInfo.LastWriteTime : (DateTime?)null;
     public bool Exists => RealInfo.Exists;
+    public string Name => RealInfo.Name;
+    public DateTime LastWriteTime => RealInfo.LastWriteTime;
 
     public void Create() => RealInfo.Create();
     public void MoveTo(string pathTo)
@@ -50,10 +50,7 @@ public class LocalFileRefDirectory : IFtpDirectory, IFileRefDirectory
             .GetFiles("*.fileref")
             .Select(realInfo => new LocalFileRef(Application, realInfo, Logger))
             .ToArray();
-
-    IFtpDirectory[] IFtpDirectory.GetDirectories() => GetDirectories();
+    
     IFileRefDirectory[] IFileRefDirectory.GetDirectories() => GetDirectories();
-
-    IFtpFile[] IFtpDirectory.GetFiles() => GetFiles();
     IFileRef[] IFileRefDirectory.GetFiles() => GetFiles();
 }

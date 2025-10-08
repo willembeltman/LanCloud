@@ -50,7 +50,7 @@ public class Logger : ILogger, IDisposable
     public string Fullname { get; }
     public Thread Thread { get; }
     public ConcurrentQueue<string> Queue { get; } = new ConcurrentQueue<string>();
-    public bool LogInfo { get; set; }
+    public bool LogInfo { get; set; } = true;
 
     public bool DebugEnabled => true;
 

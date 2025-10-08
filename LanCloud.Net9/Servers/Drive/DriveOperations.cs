@@ -1,25 +1,31 @@
 using DokanNet;
 using LanCloud.Interfaces;
+using LanCloud.Services;
 using System.Collections.Concurrent;
 using System.Security.AccessControl;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using FileAccess = DokanNet.FileAccess;
 
 namespace LanCloud.Servers.VirtualDrive;
 
 internal sealed class DriveOperations : IDokanOperations
 {
-    private readonly IDriveFileSystem _fileSystem;
-    private readonly DriveMountOptions _options;
-    private readonly ConcurrentDictionary<long, OpenFileHandle> _handles = new ConcurrentDictionary<long, OpenFileHandle>();
-    private long _handleId;
+    private readonly DriveServer DriveServer;
 
-    public DriveOperations(IDriveFileSystem fileSystem, DriveMountOptions options)
+    private readonly ConcurrentDictionary<long, OpenFileHandle> Handles = new ConcurrentDictionary<long, OpenFileHandle>();
+    private long HandleId;
+
+    public DriveOperations(DriveServer driveServer)
     {
-        _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        DriveServer = driveServer ?? throw new ArgumentNullException(nameof(driveServer));
+
+        //driveServer.Application.FileServer
     }
 
-    private bool IsReadOnly => _options.ReadOnly;
+    private FileSystemService FileSystem => DriveServer.FileSystem;
+    private DriveMountOptions Options => DriveServer.Options;
+
+    private bool IsReadOnly => Options.ReadOnly;
 
     private static string NormalizePath(string fileName)
     {
@@ -39,10 +45,10 @@ internal sealed class DriveOperations : IDokanOperations
 
     private OpenFileHandle RegisterHandle(IDokanFileInfo info, OpenFileHandle handle)
     {
-        var id = System.Threading.Interlocked.Increment(ref _handleId);
+        var id = System.Threading.Interlocked.Increment(ref HandleId);
         handle.Id = id;
         info.Context = handle;
-        _handles[id] = handle;
+        Handles[id] = handle;
         return handle;
     }
 
@@ -53,7 +59,7 @@ internal sealed class DriveOperations : IDokanOperations
     {
         if (info.Context is OpenFileHandle handle)
         {
-            if (_handles.TryRemove(handle.Id, out var stored))
+            if (Handles.TryRemove(handle.Id, out var stored))
             {
                 stored.Dispose();
             }
@@ -81,7 +87,7 @@ internal sealed class DriveOperations : IDokanOperations
 
             if (mode == FileMode.CreateNew)
             {
-                if (_fileSystem.DirectoryExists(path))
+                if (FileSystem.DirectoryExists(path))
                 {
                     return DokanResult.AlreadyExists;
                 }
@@ -91,11 +97,11 @@ internal sealed class DriveOperations : IDokanOperations
                     return DokanResult.AccessDenied;
                 }
 
-                _fileSystem.CreateDirectory(path);
+                FileSystem.CreateDirectory(path);
                 return DokanResult.Success;
             }
 
-            if (!_fileSystem.DirectoryExists(path))
+            if (!FileSystem.DirectoryExists(path))
             {
                 return DokanResult.PathNotFound;
             }
@@ -110,7 +116,7 @@ internal sealed class DriveOperations : IDokanOperations
             return DokanResult.AccessDenied;
         }
 
-        var fileExists = _fileSystem.FileExists(path);
+        var fileExists = FileSystem.FileExists(path);
 
         switch (mode)
         {
@@ -125,7 +131,7 @@ internal sealed class DriveOperations : IDokanOperations
                     return DokanResult.AccessDenied;
                 }
 
-                var createHandle = new OpenFileHandle(path, _fileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
+                var createHandle = new OpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
                 RegisterHandle(info, createHandle);
                 return DokanResult.Success;
 
@@ -136,7 +142,7 @@ internal sealed class DriveOperations : IDokanOperations
                     return DokanResult.AccessDenied;
                 }
 
-                var overwriteHandle = new OpenFileHandle(path, _fileSystem.OpenWrite(path, FileMode.Create), writable: true);
+                var overwriteHandle = new OpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.Create), writable: true);
                 RegisterHandle(info, overwriteHandle);
                 return DokanResult.Success;
 
@@ -148,7 +154,7 @@ internal sealed class DriveOperations : IDokanOperations
                         return DokanResult.AccessDenied;
                     }
 
-                    var openOrCreateHandle = new OpenFileHandle(path, _fileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
+                    var openOrCreateHandle = new OpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
                     RegisterHandle(info, openOrCreateHandle);
                     return DokanResult.Success;
                 }
@@ -162,7 +168,7 @@ internal sealed class DriveOperations : IDokanOperations
                         return DokanResult.AccessDenied;
                     }
 
-                    var appendHandle = new OpenFileHandle(path, _fileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
+                    var appendHandle = new OpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
                     RegisterHandle(info, appendHandle);
                     return DokanResult.Success;
                 }
@@ -185,7 +191,7 @@ internal sealed class DriveOperations : IDokanOperations
             return DokanResult.NotImplemented;
         }
 
-        var stream = _fileSystem.OpenRead(path);
+        var stream = FileSystem.OpenRead(path);
         RegisterHandle(info, new OpenFileHandle(path, stream, writable: false));
         return DokanResult.Success;
     }
@@ -201,12 +207,12 @@ internal sealed class DriveOperations : IDokanOperations
                 {
                     if (!IsReadOnly)
                     {
-                        _fileSystem.DeleteDirectory(handle.Path);
+                        FileSystem.DeleteDirectory(handle.Path);
                     }
                 }
                 else if (!IsReadOnly)
                 {
-                    _fileSystem.DeleteFile(handle.Path);
+                    FileSystem.DeleteFile(handle.Path);
                 }
             }
 
@@ -238,7 +244,7 @@ internal sealed class DriveOperations : IDokanOperations
             return DokanResult.AccessDenied;
         }
 
-        if (!handle.EnsureOffset(offset, _fileSystem))
+        if (!handle.EnsureOffset(offset, FileSystem))
         {
             return DokanResult.Error;
         }
@@ -298,14 +304,14 @@ internal sealed class DriveOperations : IDokanOperations
             FileName = Path.GetFileName(fileName)
         };
 
-        IDriveFileSystemEntry entry = null;
-        if (_fileSystem.FileExists(path))
+        DriveFileSystemEntry? entry = null;
+        if (FileSystem.FileExists(path))
         {
-            entry = _fileSystem.GetFile(path);
+            entry = FileSystem.GetFile(path);
         }
-        else if (_fileSystem.DirectoryExists(path))
+        else if (FileSystem.DirectoryExists(path))
         {
-            entry = _fileSystem.GetDirectory(path);
+            entry = FileSystem.GetDirectory(path);
         }
 
         if (entry == null)
@@ -327,13 +333,13 @@ internal sealed class DriveOperations : IDokanOperations
         IDokanFileInfo info)
     {
         var path = NormalizePath(fileName);
-        if (!_fileSystem.DirectoryExists(path))
+        if (!FileSystem.DirectoryExists(path))
         {
             files = Array.Empty<FileInformation>();
             return DokanResult.FileNotFound;
         }
 
-        files = _fileSystem.EnumerateDirectory(path)
+        files = FileSystem.EnumerateDirectory(path)
             .Select(entry => new FileInformation
             {
                 FileName = entry.Name,
@@ -354,13 +360,13 @@ internal sealed class DriveOperations : IDokanOperations
         IDokanFileInfo info)
     {
         var path = NormalizePath(fileName);
-        if (!_fileSystem.DirectoryExists(path))
+        if (!FileSystem.DirectoryExists(path))
         {
             files = Array.Empty<FileInformation>();
             return DokanResult.FileNotFound;
         }
 
-        files = _fileSystem.EnumerateDirectory(path)
+        files = FileSystem.EnumerateDirectory(path)
             .Select(entry => new FileInformation
             {
                 FileName = entry.Name,
@@ -375,13 +381,6 @@ internal sealed class DriveOperations : IDokanOperations
         return DokanResult.Success;
     }
 
-
-    public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, IDokanFileInfo info)
-    {
-        return DokanResult.Success;
-    }
-
-
     public NtStatus SetFileTime(
         string fileName,
         DateTime? creationTime,
@@ -390,15 +389,15 @@ internal sealed class DriveOperations : IDokanOperations
         IDokanFileInfo info)
     {
         var path = NormalizePath(fileName);
-        if (_fileSystem.FileExists(path))
+        if (FileSystem.FileExists(path))
         {
-            _fileSystem.SetFileTimestamps(path, creationTime, lastAccessTime, lastWriteTime);
+            FileSystem.SetFileTimestamps(path, creationTime, lastAccessTime, lastWriteTime);
             return DokanResult.Success;
         }
 
-        if (_fileSystem.DirectoryExists(path))
+        if (FileSystem.DirectoryExists(path))
         {
-            _fileSystem.SetDirectoryTimestamps(path, creationTime, lastAccessTime, lastWriteTime);
+            FileSystem.SetDirectoryTimestamps(path, creationTime, lastAccessTime, lastWriteTime);
             return DokanResult.Success;
         }
 
@@ -413,12 +412,12 @@ internal sealed class DriveOperations : IDokanOperations
         }
 
         var path = NormalizePath(fileName);
-        if (!_fileSystem.FileExists(path))
+        if (!FileSystem.FileExists(path))
         {
             return DokanResult.FileNotFound;
         }
 
-        _fileSystem.DeleteFile(path);
+        FileSystem.DeleteFile(path);
         return DokanResult.Success;
     }
 
@@ -430,12 +429,12 @@ internal sealed class DriveOperations : IDokanOperations
         }
 
         var path = NormalizePath(fileName);
-        if (!_fileSystem.DirectoryExists(path))
+        if (!FileSystem.DirectoryExists(path))
         {
             return DokanResult.PathNotFound;
         }
 
-        _fileSystem.DeleteDirectory(path);
+        FileSystem.DeleteDirectory(path);
         return DokanResult.Success;
     }
 
@@ -449,48 +448,28 @@ internal sealed class DriveOperations : IDokanOperations
         var source = NormalizePath(oldName);
         var destination = NormalizePath(newName);
 
-        if (_fileSystem.DirectoryExists(source))
+        if (FileSystem.DirectoryExists(source))
         {
-            if (!replace && (_fileSystem.DirectoryExists(destination) || _fileSystem.FileExists(destination)))
+            if (!replace && (FileSystem.DirectoryExists(destination) || FileSystem.FileExists(destination)))
             {
                 return DokanResult.AlreadyExists;
             }
 
-            _fileSystem.MoveDirectory(source, destination);
+            FileSystem.MoveDirectory(source, destination);
             return DokanResult.Success;
         }
 
-        if (!_fileSystem.FileExists(source))
+        if (!FileSystem.FileExists(source))
         {
             return DokanResult.FileNotFound;
         }
 
-        if (!replace && _fileSystem.FileExists(destination))
+        if (!replace && FileSystem.FileExists(destination))
         {
             return DokanResult.AlreadyExists;
         }
 
-        _fileSystem.MoveFile(source, destination);
-        return DokanResult.Success;
-    }
-
-    public NtStatus SetEndOfFile(string fileName, long length, IDokanFileInfo info)
-    {
-        return DokanResult.NotImplemented;
-    }
-
-    public NtStatus SetAllocationSize(string fileName, long length, IDokanFileInfo info)
-    {
-        return DokanResult.NotImplemented;
-    }
-
-    public NtStatus LockFile(string fileName, long offset, long length, IDokanFileInfo info)
-    {
-        return DokanResult.Success;
-    }
-
-    public NtStatus UnlockFile(string fileName, long offset, long length, IDokanFileInfo info)
-    {
+        FileSystem.MoveFile(source, destination);
         return DokanResult.Success;
     }
 
@@ -500,7 +479,7 @@ internal sealed class DriveOperations : IDokanOperations
         out long totalNumberOfFreeBytes,
         IDokanFileInfo info)
     {
-        _fileSystem.GetDiskFreeSpace(out freeBytesAvailable, out totalNumberOfBytes, out totalNumberOfFreeBytes);
+        FileSystem.GetDiskFreeSpace(out freeBytesAvailable, out totalNumberOfBytes, out totalNumberOfFreeBytes);
         return DokanResult.Success;
     }
 
@@ -511,12 +490,28 @@ internal sealed class DriveOperations : IDokanOperations
         out uint maximumComponentLength,
         IDokanFileInfo info)
     {
-        volumeLabel = _options.VolumeLabel;
+        volumeLabel = Options.VolumeLabel;
         fileSystemName = "LANCloud";
         maximumComponentLength = 255;
         features = FileSystemFeatures.CasePreservedNames |
                    FileSystemFeatures.CaseSensitiveSearch;// |
                                                           //FileSystemFeatures.Namespaces;
+        return DokanResult.Success;
+    }
+
+
+    public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, IDokanFileInfo info)
+    {
+        return DokanResult.Success;
+    }
+
+    public NtStatus LockFile(string fileName, long offset, long length, IDokanFileInfo info)
+    {
+        return DokanResult.Success;
+    }
+
+    public NtStatus UnlockFile(string fileName, long offset, long length, IDokanFileInfo info)
+    {
         return DokanResult.Success;
     }
 
@@ -531,35 +526,31 @@ internal sealed class DriveOperations : IDokanOperations
         return DokanResult.NotImplemented;
     }
 
-    public NtStatus Mounted(string mountPoint, IDokanFileInfo info)
+    public NtStatus SetEndOfFile(string fileName, long length, IDokanFileInfo info)
     {
-        try
-        {
-            // Eventueel loggen of callback naar je LanCloud systeem
-            Console.WriteLine($"[LanCloud] Drive mounted at {mountPoint}");
+        return DokanResult.NotImplemented;
+    }
 
-            // Als je ILanCloudFileSystem een hook heeft (bv. OnMounted), kun je die hier aanroepen.
-            // _fileSystem.OnMounted?.Invoke(mountPoint);
-
-            return DokanResult.Success;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[LanCloud] Mounted callback failed: {ex}");
-            return DokanResult.Error;
-        }
+    public NtStatus SetAllocationSize(string fileName, long length, IDokanFileInfo info)
+    {
+        return DokanResult.NotImplemented;
     }
 
 
+    public NtStatus Mounted(string mountPoint, IDokanFileInfo info)
+    {
+        DriveServer.MountStatus = DokanStatus.Success;
+        return DokanResult.Success;
+    }
 
     public NtStatus Unmounted(IDokanFileInfo info)
     {
-        foreach (var handle in _handles.Values.ToArray())
+        foreach (var handle in Handles.Values.ToArray())
         {
             handle.Dispose();
         }
 
-        _handles.Clear();
+        Handles.Clear();
         return DokanResult.Success;
     }
 
@@ -567,77 +558,5 @@ internal sealed class DriveOperations : IDokanOperations
     {
         streams = Array.Empty<FileInformation>();
         return DokanResult.Success;
-    }
-
-
-
-    private sealed class OpenFileHandle : IDisposable
-    {
-        private Stream _stream;
-
-        private OpenFileHandle(string path, Stream stream, bool writable, bool isDirectory)
-        {
-            Path = path;
-            _stream = stream;
-            CanWrite = writable;
-            IsDirectoryHandle = isDirectory;
-        }
-
-        public OpenFileHandle(string path, Stream stream, bool writable)
-            : this(path, stream, writable, false)
-        {
-        }
-
-        private OpenFileHandle(string path)
-            : this(path, stream: null, writable: false, isDirectory: true)
-        {
-        }
-
-        public static OpenFileHandle Directory(string path) => new OpenFileHandle(path);
-
-        public long Id { get; set; }
-        public string Path { get; }
-        public bool CanWrite { get; }
-        public bool CanRead => !CanWrite && !IsDirectoryHandle;
-        public bool IsDirectoryHandle { get; }
-        public Stream Stream => _stream ?? throw new InvalidOperationException("Directory handles do not expose streams.");
-
-        public bool EnsureOffset(long offset, IDriveFileSystem fileSystem)
-        {
-            if (_stream == null)
-            {
-                return offset == 0;
-            }
-
-            if (offset == _stream.Position)
-            {
-                return true;
-            }
-
-            if (offset < _stream.Position)
-            {
-                _stream.Dispose();
-                _stream = fileSystem.OpenRead(Path);
-            }
-
-            var buffer = new byte[8192];
-            while (_stream.Position < offset)
-            {
-                var remaining = offset - _stream.Position;
-                var read = _stream.Read(buffer, 0, (int)Math.Min(buffer.Length, remaining));
-                if (read == 0)
-                {
-                    break;
-                }
-            }
-
-            return _stream.Position == offset;
-        }
-
-        public void Dispose()
-        {
-            _stream?.Dispose();
-            _stream = null;
-        }
     }
 }

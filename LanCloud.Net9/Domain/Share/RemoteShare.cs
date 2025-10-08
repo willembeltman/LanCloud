@@ -10,15 +10,13 @@ namespace LanCloud.Domain.Share;
 
 public class RemoteShare : RpcProxy, IShare
 {
-    public RemoteShare(RemoteApplication remoteApplication, ShareDto config, ILogger logger) : base(config, remoteApplication.LocalApplication, logger)
+    public RemoteShare(RemoteApplication remoteApplication, ShareDto config) : base(config, remoteApplication.LocalApplication)
     {
-        Logger = logger;
         ShareStripes = config.ShareStripes
-            .Select(a => new RemoteShareStripe(this, a, logger))
+            .Select(a => new RemoteShareStripe(this, a))
             .ToArray();
     }
 
-    public ILogger Logger { get; }
     public RemoteShareStripe[] ShareStripes { get; }
 
     IShareStripe[] IShare.ShareStripes => ShareStripes;

@@ -13,15 +13,11 @@ public class RemoteFileStripe : IFileStripe
     public RemoteShare RemoteShare { get; }
     public FileStripeDto FileStripeDto { get; }
 
-    public string Extention => ((IFileStripe)FileStripeDto).Extention;
-
-    public string Hash => ((IFileStripe)FileStripeDto).Hash;
-
-    public long Length => ((IFileStripe)FileStripeDto).Length;
-
-    public int[] Indexes => ((IFileStripe)FileStripeDto).Indexes;
-
-    public bool IsTemp => ((IFileStripe)FileStripeDto).IsTemp;
+    public string Extention => FileStripeDto.Extention;
+    public int[] Indexes => FileStripeDto.Indexes;
+    public bool IsTemp => FileStripeDto.IsTemp;
+    public string? Hash => FileStripeDto.Hash;
+    public long? Length => FileStripeDto.Length;
 
     public FileStream OpenRead()
     {

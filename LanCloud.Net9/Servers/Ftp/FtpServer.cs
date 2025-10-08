@@ -1,4 +1,6 @@
-﻿using LanCloud.Interfaces;
+﻿using LanCloud.Domain.Application;
+using LanCloud.Interfaces;
+using LanCloud.Services;
 using System.Net;
 using System.Net.Sockets;
 
@@ -23,17 +25,14 @@ public class FtpServer : IDisposable
     private List<ClientConnection> ActiveConnections;
 
     private IPEndPoint LocalEndPoint { get; }
-    public IFtpFileSystem FtpHandler { get; }
-    public IApplication Application { get; }
+    public LocalApplication Application { get; }
     private TcpListener Listener { get; }
-    public ILogger Logger { get; }
+    public ILogger Logger => Application.Logger;
 
-    public FtpServer(IPAddress ipAddress, int port, IFtpFileSystem commandHandler, IApplication application, ILogger logger)
+    public FtpServer(LocalApplication application, IPAddress ipAddress, int port)
     {
         LocalEndPoint = new IPEndPoint(ipAddress, port);
-        FtpHandler = commandHandler;
         Application = application;
-        Logger = logger;
         Listener = new TcpListener(LocalEndPoint);
 
         Listening = true;
@@ -54,7 +53,7 @@ public class FtpServer : IDisposable
 
             TcpClient client = Listener.EndAcceptTcpClient(result);
 
-            ClientConnection connection = new ClientConnection(client, FtpHandler, Application, Logger);
+            ClientConnection connection = new ClientConnection(client, Application);
 
             ActiveConnections.Add(connection);
 

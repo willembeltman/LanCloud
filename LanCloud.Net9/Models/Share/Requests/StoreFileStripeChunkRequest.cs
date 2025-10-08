@@ -12,5 +12,5 @@ public class StoreFileStripeChunkRequest
 
     public string? Extention { get; set; }
     public int[]? Indexes { get; set; }
-    public long? Index { get; set; }
+    public long Index { get; set; }
 }

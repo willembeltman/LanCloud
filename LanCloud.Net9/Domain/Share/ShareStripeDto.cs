@@ -10,5 +10,5 @@ public class ShareStripeDto
         Indexes = localShareStripe.Indexes;
     }
 
-    public int[]? Indexes { get; set; }
+    public int[] Indexes { get; set; } = [];
 }

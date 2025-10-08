@@ -2,7 +2,7 @@
 
 public class FileRefMetadata
 {
-    public FileRefMetadata(long? length, string hash, FileRefStripeMetadata[] stripes)
+    public FileRefMetadata(long length, string hash, FileRefStripeMetadata[] stripes)
     {
         Length = length;
         Hash = hash;
@@ -11,12 +11,12 @@ public class FileRefMetadata
 
     public FileRefMetadata(LocalFileRef pathInfo)
     {
-        Length = pathInfo.Metadata?.Length;
-        Hash = pathInfo.Metadata?.Hash;
-        Stripes = pathInfo.Metadata?.Stripes;
+        Length = pathInfo.Metadata!.Length;
+        Hash = pathInfo.Metadata!.Hash;
+        Stripes = pathInfo.Metadata!.Stripes;
     }
 
-    public long? Length { get; }
-    public string? Hash { get; }
-    public FileRefStripeMetadata[]? Stripes { get; }
+    public long Length { get; }
+    public string Hash { get; }
+    public FileRefStripeMetadata[] Stripes { get; }
 }

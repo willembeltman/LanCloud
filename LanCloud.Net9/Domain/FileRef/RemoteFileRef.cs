@@ -15,7 +15,7 @@ public class RemoteFileRef : IFileRef
 
     public string Path => FileRefDto.Path;
     public bool Exists => FileRefDto.Exists;
-    public long? Length => FileRefDto.Length;
+    public long Length => FileRefDto.Length;
     public string Hash => FileRefDto.Hash;
     public DateTime LastWriteTime => FileRefDto.LastWriteTime;
     public string Name => PathTranslator.TranslatePathToName(Path);

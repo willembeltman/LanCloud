@@ -10,12 +10,6 @@ public class FileStripeReader : IDisposable
 {
     public FileStripeReader(ReconstructBuffer reconstructBuffer, IFileStripe fileStripe, int bufferSize, ILogger logger)
     {
-        if (fileStripe == null)
-        {
-            Exception = new Exception("FileStripe not found");
-            return;
-        }
-
         ReconstructBuffer = reconstructBuffer;
         FileStripe = fileStripe;
         Logger = logger;
@@ -42,7 +36,7 @@ public class FileStripeReader : IDisposable
     public long BufferReads { get; private set; }
     public bool KillSwitch { get; private set; }
     private Queue<long> Speeds { get; } = new Queue<long>(16);
-    public Exception Exception { get; private set; }
+    public Exception? Exception { get; private set; }
 
     public LocalApplication Application => ReconstructBuffer.Application;
 

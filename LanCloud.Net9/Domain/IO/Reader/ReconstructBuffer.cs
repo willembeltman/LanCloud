@@ -19,6 +19,8 @@ public class ReconstructBuffer : IDisposable
                 var fileStripe = Application
                     .FindFileStripes(PathInfo.Extention, FileRef, fileRefBit)
                     .FirstOrDefault();
+                if (fileStripe == null)
+                    throw new Exception("Filestripe not found");
                 return new FileStripeReader(this, fileStripe, bufferSize, Logger);
             })
             .Where(fileStripe => fileStripe.Exception == null)
@@ -110,9 +112,12 @@ public class ReconstructBuffer : IDisposable
         {
             foreach (var item in normals)
             {
-                ReadItem(item.Readers
+                var first = item.Readers
                     .OrderByDescending(a => a.Speed)
-                    .FirstOrDefault());
+                    .FirstOrDefault();
+
+                if (first == null) throw GeneralException();
+                ReadItem(first);
             }
         }
         else
@@ -146,9 +151,11 @@ public class ReconstructBuffer : IDisposable
                     var normal = normals.FirstOrDefault(a => a.Index == index);
                     if (normal != null)
                     {
-                        ReadItem(normal.Readers
+                        var first = normal.Readers
                             .OrderByDescending(a => a.Speed)
-                            .FirstOrDefault());
+                            .FirstOrDefault();
+                        if (first == null) throw GeneralException();
+                        ReadItem(first);
                     }
                     else
                     {
@@ -175,6 +182,7 @@ public class ReconstructBuffer : IDisposable
                                         var otherReader = other.Readers
                                             .OrderByDescending(a => a.Speed)
                                             .FirstOrDefault();
+                                        if (otherReader == null) throw GeneralException();
                                         var otherBuffer = otherReader.Buffer.ReadBuffer;
                                         for (var i = 0; i < length; i++)
                                         {
@@ -232,8 +240,8 @@ public class ReconstructBuffer : IDisposable
             message += $"{Environment.NewLine}";
             message += $"Indexes: {badReader.FileStripe.Indexes.ToUniqueKey()}{Environment.NewLine}";
             //message += $"FilePart: {badReader.FileStripe.Info.FullName}{Environment.NewLine}";
-            message += $"Error: {badReader.Exception.Message}{Environment.NewLine}";
-            message += $"Stacktrace: {badReader.Exception.StackTrace}{Environment.NewLine}";
+            message += $"Error: {badReader.Exception?.Message}{Environment.NewLine}";
+            message += $"Stacktrace: {badReader.Exception?.StackTrace}{Environment.NewLine}";
         }
         return new Exception(message);
     }

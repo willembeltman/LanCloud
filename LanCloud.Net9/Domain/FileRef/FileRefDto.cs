@@ -12,9 +12,9 @@ public class FileRefDto
         LastWriteTime = fileRef.LastWriteTime;
     }
 
-    public string? Path { get; set; } = string.Empty;
+    public string Path { get; set; } = string.Empty;
     public bool Exists { get; set; }
-    public string? Hash { get; set; }
-    public long? Length { get; set; }
+    public string Hash { get; set; } = string.Empty;
+    public long Length { get; set; }
     public DateTime LastWriteTime { get; set; }
 }

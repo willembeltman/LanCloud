@@ -9,16 +9,15 @@ namespace LanCloud.Domain.Share;
 
 public class RemoteShareStripe : IShareStripe
 {
-    public RemoteShareStripe(RemoteShare remoteShare, ShareStripeDto config, ILogger logger)
+    public RemoteShareStripe(RemoteShare remoteShare, ShareStripeDto config)
     {
         RemoteShare = remoteShare;
         Config = config;
-        Logger = logger;
     }
 
     public RemoteShare RemoteShare { get; }
     public ShareStripeDto Config { get; }
-    public ILogger Logger { get; }
+    public ILogger Logger => RemoteShare.Logger;
 
     public IShare Share => RemoteShare;
     public int[] Indexes => Config.Indexes;

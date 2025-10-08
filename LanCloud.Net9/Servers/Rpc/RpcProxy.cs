@@ -1,47 +1,36 @@
-﻿using LanCloud.Interfaces;
+﻿using LanCloud.Domain.Application;
+using LanCloud.Interfaces;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Sockets;
 
 namespace LanCloud.Servers.Rpc;
 
-public class RpcProxy : IDisposable
+public class RpcProxy : StatusBase, IDisposable
 {
-    private string _Status { get; set; }
-    public string Status
-    {
-        get => _Status;
-        set
-        {
-            _Status = value;
-            Application.StatusChanged();
-        }
-    }
+    private readonly IRpcProxyConfig Config;
+    private readonly Thread Thread;
 
-    public RpcProxy(IRpcProxyConfig config, IApplication application, ILogger logger)
+    private readonly ConcurrentQueue<RpcProxyQueueItem> Queue  = new ConcurrentQueue<RpcProxyQueueItem>();
+    private readonly AutoResetEvent Enqueued = new AutoResetEvent(false);
+
+    public RpcProxy(IRpcProxyConfig config, LocalApplication application) : base(application)
     {
         Config = config;
-        Application = application;
-        Logger = logger;
 
         Thread = new Thread(new ThreadStart(Start));
         Thread.Start();
     }
-    private IRpcProxyConfig Config { get; }
-    public IApplication Application { get; }
-    public ILogger Logger { get; }
-    private Thread Thread { get; }
 
-    ConcurrentQueue<RpcProxyQueueItem> Queue { get; } = new ConcurrentQueue<RpcProxyQueueItem>();
-    AutoResetEvent Enqueued { get; } = new AutoResetEvent(false);
     public bool Stop { get; set; }
     public bool Connected { get; private set; }
+    public long ResponseTime { get; private set; }
     public event EventHandler<EventArgs>? StateChanged;
 
     public string HostName => Config.HostName;
     public int Port => Config.Port;
+    public ILogger Logger => Application.Logger;
 
-    public long ResponseTime { get; private set; }
 
     private void Start()
     {

@@ -1,11 +1,13 @@
 using DokanNet;
+using LanCloud.Domain.Application;
 using LanCloud.Interfaces;
+using LanCloud.Services;
 
 namespace LanCloud.Servers.VirtualDrive;
 
 public sealed class DriveServer : IDisposable
 {
-    private string _Status { get; set; }
+    private string _Status { get; set; } = string.Empty;
     public string Status
     {
         get => _Status;
@@ -16,33 +18,28 @@ public sealed class DriveServer : IDisposable
         }
     }
 
-    private readonly DriveMountOptions Options;
-    private readonly IDriveFileSystem FileSystem;
-    private readonly IApplication Application;
-
     private readonly DriveOperations Operations;
     private readonly ManualResetEventSlim MountCompleted = new ManualResetEventSlim(false);
-    private readonly ILogger Logger;
-    private Thread MountThread;
 
-    private Dokan Dokan;
-    private DokanInstance DokanInstance;
+    private Thread? MountThread;
+    private Dokan? Dokan;
+    private DokanInstance? DokanInstance;
 
     public DriveServer(
         DriveMountOptions options,
-        IDriveFileSystem fileSystem,
-        IApplication application,
-        ILogger logger = null)
+        LocalApplication application)
     {
         Options = options ?? throw new ArgumentNullException(nameof(options));
-        FileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
         Application = application ?? throw new ArgumentNullException(nameof(application));
-        Logger = logger;
-
-        Operations = new DriveOperations(FileSystem, Options);
+        Operations = new DriveOperations(this);
     }
 
-    public DokanStatus MountStatus { get; private set; } = DokanStatus.Success;
+    public DriveMountOptions Options { get; }
+    public LocalApplication Application { get; }
+    public DokanStatus MountStatus { get; set; } = DokanStatus.Success;
+
+    public FileSystemService FileSystem => Application.FileSystem;
+    public ILogger Logger => Application.Logger;
     public bool IsRunning => MountThread != null && MountThread.IsAlive;
 
     public void Start(int threadCount = 2)
@@ -59,9 +56,6 @@ public sealed class DriveServer : IDisposable
         };
 
         MountThread.Start();
-
-        // korte wait zodat Start() terugkeert nadat mount-proces gestart is (net als jouw eerdere gedrag)
-        //MountCompleted.Wait(TimeSpan.FromSeconds(5));
     }
 
     private void MountWorker(int threadCount)
@@ -84,20 +78,19 @@ public sealed class DriveServer : IDisposable
                 });
 
             DokanInstance = builder.Build(Operations);
-            MountStatus = DokanStatus.Success;
-            Logger?.Info("Mounted virtual drive at {0}", Options.MountPoint);
+            Status = Logger.Info($"OK");
         }
         catch (DokanException ex)
         {
             MountStatus = ex.ErrorStatus;
-            Logger?.Error("Dokan mount failed with status {0}: {1}", ex.ErrorStatus, ex.Message);
+            Status = Logger.Error($"Dokan mount failed with status {MountStatus}: {ex}");
             Dokan?.Dispose();
             return;
         }
         catch (Exception ex)
         {
             MountStatus = DokanStatus.Error;
-            Logger?.Error("Dokan mount failed with unexpected error: {0}", ex);
+            Status = Logger.Error($"Dokan mount failed with unexpected error: {ex}");
             Dokan?.Dispose();
             return;
         }
@@ -113,21 +106,21 @@ public sealed class DriveServer : IDisposable
         catch (DokanException ex)
         {
             MountStatus = ex.ErrorStatus;
-            Logger?.Error("Dokan mount failed with status {0}: {1}", ex.ErrorStatus, ex.Message);
+            Status = Logger.Error($"Dokan mount failed with status {MountStatus}: {ex}");
             Dokan?.Dispose();
             return;
         }
         catch (Exception ex)
         {
             MountStatus = DokanStatus.Error;
-            Logger?.Error("Dokan mount failed with unexpected error: {0}", ex);
+            Status = Logger.Error($"Dokan mount failed with unexpected error: {ex}");
             Dokan?.Dispose();
             return;
         }
         finally
         {
             MountStatus = DokanStatus.MountError;
-            Logger?.Error("Dokan unmounted from {0}", Options.MountPoint);
+            Status = Logger.Error($"Dokan mount failed with status {Options.MountPoint}");
             DokanInstance?.Dispose();
             Dokan?.Dispose();
             DokanInstance = null;

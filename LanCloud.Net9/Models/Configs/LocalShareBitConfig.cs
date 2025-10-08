@@ -8,5 +8,5 @@ public class LocalShareBitConfig
         Indexes = indexes;
     }
 
-    public int[]? Indexes { get; set; }
+    public int[] Indexes { get; set; } = [];
 }

@@ -1,6 +1,11 @@
-﻿using LanCloud.Enums;
+﻿using LanCloud.Database.Entities;
+using LanCloud.Domain.Application;
+using LanCloud.Enums;
 using LanCloud.Interfaces;
+using LanCloud.Services;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -11,53 +16,49 @@ namespace LanCloud.Servers.Ftp;
 
 public class ClientConnection : IDisposable
 {
+
+    TcpClient? DataClient;
+    TcpListener? PassiveListener;
+    NetworkStream? ControlStream;
+    System.IO.StreamReader? ControlReader;
+    System.IO.StreamWriter? ControlWriter;
+    TransferType ConnectionType = TransferType.Ascii;
+    FormatControlType FormatControlType = FormatControlType.NonPrint;
+    DataConnectionType DataConnectionType = DataConnectionType.Active;
+    FileStructureType FileStructureType = FileStructureType.File;
+
+    string? UserName;
+    IPEndPoint? DataEndpoint;
+    string CertificateFileName;
+    X509Certificate? Cert;
+    SslStream? SslStream;
+    bool Disposed;
+    string CurrentPath = "/";
+    User? CurrentUser;
+    List<string> _validCommands;
+
     public ClientConnection(
         TcpClient client,
-        IFtpFileSystem commandHandler,
-        IApplication application,
-        ILogger logger,
+        LocalApplication application,
         string certificateFilename = null)
     {
 
         ControlClient = client;
-        FtpHandler = commandHandler;
         Application = application;
-        Logger = logger;
         CertificateFileName = certificateFilename;
 
-
         var RemoteEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
-        Name = RemoteEndPoint.Address.ToString();
+        Name = RemoteEndPoint?.Address.ToString() ?? "";
 
         _validCommands = new List<string>();
     }
 
-    ILogger Logger { get; }
     string Name { get; }
     TcpClient ControlClient { get; }
-    public IFtpFileSystem FtpHandler { get; }
-    public IApplication Application { get; }
-    TcpClient DataClient { get; set; }
-    TcpListener PassiveListener { get; set; }
-    NetworkStream ControlStream { get; set; }
-    System.IO.StreamReader ControlReader { get; set; }
-    System.IO.StreamWriter ControlWriter { get; set; }
-    TransferType ConnectionType { get; set; } = TransferType.Ascii;
-    FormatControlType FormatControlType { get; set; } = FormatControlType.NonPrint;
-    DataConnectionType DataConnectionType { get; set; } = DataConnectionType.Active;
-    FileStructureType FileStructureType { get; set; } = FileStructureType.File;
+    public FileSystemService FileSystem => Application.FileSystem;
+    public LocalApplication Application { get; }
 
-    string UserName { get; set; }
-    IPEndPoint DataEndpoint { get; set; }
-    string CertificateFileName { get; set; }
-    X509Certificate Cert { get; set; }
-    SslStream SslStream { get; set; }
-    bool Disposed { get; set; }
-    string CurrentPath { get; set; } = "/";
-
-    private IFtpUser CurrentUser;
-
-    private List<string> _validCommands;
+    ILogger Logger => Application.Logger;
 
     private string CheckUser()
     {
@@ -302,7 +303,8 @@ public class ClientConnection : IDisposable
 
                     if (cmd == "AUTH" && CertificateFileName != null)
                     {
-                        Cert = new X509Certificate(CertificateFileName);
+                        var certData = System.IO.File.ReadAllBytes(CertificateFileName);
+                        Cert = X509CertificateLoader.LoadCertificate(certData);
 
                         SslStream = new SslStream(ControlStream);
 
@@ -399,7 +401,7 @@ public class ClientConnection : IDisposable
 
     private string Password(string password)
     {
-        CurrentUser = FtpHandler.ValidateUser(UserName, password);
+        CurrentUser = FileSystem.ValidateUser(UserName, password);
 
         if (CurrentUser != null)
         {
@@ -415,49 +417,13 @@ public class ClientConnection : IDisposable
     {
         pathname = NormalizeFilename(pathname);
 
-        if (!FtpHandler.DirectoryExists(pathname))
+        if (!FileSystem.DirectoryExists(pathname))
         {
             return $"550 CWD failed. Directory '{pathname}' not found.";
         }
 
         CurrentPath = pathname;
         return $"250 Changed to directory '{pathname}'";
-
-        //if (pathname == "/")
-        //{
-        //    CurrentDirectory = Root;
-        //}
-        //else
-        //{
-        //    string newDir;
-
-        //    if (pathname.StartsWith("/"))
-        //    {
-        //        pathname = pathname.Substring(1).Replace('/', '\\');
-        //        newDir = Path.Combine(Root, pathname);
-        //    }
-        //    else
-        //    {
-        //        pathname = pathname.Replace('/', '\\');
-        //        newDir = Path.Combine(CurrentDirectory, pathname);
-        //    }
-
-        //    if (Directory.Exists(newDir))
-        //    {
-        //        CurrentDirectory = new DirectoryInfo(newDir).FullName;
-
-        //        if (!IsPathValid(CurrentDirectory))
-        //        {
-        //            CurrentDirectory = Root;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        CurrentDirectory = Root;
-        //    }
-        //}
-
-        //return "250 Changed to new directory";
     }
 
     private string Port(string hostPort)
@@ -576,9 +542,9 @@ public class ClientConnection : IDisposable
 
         if (pathname != null)
         {
-            if (FtpHandler.FileExists(pathname))
+            if (FileSystem.FileExists(pathname))
             {
-                FtpHandler.FileDelete(pathname);
+                FileSystem.FileDelete(pathname);
             }
             else
             {
@@ -597,9 +563,9 @@ public class ClientConnection : IDisposable
 
         if (pathname != null)
         {
-            if (FtpHandler.DirectoryExists(pathname))
+            if (FileSystem.DirectoryExists(pathname))
             {
-                FtpHandler.DeleteDirectory(pathname);
+                FileSystem.DeleteDirectory(pathname);
             }
             else
             {
@@ -618,9 +584,9 @@ public class ClientConnection : IDisposable
 
         if (pathname != null)
         {
-            if (!FtpHandler.DirectoryExists(pathname))
+            if (!FileSystem.DirectoryExists(pathname))
             {
-                FtpHandler.CreateDirectory(pathname);
+                FileSystem.CreateDirectory(pathname);
             }
             else
             {
@@ -639,9 +605,9 @@ public class ClientConnection : IDisposable
 
         if (pathname != null)
         {
-            if (FtpHandler.FileExists(pathname))
+            if (FileSystem.FileExists(pathname))
             {
-                return string.Format("213 {0}", FtpHandler.FileGetLastWriteTime(pathname).ToString("yyyyMMddHHmmss.fff"));
+                return string.Format("213 {0}", FileSystem.FileGetLastWriteTime(pathname).ToString("yyyyMMddHHmmss.fff"));
             }
         }
 
@@ -654,11 +620,11 @@ public class ClientConnection : IDisposable
 
         if (pathname != null)
         {
-            if (FtpHandler.FileExists(pathname))
+            if (FileSystem.FileExists(pathname))
             {
                 long length = 0;
 
-                using (var fs = FtpHandler.FileOpenRead(pathname))
+                using (var fs = FileSystem.FileOpenRead(pathname))
                 {
                     length = fs.Length;
                 }
@@ -676,7 +642,7 @@ public class ClientConnection : IDisposable
 
         if (pathname != null)
         {
-            if (FtpHandler.FileExists(pathname))
+            if (FileSystem.FileExists(pathname))
             {
                 var state = new DataConnectionOperation { Arguments = pathname, Operation = RetrieveOperation };
 
@@ -801,13 +767,13 @@ public class ClientConnection : IDisposable
 
         if (renameFrom != null && renameTo != null)
         {
-            if (FtpHandler.FileExists(renameFrom))
+            if (FileSystem.FileExists(renameFrom))
             {
-                FtpHandler.FileMove(renameFrom, renameTo);
+                FileSystem.FileMove(renameFrom, renameTo);
             }
-            else if (FtpHandler.DirectoryExists(renameFrom))
+            else if (FileSystem.DirectoryExists(renameFrom))
             {
-                FtpHandler.DirectoryMove(renameFrom, renameTo);
+                FileSystem.DirectoryMove(renameFrom, renameTo);
             }
             else
             {
@@ -878,7 +844,7 @@ public class ClientConnection : IDisposable
         var stopWatch = Stopwatch.StartNew();
         long bytes = 0;
 
-        using (var fs = FtpHandler.FileOpenRead(pathname))
+        using (var fs = FileSystem.FileOpenRead(pathname))
         {
             bytes = CopyStream(fs, dataStream);
         }
@@ -901,7 +867,7 @@ public class ClientConnection : IDisposable
         var stopWatch = Stopwatch.StartNew();
         long bytes = 0;
 
-        using (var fs = FtpHandler.FileOpenWriteCreate(pathname))
+        using (var fs = FileSystem.FileOpenWriteCreate(pathname))
         {
             bytes = CopyStream(dataStream, fs);
         }
@@ -937,7 +903,7 @@ public class ClientConnection : IDisposable
         var stopWatch = Stopwatch.StartNew();
         long bytes = 0;
 
-        using (var fs = FtpHandler.FileOpenWriteAppend(pathname))
+        using (var fs = FileSystem.FileOpenWriteAppend(pathname))
         {
             bytes = CopyStream(dataStream, fs);
         }
@@ -970,52 +936,35 @@ public class ClientConnection : IDisposable
     {
         var dataWriter = new System.IO.StreamWriter(dataStream, Encoding.ASCII);
 
-        var directories = FtpHandler.EnumerateDirectories(pathname);
+        var directories = FileSystem.EnumerateDirectories(pathname);
 
         foreach (var directory in directories)
         {
-            string date = directory.LastWriteTime < DateTime.Now - TimeSpan.FromDays(180) ?
-                directory.LastWriteTime.Value.ToString("MMM dd  yyyy") :
-                directory.LastWriteTime.Value.ToString("MMM dd HH:mm");
+            string date = directory.LastWriteTime < DateTime.Now - TimeSpan.FromDays(180)
+                ? directory.LastWriteTime.ToString("MMM d  yyyy", CultureInfo.InvariantCulture)
+                : directory.LastWriteTime.ToString("MMM d HH:mm", CultureInfo.InvariantCulture);
 
-            string line = string.Format(
-                "drwxr-xr-x    2 2003     2003     {0,8} {1} {2}",
-                Application.FtpBufferSize.ToString(),
-                date,
-                directory.Name);
+            string line = $"drwxr-xr-x 1 2003 2003 {Application.FtpBufferSize} {date} {directory.Name}";
+            Logger.Info($"Send: {line}");
 
             dataWriter.WriteLine(line);
             dataWriter.Flush();
         }
 
-        IEnumerable<IFtpFile> files = FtpHandler.EnumerateFiles(pathname);
+        var files = FileSystem.EnumerateFiles(pathname);
 
         foreach (var file in files)
         {
-            string date = file.LastWriteTime < DateTime.Now - TimeSpan.FromDays(180) ?
-                file.LastWriteTime.ToString("MMM dd  yyyy") :
-                file.LastWriteTime.ToString("MMM dd HH:mm");
+            string date = date = file.LastWriteTime < DateTime.Now - TimeSpan.FromDays(180)
+                ? file.LastWriteTime.ToString("MMM d  yyyy", CultureInfo.InvariantCulture)
+                : file.LastWriteTime.ToString("MMM d HH:mm", CultureInfo.InvariantCulture);
 
-            string line = string.Format(
-                "-rw-r--r--    2 2003     2003     {0,8} {1} {2}",
-                file.Length.Value,
-                date,
-                file.Name);
+            string line = $"-rw-r--r-- 1 2003 2003 {file.Length} {date} {file.Name}";
+            Logger.Info($"Send: {line}");
 
             dataWriter.WriteLine(line);
             dataWriter.Flush();
         }
-
-        //LogEntry logEntry = new LogEntry
-        //{
-        //    Date = DateTime.Now,
-        //    CIP = ClientIP,
-        //    CSMethod = "LIST",
-        //    CSUsername = UserName,
-        //    SCStatus = "226"
-        //};
-
-        //Logger.Info(logEntry);
 
         return "226 Transfer complete";
     }

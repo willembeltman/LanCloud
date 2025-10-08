@@ -13,7 +13,7 @@ public class RemoteApplication : RpcProxy
     public RemoteApplication(
         LocalApplication localApplication,
         RemoteApplicationConfig config,
-        ILogger logger) : base(config, localApplication, logger)
+        ILogger logger) : base(config, localApplication)
     {
         LocalApplication = localApplication;
         Config = config;
@@ -33,7 +33,7 @@ public class RemoteApplication : RpcProxy
         if (Connected)
         {
             RemoteShares = GetShares()
-                .Select(a => new RemoteShare(this, a, Logger))
+                .Select(a => new RemoteShare(this, a))
                 .ToArray();
         }
         else

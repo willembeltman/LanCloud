@@ -10,8 +10,8 @@ namespace LanCloud.Helpers
             using (var stream = fileInfo.OpenWrite())
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write(fileRef.Length ?? -1);
-                writer.Write(fileRef.Hash ?? "");
+                writer.Write(fileRef.Length);
+                writer.Write(fileRef.Hash);
                 writer.Write(Convert.ToByte(fileRef.Stripes?.Length ?? 0));
                 if (fileRef.Stripes != null)
                 {
@@ -34,8 +34,7 @@ namespace LanCloud.Helpers
             using (var stream = fileInfo.OpenRead())
             using (var reader = new BinaryReader(stream))
             {
-                long? Length = reader.ReadInt64();
-                if (Length == -1) Length = null;
+                var Length = reader.ReadInt64();
                 var Hash = reader.ReadString();
                 var Bits = new FileRefStripeMetadata[reader.ReadByte()];
                 for (int i = 0; i < Bits.Length; i++)

@@ -129,15 +129,12 @@ public partial class StatusForm : Form
 
         if (Application.VirtualDriveServer != null)
         {
-            var driveState =
-                (Application.VirtualDriveServer.IsRunning
-                ? $"Mounted at {Application.Config.VirtualDriveMountPoint} " +
-                    $"({Application.VirtualDriveServer.MountStatus}) "
-                : $"{Application.VirtualDriveServer.MountStatus} ") +
+            var virtualDriveState =
+                $"{Application.Config.VirtualDriveMountPoint} " +
                 $"{Application.VirtualDriveServer.DriveServer.Status}";
 
             var virtualDriveNode = new TreeNode("Virtual Drive Server");
-            virtualDriveNode.Nodes.Add(new TreeNode(driveState));
+            virtualDriveNode.Nodes.Add(new TreeNode(virtualDriveState));
             treeView1.Nodes.Add(virtualDriveNode);
         }
 

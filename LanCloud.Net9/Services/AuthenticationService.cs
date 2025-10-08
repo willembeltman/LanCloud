@@ -1,21 +1,20 @@
-﻿using LanCloud.Domain.Application;
-using LanCloud.Domain.Authentication;
+﻿using LanCloud.Database.Entities;
+using LanCloud.Domain.Application;
 using LanCloud.Interfaces;
 
 namespace LanCloud.Services;
 
-public class AuthenticationService
+public class AuthenticationService(LocalApplication application, ILogger logger)
 {
-    public AuthenticationService(LocalApplication localApplication, ILogger logger)
-    {
-        Logger = logger;
-    }
+    public ILogger Logger { get; } = logger;
 
-    public ILogger Logger { get; }
-
-    public IFtpUser ValidateUser(string userName, string password)
+    public User ValidateUser(string userName, string password)
     {
         //if (userName != "willem") return null;
-        return new User(userName);
+        return new User()
+        {
+            Id = 1,
+            UserName = userName,
+        };
     }
 }

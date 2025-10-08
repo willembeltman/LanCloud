@@ -31,7 +31,7 @@ public class LocalFileStripe : IFileStripe
         Indexes = indexes;
         Length = length;
         Hash = hash;
-        Name = CreateFileName(Extention, Hash, Length, Indexes);
+        Name = CreateFileName(Extention, Hash, length, Indexes);
         FullName = Path.Combine(dirinfo.FullName, Name);
         Info = new FileInfo(FullName);
         IsTemp = false;
@@ -42,16 +42,16 @@ public class LocalFileStripe : IFileStripe
     public string Name { get; }
     public FileInfo Info { get; private set; }
     public string FullName { get; private set; }
-    public long Length { get; private set; }
-    public string Hash { get; private set; }
+    public long? Length { get; private set; }
+    public string? Hash { get; private set; }
     public bool IsTemp { get; private set; }
 
     public void Update(long length, string hash)
     {
         Length = length;
         Hash = hash;
-        var name = CreateFileName(Extention, Hash, Length, Indexes);
-        FullName = Path.Combine(Info.Directory.FullName, name);
+        var name = CreateFileName(Extention, Hash, length, Indexes);
+        FullName = Path.Combine(Info.Directory!.FullName, name);
         if (File.Exists(FullName))
             File.Delete(Info.FullName);
         else

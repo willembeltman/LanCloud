@@ -45,7 +45,7 @@ public class LocalShare : IRpcHandler, IDisposable, IShare
 
         if (Application.LocalApplicationConfig != null)
         {
-            Server = new RpcServer(IPAddress.Any, Port, this, Application, Logger);
+            Server = new RpcServer(this, Application, IPAddress.Any, Port);
         }
 
         Status = Logger.Info($"OK");
@@ -118,7 +118,7 @@ public class LocalShare : IRpcHandler, IDisposable, IShare
         responseDataLength = 0;
     }
 
-    private void Handle_CreateFileStripeSession(string requestJson, byte[] requestData, int requestDataLength, out string responseJson, byte[] responseData, out int responseDataLength)
+    private void Handle_CreateFileStripeSession(string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
     {
         var request = JsonConvert.DeserializeObject<CreateFileStripeSessionRequest>(requestJson);
 
@@ -137,7 +137,7 @@ public class LocalShare : IRpcHandler, IDisposable, IShare
         responseJson = JsonConvert.SerializeObject(response);
         responseDataLength = 0;
     }
-    private void Handle_StoreFileStripeChunk(string requestJson, byte[] requestData, int requestDataLength, out string responseJson, byte[] responseData, out int responseDataLength)
+    private void Handle_StoreFileStripeChunk(string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
     {
         var request = JsonConvert.DeserializeObject<StoreFileStripeChunkRequest>(requestJson);
 
@@ -155,7 +155,7 @@ public class LocalShare : IRpcHandler, IDisposable, IShare
         responseJson = JsonConvert.SerializeObject(response);
         responseDataLength = 0;
     }
-    private void Handle_CloseFileStripeSession(string requestJson, byte[] requestData, int requestDataLength, out string responseJson, byte[] responseData, out int responseDataLength)
+    private void Handle_CloseFileStripeSession(string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
     {
         var request = JsonConvert.DeserializeObject<CloseFileStripeSessionRequest>(requestJson);
 
@@ -183,7 +183,7 @@ public class LocalShare : IRpcHandler, IDisposable, IShare
 
     #region IShare interface
     IShareStripe[] IShare.ShareStripes => LocalShareStripes;
-    IFileStripe IShare.FindFileStripe(string extention, string hash, long length, int[] indexes)
+    IFileStripe? IShare.FindFileStripe(string extention, string hash, long length, int[] indexes)
     {
         return FindFileStripe(extention, hash, length, indexes);
     }

@@ -2,7 +2,7 @@ using LanCloud.Interfaces;
 
 namespace LanCloud.Servers.VirtualDrive;
 
-public sealed class DriveFileSystemEntry : IDriveFileSystemEntry
+public sealed class DriveFileSystemEntry
 {
     public DriveFileSystemEntry(
         string path,

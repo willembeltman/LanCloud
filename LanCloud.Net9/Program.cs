@@ -20,12 +20,12 @@ class Program
             using (var application = new LocalApplication(config, logger))
             {
                 //Thread.Sleep(100);
-                Console.WriteLine("Started");
+                logger.Info("OK");
 
                 StatusForm form = new StatusForm(application);
                 form.ShowDialog();
 
-                Console.WriteLine("Shutting down please wait...");
+                logger.Info("Shutting down please wait...");
 
                 //var res = localApplication.RemoteApplications.First().Ping();
 
@@ -39,37 +39,37 @@ class Program
         }
     }
 
-    private static void DoTest2(VirtualFtpServer virtualFtpServer)
-    {
-        using (var stream = virtualFtpServer.FileOpenRead("/test.bin"))
-        using (var reader = new StreamReader(stream))
-        {
-            Console.WriteLine(reader.ReadToEnd());
-            Console.WriteLine();
-        }
-    }
+    //private static void DoTest2(VirtualFtpServer virtualFtpServer)
+    //{
+    //    using (var stream = virtualFtpServer.FileOpenRead("/test.bin"))
+    //    using (var reader = new StreamReader(stream))
+    //    {
+    //        Console.WriteLine(reader.ReadToEnd());
+    //        Console.WriteLine();
+    //    }
+    //}
 
-    private static void DoTest(VirtualFtpServer virtualFtpServer)
-    {
-        Console.WriteLine("creating file");
+    //private static void DoTest(VirtualFtpServer virtualFtpServer)
+    //{
+    //    Console.WriteLine("creating file");
 
-        byte[] buffer = new byte[1024 * 8];
-        var aantal = 128 * 1024;
-        var size = aantal * buffer.Length;
+    //    byte[] buffer = new byte[1024 * 8];
+    //    var aantal = 128 * 1024;
+    //    var size = aantal * buffer.Length;
 
-        Stopwatch sw = Stopwatch.StartNew();
-        using (var stream = virtualFtpServer.FileOpenWriteCreate("/test.bin"))
-        {
-            for (long i = 0; i < aantal; i++)
-            {
-                stream.Write(buffer, 0, buffer.Length);
-                //Thread.Sleep(200);
-            }
-        }
-        var time = sw.Elapsed.TotalSeconds;
-        var speed = size / time / 1024 / 1024;
-        Console.WriteLine($"speed: {speed}mb/sec");
-    }
+    //    Stopwatch sw = Stopwatch.StartNew();
+    //    using (var stream = virtualFtpServer.FileOpenWriteCreate("/test.bin"))
+    //    {
+    //        for (long i = 0; i < aantal; i++)
+    //        {
+    //            stream.Write(buffer, 0, buffer.Length);
+    //            //Thread.Sleep(200);
+    //        }
+    //    }
+    //    var time = sw.Elapsed.TotalSeconds;
+    //    var speed = size / time / 1024 / 1024;
+    //    Console.WriteLine($"speed: {speed}mb/sec");
+    //}
 }
 
 

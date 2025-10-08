@@ -1,4 +1,5 @@
-﻿using LanCloud.Interfaces;
+﻿using LanCloud.Domain.Application;
+using LanCloud.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 
@@ -17,15 +18,13 @@ public class RpcClientConnection : IDisposable
         }
     }
 
-    public RpcClientConnection(RpcServer server, TcpClient client, IRpcHandler handler, ILogger logger)
+    public RpcClientConnection(RpcServer server, TcpClient client)
     {
         Server = server;
         Client = client;
-        Handler = handler;
-        Logger = logger;
 
         var RemoteEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
-        Name = RemoteEndPoint.Address.ToString();
+        Name = RemoteEndPoint?.Address.ToString() ?? string.Empty;
 
         Thread = new Thread(new ThreadStart(Start));
         Thread.Start();
@@ -33,12 +32,11 @@ public class RpcClientConnection : IDisposable
 
     public string Name { get; }
     public TcpClient Client { get; }
-    public IRpcHandler Handler { get; }
-    public ILogger Logger { get; }
     public RpcServer Server { get; }
     public Thread Thread { get; }
 
-    public IApplication Application => Server.Application;
+    public LocalApplication Application => Server.Application;
+    public ILogger Logger => Server.Logger;
 
     private void Start()
     {
@@ -75,7 +73,7 @@ public class RpcClientConnection : IDisposable
                         {
                             reader.Read(requestData, 0, requestDataLength);
                         }
-                        Handler.ProcessRequest(requestMessageType, requestJson, requestData, requestDataLength, out responseJson, responseData, out responseDataLength);
+                        Server.Handler.ProcessRequest(requestMessageType, requestJson, requestData, requestDataLength, out responseJson, responseData, out responseDataLength);
                         writer.Write(responseJson);
                         writer.Write(responseDataLength);
                         if (responseDataLength >= 0)

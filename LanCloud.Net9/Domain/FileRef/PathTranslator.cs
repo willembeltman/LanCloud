@@ -33,18 +33,18 @@ public static class PathTranslator
         return path;
     }
 
-    public static string? TranslatePathToExtention(string path)
+    public static string TranslatePathToExtention(string path)
     {
-        if (path == null) return null;
+        //if (path == null) return null;
         var name = TranslatePathToName(path);
         var exts = name.Split('.');
         var ext = exts.Last();
         return ext;
     }
 
-    public static string? TranslatePathToName(string? path)
+    public static string TranslatePathToName(string path)
     {
-        if (path == null) return null;
+        //if (path == null) return null;
         var dirs = path.Split('/');
         var name = dirs.Last();
         return name;
