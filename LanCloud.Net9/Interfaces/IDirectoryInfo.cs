@@ -1,6 +1,6 @@
 ﻿namespace LanCloud.Interfaces;
 
-public interface IFileDirectory
+public interface IDirectoryInfo
 {
     bool Exists { get; }
 
@@ -12,6 +12,6 @@ public interface IFileDirectory
     void Delete();
     void MoveTo(string pathTo);
 
-    IFileDirectory[] GetDirectories();
-    IFile[] GetFiles();
+    IDirectoryInfo[] GetDirectories();
+    IFileInfo[] GetFiles();
 }

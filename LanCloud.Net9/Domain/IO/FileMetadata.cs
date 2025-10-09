@@ -12,7 +12,7 @@ public class FileMetadata
         Stripes = stripes;
     }
 
-    public FileMetadata(LocalFile pathInfo)
+    public FileMetadata(LocalFileInfo pathInfo)
     {
         //if (pathInfo.Metadata == null) throw new ArgumentNullException("Metadata cannot be null");
         BufferSize = pathInfo.Metadata?.BufferSize ?? pathInfo.Application.FileStripeBufferSize;

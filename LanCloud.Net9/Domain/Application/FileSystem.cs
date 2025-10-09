@@ -21,41 +21,41 @@ public class FileSystem
     public User ValidateUser(string? userName, string? password)
         => Application.Authentication.ValidateUser(userName, password);
 
-    public IFileDirectory[] EnumerateDirectories(string path)
-        => new LocalFileDirectory(Application, path).GetDirectories();
-    public IFile[] EnumerateFiles(string path)
-        => new LocalFileDirectory(Application, path).GetFiles();
+    public IDirectoryInfo[] EnumerateDirectories(string path)
+        => new LocalDirectoryInfo(Application, path).GetDirectories();
+    public IFileInfo[] EnumerateFiles(string path)
+        => new LocalDirectoryInfo(Application, path).GetFiles();
 
     public void CreateDirectory(string path)
-        => new LocalFileDirectory(Application, path).Create();
+        => new LocalDirectoryInfo(Application, path).Create();
     public void DeleteDirectory(string path)
-        => new LocalFileDirectory(Application, path).Delete();
+        => new LocalDirectoryInfo(Application, path).Delete();
     public bool DirectoryExists(string path)
-        => new LocalFileDirectory(Application, path).Exists;
+        => new LocalDirectoryInfo(Application, path).Exists;
     public void DirectoryMove(string renameFrom, string renameTo)
     {
-        var from = new LocalFileDirectory(Application, renameFrom);
+        var from = new LocalDirectoryInfo(Application, renameFrom);
         from.MoveTo(renameTo);
     }
 
     public bool FileExists(string path)
-        => new LocalFile(Application, path).Exists;
+        => new LocalFileInfo(Application, path).Exists;
     public void FileDelete(string path)
-        => new LocalFile(Application, path).Delete();
+        => new LocalFileInfo(Application, path).Delete();
     public void FileMove(string renameFrom, string renameTo)
     {
-        var from = new LocalFile(Application, renameFrom);
+        var from = new LocalFileInfo(Application, renameFrom);
         from.MoveTo(renameTo);
     }
     public DateTime FileGetLastWriteTime(string path)
-        => new LocalFile(Application, path).LastWriteTime;
+        => new LocalFileInfo(Application, path).LastWriteTime;
 
     public Stream FileOpenRead(string path)
-        => new LocalFile(Application, path).OpenRead();
+        => new LocalFileInfo(Application, path).OpenRead();
     public Stream FileOpenWriteCreate(string path)
-        => new LocalFile(Application, path).Create();
-    public Stream FileOpenWriteAppend(string path)
-        => new LocalFile(Application, path).OpenAppend();
+        => new LocalFileInfo(Application, path).Create();
+    //public Stream FileOpenWriteAppend(string path)
+    //    => new LocalFile(Application, path).OpenAppend();
 
     
 
@@ -113,7 +113,7 @@ public class FileSystem
     }
     public DriveFileEntry? GetFile(string path)
     {
-        var file = new LocalFile(Application, NormalizePath(path));
+        var file = new LocalFileInfo(Application, NormalizePath(path));
         if (!file.Exists || file.Metadata == null)
         {
             return null;
@@ -132,7 +132,7 @@ public class FileSystem
     }
     public IEnumerable<DriveFileEntry> EnumerateDirectory(string path)
     {
-        var directory = new LocalFileDirectory(Application, NormalizePath(path));
+        var directory = new LocalDirectoryInfo(Application, NormalizePath(path));
         if (!directory.Exists)
         {
             return Enumerable.Empty<DriveFileEntry>();
@@ -167,7 +167,7 @@ public class FileSystem
     
     public void MoveDirectory(string sourcePath, string destinationPath)
     {
-        var directory = new LocalFileDirectory(Application, NormalizePath(sourcePath));
+        var directory = new LocalDirectoryInfo(Application, NormalizePath(sourcePath));
         if (!directory.Exists)
         {
             return;
@@ -177,7 +177,7 @@ public class FileSystem
     }
     public void MoveFile(string sourcePath, string destinationPath)
     {
-        var file = new LocalFile(Application, NormalizePath(sourcePath));
+        var file = new LocalFileInfo(Application, NormalizePath(sourcePath));
         if (!file.Exists)
         {
             return;
@@ -187,13 +187,13 @@ public class FileSystem
     }
     public Stream OpenRead(string path)
     {
-        var file = new LocalFile(Application, NormalizePath(path));
+        var file = new LocalFileInfo(Application, NormalizePath(path));
         return file.OpenRead() ?? throw new IOException($"File {path} could not be opened for reading.");
     }
     public Stream? OpenWrite(string path, FileMode mode)
     {
         var normalized = NormalizePath(path);
-        var file = new LocalFile(Application, normalized);
+        var file = new LocalFileInfo(Application, normalized);
 
         switch (mode)
         {
@@ -201,15 +201,15 @@ public class FileSystem
             case FileMode.CreateNew:
             case FileMode.Truncate:
                 return file.Create();
-            case FileMode.Append:
-                return file.OpenAppend();
+            //case FileMode.Append:
+            //    return file.OpenAppend();
             default:
                 throw new NotSupportedException($"FileMode {mode} is not supported.");
         }
     }
     public void DeleteFile(string path)
     {
-        var file = new LocalFile(Application, NormalizePath(path));
+        var file = new LocalFileInfo(Application, NormalizePath(path));
         if (file.Exists)
         {
             file.Delete();

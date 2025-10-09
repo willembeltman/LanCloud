@@ -5,7 +5,7 @@ namespace LanCloud.Models.Dtos;
 public class FileRefDirectoryDto
 {
     public FileRefDirectoryDto() { }
-    public FileRefDirectoryDto(IFileDirectory fileRefDirectory)
+    public FileRefDirectoryDto(IDirectoryInfo fileRefDirectory)
     {
         Path = fileRefDirectory.Path;
         Exists = fileRefDirectory.Exists;

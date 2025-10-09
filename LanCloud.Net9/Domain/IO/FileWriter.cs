@@ -7,7 +7,7 @@ namespace LanCloud.Domain.IO;
 
 public class FileWriter : Stream
 {
-    public FileWriter(LocalApplication application, LocalFile fileRef, int bufferSize)
+    public FileWriter(LocalApplication application, LocalFileInfo fileRef, int bufferSize)
     {
         Application = application;
         FileRef = fileRef;
@@ -42,7 +42,7 @@ public class FileWriter : Stream
     private bool Disposed;
 
     public LocalApplication Application { get; }
-    public LocalFile FileRef { get; }
+    public LocalFileInfo FileRef { get; }
     public int BufferSize { get; }
     public DoubleBuffer Buffer { get; }
 

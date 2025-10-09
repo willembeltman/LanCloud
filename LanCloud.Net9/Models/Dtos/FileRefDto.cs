@@ -5,7 +5,7 @@ namespace LanCloud.Models.Dtos;
 public class FileRefDto
 {
     public FileRefDto() { }
-    public FileRefDto(IFile fileRef)
+    public FileRefDto(IFileInfo fileRef)
     {
         Path = fileRef.Path;
         Exists = fileRef.Exists;

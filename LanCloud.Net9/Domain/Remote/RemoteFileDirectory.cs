@@ -4,7 +4,7 @@ using LanCloud.Models.Dtos;
 
 namespace LanCloud.Domain.Remote;
 
-public class RemoteFileDirectory : IFileDirectory
+public class RemoteFileDirectory : IDirectoryInfo
 {
     public RemoteFileDirectory(RemoteApplication application, FileRefDirectoryDto fileRefDirectoryDto)
     {
@@ -30,12 +30,12 @@ public class RemoteFileDirectory : IFileDirectory
         throw new NotImplementedException();
     }
 
-    public IFileDirectory[] GetDirectories()
+    public IDirectoryInfo[] GetDirectories()
     {
         throw new NotImplementedException();
     }
 
-    public IFile[] GetFiles()
+    public IFileInfo[] GetFiles()
     {
         throw new NotImplementedException();
     }

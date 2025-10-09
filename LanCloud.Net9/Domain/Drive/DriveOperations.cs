@@ -6,23 +6,14 @@ using FileAccess = DokanNet.FileAccess;
 
 namespace LanCloud.Domain.Drive;
 
-internal sealed class DriveOperations : IDokanOperations
+internal sealed class DriveOperations(DriveServer driveServer) : IDokanOperations
 {
-    private readonly DriveServer DriveServer;
-
+    private readonly DriveServer DriveServer = driveServer ?? throw new ArgumentNullException(nameof(driveServer));
     private readonly ConcurrentDictionary<long, DriveOpenFileHandle> Handles = new ConcurrentDictionary<long, DriveOpenFileHandle>();
     private long HandleId;
 
-    public DriveOperations(DriveServer driveServer)
-    {
-        DriveServer = driveServer ?? throw new ArgumentNullException(nameof(driveServer));
-
-        //driveServer.Application.FileServer
-    }
-
     private FileSystem FileSystem => DriveServer.FileSystem;
     private DriveMountOptions Options => DriveServer.Options;
-
     private bool IsReadOnly => Options.ReadOnly;
 
     private static string NormalizePath(string fileName)
@@ -47,9 +38,6 @@ internal sealed class DriveOperations : IDokanOperations
         handle.Id = id;
         info.Context = handle;
         Handles[id] = handle;
-
-        //DriveServer.Logger.Info($"Created handle: {id}");
-
         return handle;
     }
 
@@ -60,8 +48,6 @@ internal sealed class DriveOperations : IDokanOperations
     {
         if (info.Context is DriveOpenFileHandle handle)
         {
-            //DriveServer.Logger.Info($"closing handle: {handle.Id}");
-
             if (Handles.TryRemove(handle.Id, out var stored))
             {
                 stored.Dispose();
@@ -79,7 +65,6 @@ internal sealed class DriveOperations : IDokanOperations
         FileOptions options,
         FileAttributes attributes,
         IDokanFileInfo info)
-
     {
         var path = NormalizePath(fileName);
         var isDirectoryRequest = info.IsDirectory;
@@ -163,19 +148,22 @@ internal sealed class DriveOperations : IDokanOperations
                 }
                 break;
 
-            case FileMode.Append:
-                if (!fileExists)
-                {
-                    if (IsReadOnly)
-                    {
-                        return DokanResult.AccessDenied;
-                    }
 
-                    var appendHandle = new DriveOpenFileHandle(path, FileSystem.FileOpenWriteAppend(path), writable: true);
-                    RegisterHandle(info, appendHandle);
-                    return DokanResult.Success;
-                }
-                break;
+
+            case FileMode.Append:
+                return DokanResult.NotImplemented;
+                //if (!fileExists)
+                //{
+                //    if (IsReadOnly)
+                //    {
+                //        return DokanResult.AccessDenied;
+                //    }
+
+                //    var appendHandle = new DriveOpenFileHandle(path, FileSystem.FileOpenWriteAppend(path), writable: true);
+                //    RegisterHandle(info, appendHandle);
+                //    return DokanResult.Success;
+                //}
+                //break;
         }
 
         if (!fileExists)
@@ -538,7 +526,6 @@ internal sealed class DriveOperations : IDokanOperations
     {
         return DokanResult.NotImplemented;
     }
-
 
     public NtStatus Mounted(string mountPoint, IDokanFileInfo info)
     {

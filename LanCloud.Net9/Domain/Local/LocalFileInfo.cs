@@ -5,9 +5,9 @@ using LanCloud.Repositories;
 
 namespace LanCloud.Domain.Local;
 
-public class LocalFile : IFile
+public class LocalFileInfo : IFileInfo
 {
-    public LocalFile(LocalApplication application, string path)
+    public LocalFileInfo(LocalApplication application, string path)
     {
         Application = application;
         Path = path;
@@ -16,7 +16,7 @@ public class LocalFile : IFile
         Name = PathTranslator.TranslatePathToName(Path);
         Extention = PathTranslator.TranslatePathToExtention(Path);
     }
-    public LocalFile(LocalApplication application, FileInfo realInfo)
+    public LocalFileInfo(LocalApplication application, FileInfo realInfo)
     {
         Application = application;
         RealInfo = realInfo;
@@ -72,17 +72,17 @@ public class LocalFile : IFile
         if (Metadata == null) throw new Exception("No Metadata");
         return new FileReader(this, Application.FileStripeBufferSize);
     }
-    public Stream OpenAppend()
-    {
-        if (Metadata == null) throw new Exception("No Metadata");
-        return new FileAppender(this);
-    }
+    //public Stream OpenAppend()
+    //{
+    //    if (Metadata == null) throw new Exception("No Metadata");
+    //    return new FileAppender(this);
+    //}
 
     public void MoveTo(string toPath)
     {
         if (Metadata == null) return;
         if (Metadata.Stripes == null) return;
-        var to = new LocalFile(Application, toPath);
+        var to = new LocalFileInfo(Application, toPath);
 
         if (Extention != to.Extention)
         {

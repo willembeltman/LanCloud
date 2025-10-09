@@ -6,7 +6,7 @@ namespace LanCloud.Domain.IO;
 
 public class FileReader : Stream
 {
-    public FileReader(LocalFile file, int bufferSize)
+    public FileReader(LocalFileInfo file, int bufferSize)
     {
         File = file;
 
@@ -15,7 +15,7 @@ public class FileReader : Stream
         file.Logger.Info($"Opened virtual file: {file.Name} for reading");
     }
 
-    public LocalFile File { get; }
+    public LocalFileInfo File { get; }
     public ILogger Logger => File.Logger;
     public ReconstructBuffer ReconstructBuffer { get; }
 

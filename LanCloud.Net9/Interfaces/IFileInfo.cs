@@ -1,6 +1,6 @@
 ﻿namespace LanCloud.Interfaces;
 
-public interface IFile
+public interface IFileInfo
 {
     bool Exists { get; }
     string Extention { get; }
@@ -13,6 +13,6 @@ public interface IFile
     void Delete();
     void MoveTo(string toPath);
     Stream? Create();
-    Stream? OpenAppend();
+    //Stream? OpenAppend();
     Stream? OpenRead();
 }

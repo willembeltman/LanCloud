@@ -4,7 +4,7 @@ using LanCloud.Models.Dtos;
 
 namespace LanCloud.Domain.Remote;
 
-public class RemoteFile : IFile
+public class RemoteFile : IFileInfo
 {
     public RemoteFile(RemoteApplication application, FileRefDto fileRefDto)
     {

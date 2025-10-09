@@ -3,16 +3,16 @@ using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.Local;
 
-public class LocalFileDirectory : IFileDirectory
+public class LocalDirectoryInfo : IDirectoryInfo
 {
-    public LocalFileDirectory(LocalApplication application, string path)
+    public LocalDirectoryInfo(LocalApplication application, string path)
     {
         Application = application;
         Path = path;
         var realFullName = PathTranslator.TranslateDirectoryPathToFullName(application.RealRoot, path);
         RealInfo = new DirectoryInfo(realFullName);
     }
-    public LocalFileDirectory(LocalApplication application, DirectoryInfo realInfo)
+    public LocalDirectoryInfo(LocalApplication application, DirectoryInfo realInfo)
     {
         Application = application;
         RealInfo = realInfo;
@@ -37,17 +37,17 @@ public class LocalFileDirectory : IFileDirectory
     {
         RealInfo.Delete(false);
     }
-    public LocalFileDirectory[] GetDirectories()
+    public LocalDirectoryInfo[] GetDirectories()
         => RealInfo
             .GetDirectories()
-            .Select(dirinfo => new LocalFileDirectory(Application, dirinfo))
+            .Select(dirinfo => new LocalDirectoryInfo(Application, dirinfo))
             .ToArray();
-    public LocalFile[] GetFiles()
+    public LocalFileInfo[] GetFiles()
         => RealInfo
             .GetFiles("*.fileref")
-            .Select(realInfo => new LocalFile(Application, realInfo))
+            .Select(realInfo => new LocalFileInfo(Application, realInfo))
             .ToArray();
     
-    IFileDirectory[] IFileDirectory.GetDirectories() => GetDirectories();
-    IFile[] IFileDirectory.GetFiles() => GetFiles();
+    IDirectoryInfo[] IDirectoryInfo.GetDirectories() => GetDirectories();
+    IFileInfo[] IDirectoryInfo.GetFiles() => GetFiles();
 }

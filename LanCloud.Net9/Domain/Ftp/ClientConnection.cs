@@ -672,18 +672,20 @@ public class ClientConnection : IDisposable
 
     private string Append(string? pathname)
     {
-        pathname = NormalizeFilename(pathname);
-
-        if (pathname != null)
-        {
-            var state = new DataConnectionOperation(AppendOperation, pathname);
-
-            SetupDataConnectionOperation(state);
-
-            return string.Format("150 Opening {0} mode data transfer for APPE", DataConnectionType);
-        }
-
         return "450 Requested file action not taken";
+
+        //pathname = NormalizeFilename(pathname);
+
+        //if (pathname != null)
+        //{
+        //    var state = new DataConnectionOperation(AppendOperation, pathname);
+
+        //    SetupDataConnectionOperation(state);
+
+        //    return string.Format("150 Opening {0} mode data transfer for APPE", DataConnectionType);
+        //}
+
+        //return "450 Requested file action not taken";
     }
 
     private string StoreUnique()
@@ -900,41 +902,41 @@ public class ClientConnection : IDisposable
         //}
     }
 
-    private string AppendOperation(NetworkStream dataStream, string pathname)
-    {
-        //try
-        //{
-        var stopWatch = Stopwatch.StartNew();
-        long bytes = 0;
+    //private string AppendOperation(NetworkStream dataStream, string pathname)
+    //{
+    //    //try
+    //    //{
+    //    var stopWatch = Stopwatch.StartNew();
+    //    long bytes = 0;
 
-        using (var fs = FileSystem.FileOpenWriteAppend(pathname))
-        {
-            bytes = CopyStream(dataStream, fs);
-        }
+    //    using (var fs = FileSystem.FileOpenWriteAppend(pathname))
+    //    {
+    //        bytes = CopyStream(dataStream, fs);
+    //    }
 
-        var sec = stopWatch.Elapsed.TotalSeconds;
-        var speed = Convert.ToInt64(bytes / sec);
+    //    var sec = stopWatch.Elapsed.TotalSeconds;
+    //    var speed = Convert.ToInt64(bytes / sec);
 
-        //LogEntry logEntry = new LogEntry
-        //{
-        //    Date = DateTime.Now,
-        //    CIP = ClientIP,
-        //    CSMethod = "APPE",
-        //    CSUsername = UserName,
-        //    SCStatus = "226",
-        //    CSBytes = bytes.ToString()
-        //};
+    //    //LogEntry logEntry = new LogEntry
+    //    //{
+    //    //    Date = DateTime.Now,
+    //    //    CIP = ClientIP,
+    //    //    CSMethod = "APPE",
+    //    //    CSUsername = UserName,
+    //    //    SCStatus = "226",
+    //    //    CSBytes = bytes.ToString()
+    //    //};
 
-        //Logger.Info(logEntry);
+    //    //Logger.Info(logEntry);
 
-        return $"226 Closing data connection, file transfer successful ({speed}b/sec)";
-        //}
-        //catch (Exception ex)
-        //{
-        //    Logger.Error(ex);
-        //    return $"502 Error while appending data";
-        //}
-    }
+    //    return $"226 Closing data connection, file transfer successful ({speed}b/sec)";
+    //    //}
+    //    //catch (Exception ex)
+    //    //{
+    //    //    Logger.Error(ex);
+    //    //    return $"502 Error while appending data";
+    //    //}
+    //}
 
     private string ListOperation(NetworkStream dataStream, string pathname)
     {
