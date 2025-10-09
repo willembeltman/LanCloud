@@ -60,11 +60,11 @@ public class LocalFileStripe : IFileStripe
         IsTemp = false;
     }
 
-    public FileStream OpenRead()
+    public Stream OpenRead()
     {
         return Info.OpenRead();
     }
-    public FileStream OpenWrite()
+    public Stream OpenWrite()
     {
         return Info.OpenWrite();
     }

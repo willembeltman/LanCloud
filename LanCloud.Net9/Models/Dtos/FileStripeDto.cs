@@ -8,6 +8,7 @@ public class FileStripeDto
     public FileStripeDto(IFileStripe fileStripe)
     {
         if (fileStripe.Length == null) throw new ArgumentNullException(nameof(fileStripe));
+        Name = fileStripe.Name;
         Extention = fileStripe.Extention;
         Hash = fileStripe.Hash;
         Length = fileStripe.Length.Value;
@@ -15,6 +16,7 @@ public class FileStripeDto
         IsTemp = fileStripe.IsTemp;
     }
 
+    public string Name { get; set; } = string.Empty;
     public string Extention { get; set; } = string.Empty;
     public int[] Indexes { get; set; } = [];
     public bool IsTemp { get; set; }

@@ -125,7 +125,7 @@ public class RpcProxy : StatusBase, IDisposable
         StateChanged?.Invoke(this, null);
     }
 
-    public void SendRequest(int requestMessageType, string requestJson, byte[]? requestData, int requestDataLength, out string responseJson, byte[]? responseData, out int responseDataLength)
+    public void SendRequest(int requestMessageType, string requestJson, byte[]? requestData, int requestDataLength, out string? responseJson, byte[]? responseData, out int responseDataLength)
     {
         var queueItem = new RpcProxyQueueItem(requestMessageType, requestJson, requestData, requestDataLength, responseData);
         Queue.Enqueue(queueItem);

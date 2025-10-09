@@ -26,7 +26,7 @@ public class FileStripeReader : IDisposable
     public ILogger Logger { get; }
     public DoubleBuffer Buffer { get; }
     public Stopwatch Stopwatch { get; }
-    public FileStream Stream { get; }
+    public Stream Stream { get; }
     private Thread Thread { get; }
     private AutoResetEvent StartNext { get; } = new AutoResetEvent(true);
     private AutoResetEvent BufferIsWritten { get; } = new AutoResetEvent(false);

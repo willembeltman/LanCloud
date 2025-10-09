@@ -39,9 +39,10 @@ public class RemoteApplication : RpcProxy
 
     public ShareDto[] GetShares()
     {
-        string responseJson = "";
+        string? responseJson = null;
         int responseDataLength = 0;
         SendRequest((int)ApplicationMessageEnum.GetShares, string.Empty, null, 0, out responseJson, null, out responseDataLength);
+        if (responseJson == null) throw new Exception();
         var response = JsonConvert.DeserializeObject<ShareDto[]>(responseJson);
         if (response == null) throw new Exception();
         return response;

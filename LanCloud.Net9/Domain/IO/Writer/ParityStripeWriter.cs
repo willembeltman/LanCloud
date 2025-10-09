@@ -1,5 +1,6 @@
 ﻿using LanCloud.Domain.Local;
 using LanCloud.Domain.Share;
+using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.IO.Writer;
 
@@ -94,7 +95,7 @@ public class ParityStripeWriter
     }
 
 
-    public LocalFileStripe[] Stop(long length, string hash)
+    public IFileStripe[] Stop(long length, string hash)
     {
         if (Thread.CurrentThread == Thread) throw new Exception("Cannot wait for own thread");
 

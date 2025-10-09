@@ -53,14 +53,17 @@ public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
             return null;
         }
     }
-    public void AddFileStripe(LocalFileStripe fileStripe)
+    public void AddFileStripe(IFileStripe fileStripe)
     {
-        lock (LocalFileStripeInfos)
+        if (fileStripe is LocalFileStripe localFileStripe)
         {
-            LocalFileStripeInfos.Add(fileStripe.Name, fileStripe);
+            lock (LocalFileStripeInfos)
+            {
+                LocalFileStripeInfos.Add(fileStripe.Name, localFileStripe);
+            }
         }
     }
-    public void RemoveFileStripe(LocalFileStripe fileStripe)
+    public void RemoveFileStripe(IFileStripe fileStripe)
     {
         lock (LocalFileStripeInfos)
         {
@@ -186,7 +189,7 @@ public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
             return;
         }
 
-        LocalFileStripe localFileStripe = CloseFileStripeSession(request.Extention);
+        var localFileStripe = CloseFileStripeSession(request.Extention);
         var fileStripeDto = new FileStripeDto(localFileStripe);
 
         var response = new CloseFileStripeSessionResponse(fileStripeDto);
@@ -194,17 +197,17 @@ public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
         responseDataLength = 0;
     }
 
-    public LocalFileStripe CreateFileStripeSession(string extention)
+    public IFileStripe CreateFileStripeSession(string extention)
     {
         return new LocalFileStripe(Root, extention, Indexes);
     }
 
-    public bool StoreFileStripeChunk(string extention, long index, byte[] requestData, int requestDataLength)
+    public bool StoreFileStripeChunk(string extention, long index, byte[]? requestData, int requestDataLength)
     {
         throw new NotImplementedException();
     }
 
-    internal LocalFileStripe CloseFileStripeSession(string extention)
+    internal IFileStripe CloseFileStripeSession(string extention)
     {
         throw new NotImplementedException();
     }

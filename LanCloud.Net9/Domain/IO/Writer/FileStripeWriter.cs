@@ -1,11 +1,12 @@
 ﻿using LanCloud.Domain.Local;
 using LanCloud.Domain.Share;
+using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.IO.Writer;
 
 public class FileStripeWriter
 {
-    public FileStripeWriter(FileWriter fileWriter, LocalShare localShare, DoubleBuffer buffer)
+    public FileStripeWriter(FileWriter fileWriter, IShare localShare, DoubleBuffer buffer)
     {
         FileWriter = fileWriter;
         LocalShare = localShare;
@@ -16,13 +17,13 @@ public class FileStripeWriter
         Thread = new Thread(new ThreadStart(Kernel));
         Thread.Start();
 
-        fileWriter.Logger.Info($"Opened {FileStripe.Info.Name} as output for parts: {string.Join(" xor ", Indexes.OrderBy(a => a).Select(a => $"#{a}"))}");
+        fileWriter.Logger.Info($"Opened {FileStripe.Name} as output for parts: {string.Join(" xor ", Indexes.OrderBy(a => a).Select(a => $"#{a}"))}");
     }
 
     public FileWriter FileWriter { get; }
-    public LocalShare LocalShare { get; }
+    public IShare LocalShare { get; }
     public DoubleBuffer Buffer { get; }
-    public LocalFileStripe FileStripe { get; }
+    public IFileStripe FileStripe { get; }
 
     public Thread Thread { get; }
 
@@ -56,7 +57,7 @@ public class FileStripeWriter
         }
     }
 
-    public LocalFileStripe Stop(long length, string hash)
+    public IFileStripe Stop(long length, string hash)
     {
         if (Thread.CurrentThread == Thread) throw new Exception("Cannot wait for own thread");
 

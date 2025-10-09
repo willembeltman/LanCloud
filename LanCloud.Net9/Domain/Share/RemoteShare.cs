@@ -22,6 +22,16 @@ public class RemoteShare : RpcProxy, IShare
 
     public int[] Indexes => Share.Indexes;
 
+    public void AddFileStripe(IFileStripe fileStripe)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IFileStripe CreateFileStripeSession(string extention)
+    {
+        throw new NotImplementedException();
+    }
+
     public IFileStripe? FindFileStripe(string extention, string hash, long length, int[] indexes)
     {
         var request = new FindFileStripesRequest(extention, hash, length, indexes);

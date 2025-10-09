@@ -1,4 +1,5 @@
-﻿namespace LanCloud.Interfaces;
+﻿
+namespace LanCloud.Interfaces;
 
 public interface IFileStripe
 {
@@ -7,6 +8,9 @@ public interface IFileStripe
     bool IsTemp { get; }
     string? Hash { get; }
     long? Length { get; }
+    string Name { get; }
 
-    FileStream OpenRead();
+    Stream OpenRead();
+    Stream OpenWrite();
+    void Update(long length, string hash);
 }
