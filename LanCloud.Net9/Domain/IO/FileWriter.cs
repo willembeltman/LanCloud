@@ -13,8 +13,6 @@ public class FileWriter : Stream
         FileRef = fileRef;
         BufferSize = bufferSize;
 
-        _Length = fileRef.Length;
-
         HashWriter = new HashWriter(this);
         DataStripeWriters = Application.LocalShareStripes
             .Where(a => a.Indexes.Length == 1)
@@ -37,7 +35,6 @@ public class FileWriter : Stream
         fileRef.Logger.Info($"Opened virtual file: {fileRef.Name} for writing");
     }
 
-    private long _Length { get; set; }
     private DataStripeWriter[] DataStripeWriters;
     private ParityStripeWriter[] ParityStripeWriters;
     private HashWriter HashWriter;
@@ -50,7 +47,6 @@ public class FileWriter : Stream
     public DoubleBuffer Buffer { get; }
 
     public override long Position { get; set; }
-    public override long Length => throw new NotImplementedException();
     public override bool CanRead => false;
     public override bool CanSeek => false;
     public override bool CanWrite => true;
@@ -158,6 +154,7 @@ public class FileWriter : Stream
 
     #region Not implemented
 
+    public override long Length => throw new NotImplementedException();
 
     public override void SetLength(long value)
     {
