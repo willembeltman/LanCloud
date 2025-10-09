@@ -100,7 +100,7 @@ public sealed class DriveServer : IDisposable
 
         try
         {
-            DokanInstance.WaitForFileSystemClosed(100000);
+            DokanInstance.WaitForFileSystemClosed(uint.MaxValue);
         }
         catch (DokanException ex)
         {

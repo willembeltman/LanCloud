@@ -9,15 +9,16 @@ public class FileReader : Stream
     public FileReader(LocalFileInfo file, int bufferSize)
     {
         File = file;
+        BufferSize = bufferSize;
 
-        ReconstructBuffer = new ReconstructBuffer(this, bufferSize);
-
-        file.Logger.Info($"Opened virtual file: {file.Name} for reading");
+        //file.Logger.Info($"Opened virtual file: {file.Name} for reading");
     }
 
     public LocalFileInfo File { get; }
+    public int BufferSize { get; }
+
     public ILogger Logger => File.Logger;
-    public ReconstructBuffer ReconstructBuffer { get; }
+    public ReconstructBuffer? ReconstructBuffer { get; private set; }
 
     public override long Position { get; set; }
     private bool BufferInitialized { get; set; }
@@ -25,12 +26,19 @@ public class FileReader : Stream
 
     public override bool CanRead => true;
     public override bool CanSeek => false;
-    public override bool CanWrite => false;
+    public override bool CanWrite => false; 
     public override long Length => File.Length;
-    public bool Disposed => ReconstructBuffer.Disposed;
+    public bool Disposed => ReconstructBuffer?.Disposed ?? true;
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+        File.Logger.Info($"Reading virtual file: {File.Name} {offset} + {count} bytes");
+
+        if (ReconstructBuffer == null)
+        {
+            ReconstructBuffer = new ReconstructBuffer(this, BufferSize);
+        }
+
         if (!BufferInitialized)
         {
             ReconstructBuffer.FlipBuffer();
@@ -62,7 +70,7 @@ public class FileReader : Stream
     {
         if (!Disposed && disposing)
         {
-            ReconstructBuffer.Dispose();
+            ReconstructBuffer?.Dispose();
         }
 
         base.Dispose(disposing);
