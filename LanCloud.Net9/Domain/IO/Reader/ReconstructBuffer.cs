@@ -46,7 +46,7 @@ public class ReconstructBuffer : IDisposable
     private AutoResetEvent StartNext { get; } = new AutoResetEvent(true);
     private AutoResetEvent BufferIsWritten { get; } = new AutoResetEvent(false);
 
-    public LocalFile PathInfo => FileRefReader.PathInfo;
+    public LocalFile PathInfo => FileRefReader.File;
     public LocalApplication Application => PathInfo.Application;
     public FileMetadata FileRef => PathInfo.Metadata;
     bool KillSwitch { get; set; }

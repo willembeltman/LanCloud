@@ -47,6 +47,9 @@ internal sealed class DriveOperations : IDokanOperations
         handle.Id = id;
         info.Context = handle;
         Handles[id] = handle;
+
+        //DriveServer.Logger.Info($"Created handle: {id}");
+
         return handle;
     }
 
@@ -57,6 +60,8 @@ internal sealed class DriveOperations : IDokanOperations
     {
         if (info.Context is DriveOpenFileHandle handle)
         {
+            //DriveServer.Logger.Info($"closing handle: {handle.Id}");
+
             if (Handles.TryRemove(handle.Id, out var stored))
             {
                 stored.Dispose();

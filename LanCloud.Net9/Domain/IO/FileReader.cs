@@ -6,15 +6,17 @@ namespace LanCloud.Domain.IO;
 
 public class FileReader : Stream
 {
-    public FileReader(LocalFile pathInfo, int bufferSize)
+    public FileReader(LocalFile file, int bufferSize)
     {
-        PathInfo = pathInfo;
+        File = file;
 
         ReconstructBuffer = new ReconstructBuffer(this, bufferSize);
+
+        file.Logger.Info($"Opened virtual file: {file.Name} for reading");
     }
 
-    public LocalFile PathInfo { get; }
-    public ILogger Logger => PathInfo.Logger;
+    public LocalFile File { get; }
+    public ILogger Logger => File.Logger;
     public ReconstructBuffer ReconstructBuffer { get; }
 
     public override long Position { get; set; }
@@ -24,7 +26,7 @@ public class FileReader : Stream
     public override bool CanRead => true;
     public override bool CanSeek => false;
     public override bool CanWrite => false;
-    public override long Length => PathInfo.Length;
+    public override long Length => File.Length;
     public bool Disposed => ReconstructBuffer.Disposed;
 
     public override int Read(byte[] buffer, int offset, int count)

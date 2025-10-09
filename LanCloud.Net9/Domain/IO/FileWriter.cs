@@ -34,7 +34,7 @@ public class FileWriter : Stream
             .ToArray();
         Buffer = new DoubleBuffer(bufferSize, AllIndexes.Length);
 
-        fileRef.Logger.Info($"Opened virtual ftp file: {fileRef.Name}");
+        fileRef.Logger.Info($"Opened virtual file: {fileRef.Name} for writing");
     }
 
     private long _Length { get; set; }
