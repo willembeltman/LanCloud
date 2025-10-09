@@ -1,5 +1,5 @@
 ﻿using LanCloud.Domain.Application;
-using LanCloud.Domain.FileStripe;
+using LanCloud.Domain.Local;
 using LanCloud.Domain.Rpc;
 using LanCloud.Interfaces;
 using LanCloud.Models.Config;

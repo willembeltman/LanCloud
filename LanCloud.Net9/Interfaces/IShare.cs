@@ -1,6 +1,4 @@
-﻿using LanCloud.Domain.FileStripe;
-
-namespace LanCloud.Domain.Share;
+﻿namespace LanCloud.Interfaces;
 
 public interface IShare
 {

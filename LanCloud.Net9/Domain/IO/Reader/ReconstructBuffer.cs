@@ -1,12 +1,12 @@
 ﻿using LanCloud.Domain.Application;
-using LanCloud.Domain.FileRef;
+using LanCloud.Domain.Local;
 using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.IO.Reader;
 
 public class ReconstructBuffer : IDisposable
 {
-    public ReconstructBuffer(FileRefReader fileRefReader, int bufferSize)
+    public ReconstructBuffer(FileReader fileRefReader, int bufferSize)
     {
         FileRefReader = fileRefReader;
 
@@ -36,7 +36,7 @@ public class ReconstructBuffer : IDisposable
         Thread.Start();
     }
 
-    public FileRefReader FileRefReader { get; }
+    public FileReader FileRefReader { get; }
     internal FileStripeReader[] FileStripeReaders { get; }
     public int[] AllIndexes { get; }
     public DoubleBuffer Buffer { get; }
@@ -47,9 +47,9 @@ public class ReconstructBuffer : IDisposable
     private AutoResetEvent StartNext { get; } = new AutoResetEvent(true);
     private AutoResetEvent BufferIsWritten { get; } = new AutoResetEvent(false);
 
-    public LocalFileRef PathInfo => FileRefReader.PathInfo;
+    public LocalFile PathInfo => FileRefReader.PathInfo;
     public LocalApplication Application => PathInfo.Application;
-    public FileRefMetadata FileRef => PathInfo.Metadata;
+    public FileMetadata FileRef => PathInfo.Metadata;
     bool KillSwitch { get; set; }
 
     public void FlipBuffer()
@@ -65,7 +65,7 @@ public class ReconstructBuffer : IDisposable
         {
             if (StartNext.WaitOne(100))
             {
-                Buffer.WriteBufferPosition = 0;
+                Buffer.WriteDataLength = 0;
 
                 var goodReaders = FileStripeReaders.Where(a => a.Exception == null).ToArray();
                 if (goodReaders.Length < AllIndexes.Length)
@@ -165,7 +165,7 @@ public class ReconstructBuffer : IDisposable
                             if (parityreader != null)
                             {
                                 var buffer = parityreader.Buffer.ReadBuffer;
-                                var length = parityreader.Buffer.ReadBufferPosition;
+                                var length = parityreader.Buffer.ReadDataLength;
 
                                 var otherNormals = normals
                                     .Where(foundNormal => parityreader.Indexes.Contains(foundNormal.Index))
@@ -186,9 +186,9 @@ public class ReconstructBuffer : IDisposable
                                         }
                                     }
 
-                                    Array.Copy(buffer, 0, Buffer.WriteBuffer, Buffer.WriteBufferPosition, length);
+                                    Array.Copy(buffer, 0, Buffer.WriteBuffer, Buffer.WriteDataLength, length);
 
-                                    Buffer.WriteBufferPosition += length;
+                                    Buffer.WriteDataLength += length;
                                 }
                                 else
                                 {
@@ -216,13 +216,13 @@ public class ReconstructBuffer : IDisposable
 
     private void ReadItem(FileStripeReader item)
     {
-        if (item.Buffer.ReadBufferPosition > 0)
+        if (item.Buffer.ReadDataLength > 0)
         {
-            var length = item.Buffer.ReadBufferPosition;
+            var length = item.Buffer.ReadDataLength;
 
-            Array.Copy(item.Buffer.ReadBuffer, 0, Buffer.WriteBuffer, Buffer.WriteBufferPosition, length);
+            Array.Copy(item.Buffer.ReadBuffer, 0, Buffer.WriteBuffer, Buffer.WriteDataLength, length);
 
-            Buffer.WriteBufferPosition += length;
+            Buffer.WriteDataLength += length;
         }
     }
 

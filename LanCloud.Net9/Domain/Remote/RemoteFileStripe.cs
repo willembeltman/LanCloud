@@ -1,7 +1,8 @@
-﻿using LanCloud.Domain.FileStripe;
+﻿using LanCloud.Interfaces;
+using LanCloud.Domain.Share;
 using LanCloud.Models.Dtos;
 
-namespace LanCloud.Domain.Share;
+namespace LanCloud.Domain.Remote;
 
 public class RemoteFileStripe : IFileStripe
 {
@@ -22,6 +23,6 @@ public class RemoteFileStripe : IFileStripe
 
     public FileStream OpenRead()
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 }

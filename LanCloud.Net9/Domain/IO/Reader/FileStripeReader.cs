@@ -1,5 +1,4 @@
 ﻿using LanCloud.Domain.Application;
-using LanCloud.Domain.FileStripe;
 using LanCloud.Interfaces;
 using System.Diagnostics;
 
@@ -63,9 +62,9 @@ public class FileStripeReader : IDisposable
                     if (!EndOfFile)
                     {
                         // Do the read
-                        Buffer.WriteBufferPosition = Stream.Read(Buffer.WriteBuffer, 0, Buffer.WriteBuffer.Length);
+                        Buffer.WriteDataLength = Stream.Read(Buffer.WriteBuffer, 0, Buffer.WriteBuffer.Length);
 
-                        if (Buffer.WriteBufferPosition <= 0)
+                        if (Buffer.WriteDataLength <= 0)
                         {
                             EndOfFile = true;
                         }
@@ -75,13 +74,13 @@ public class FileStripeReader : IDisposable
 
                             var time = Stopwatch.ElapsedTicks;
                             Stopwatch.Restart();
-                            var speed = Buffer.WriteBufferPosition * Stopwatch.Frequency / time;
+                            var speed = Buffer.WriteDataLength * Stopwatch.Frequency / time;
                             AddSpeed(speed);
                         }
                     }
                     else
                     {
-                        Buffer.WriteBufferPosition = 0;
+                        Buffer.WriteDataLength = 0;
                     }
 
                     BufferIsWritten.Set();

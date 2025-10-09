@@ -1,18 +1,19 @@
-﻿using LanCloud.Domain.FileRef;
+﻿using LanCloud.Domain.IO.Reader;
+using LanCloud.Domain.Local;
 using LanCloud.Interfaces;
 
-namespace LanCloud.Domain.IO.Reader;
+namespace LanCloud.Domain.IO;
 
-public class FileRefReader : Stream
+public class FileReader : Stream
 {
-    public FileRefReader(LocalFileRef pathInfo, int bufferSize)
+    public FileReader(LocalFile pathInfo, int bufferSize)
     {
         PathInfo = pathInfo;
 
         ReconstructBuffer = new ReconstructBuffer(this, bufferSize);
     }
 
-    public LocalFileRef PathInfo { get; }
+    public LocalFile PathInfo { get; }
     public ILogger Logger => PathInfo.Logger;
     public ReconstructBuffer ReconstructBuffer { get; }
 
@@ -35,9 +36,9 @@ public class FileRefReader : Stream
         }
 
         var read = 0;
-        while (read < count && BufferPosition < ReconstructBuffer.Buffer.ReadBufferPosition)
+        while (read < count && BufferPosition < ReconstructBuffer.Buffer.ReadDataLength)
         {
-            var availableSpace = ReconstructBuffer.Buffer.ReadBufferPosition - BufferPosition;
+            var availableSpace = ReconstructBuffer.Buffer.ReadDataLength - BufferPosition;
             int bytesToWrite = Math.Min(count - read, availableSpace);
 
             Array.Copy(ReconstructBuffer.Buffer.ReadBuffer, BufferPosition, buffer, offset + read, bytesToWrite);

@@ -1,4 +1,4 @@
-﻿using LanCloud.Domain.FileStripe;
+﻿using LanCloud.Domain.Local;
 using LanCloud.Domain.Share;
 using LanCloud.Interfaces;
 
@@ -6,7 +6,7 @@ namespace LanCloud.Domain.IO.Writer;
 
 public class FileStripeWriter
 {
-    public FileStripeWriter(FileRefWriter fileRefWriter, LocalShareStripe localSharePart, DoubleBuffer buffer)
+    public FileStripeWriter(FileWriter fileRefWriter, LocalShareStripe localSharePart, DoubleBuffer buffer)
     {
         FileRefWriter = fileRefWriter;
         LocalShareStripe = localSharePart;
@@ -14,13 +14,13 @@ public class FileStripeWriter
 
         FileStripe = LocalShareStripe.CreateFileStripeSession(FileRefWriter.FileRef.Extention);
 
-        Thread = new Thread(new ThreadStart(Start));
+        Thread = new Thread(new ThreadStart(Kernel));
         Thread.Start();
 
         fileRefWriter.Logger.Info($"Opened {FileStripe.Info.Name} as output for parts: {string.Join(" xor ", Indexes.OrderBy(a => a).Select(a => $"#{a}"))}");
     }
 
-    public FileRefWriter FileRefWriter { get; }
+    public FileWriter FileRefWriter { get; }
     public LocalShareStripe LocalShareStripe { get; }
     public DoubleBuffer Buffer { get; }
     public LocalFileStripe FileStripe { get; }
@@ -34,7 +34,7 @@ public class FileStripeWriter
 
     public int[] Indexes => LocalShareStripe.Indexes;
 
-    private void Start()
+    private void Kernel()
     {
         using (var stream = FileStripe.OpenWrite())
         {
@@ -42,10 +42,10 @@ public class FileStripeWriter
             {
                 if (StartNext.WaitOne(100))
                 {
-                    if (!KillSwitch && Buffer.ReadBufferPosition > 0)
+                    if (!KillSwitch && Buffer.ReadDataLength > 0)
                     {
                         var data = Buffer.ReadBuffer;
-                        var datalength = Buffer.ReadBufferPosition;
+                        var datalength = Buffer.ReadDataLength;
 
                         stream.Write(data, 0, datalength);
                         Position += datalength;

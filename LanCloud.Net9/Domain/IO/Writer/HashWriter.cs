@@ -6,7 +6,7 @@ namespace LanCloud.Domain.IO.Writer;
 
 public class HashWriter
 {
-    public HashWriter(FileRefWriter fileRefWriter)
+    public HashWriter(FileWriter fileRefWriter)
     {
         FileRefWriter = fileRefWriter;
 
@@ -14,7 +14,7 @@ public class HashWriter
         Thread.Start();
     }
 
-    public FileRefWriter FileRefWriter { get; }
+    public FileWriter FileRefWriter { get; }
     public Thread Thread { get; }
 
     private IncrementalHash IncrementalHash { get; } = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
@@ -28,10 +28,10 @@ public class HashWriter
         {
             if (StartNext.WaitOne(1000))
             {
-                if (!KillSwitch && FileRefWriter.Buffer.ReadBufferPosition > 0)
+                if (!KillSwitch && FileRefWriter.Buffer.ReadDataLength > 0)
                 {
                     var data = FileRefWriter.Buffer.ReadBuffer;
-                    var datalength = FileRefWriter.Buffer.ReadBufferPosition;
+                    var datalength = FileRefWriter.Buffer.ReadDataLength;
 
                     IncrementalHash.AppendData(data, 0, datalength);
                 }

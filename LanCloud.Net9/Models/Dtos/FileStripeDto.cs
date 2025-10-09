@@ -1,4 +1,4 @@
-﻿using LanCloud.Domain.FileStripe;
+﻿using LanCloud.Interfaces;
 
 namespace LanCloud.Models.Dtos;
 

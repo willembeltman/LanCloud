@@ -1,4 +1,4 @@
-﻿using LanCloud.Domain.Application;
+﻿using LanCloud.Domain;
 using LanCloud.Interfaces;
 
 namespace LanCloud.Repositories;

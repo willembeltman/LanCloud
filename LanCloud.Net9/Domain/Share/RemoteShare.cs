@@ -1,6 +1,7 @@
 ﻿using LanCloud.Domain.Application;
-using LanCloud.Domain.FileStripe;
+using LanCloud.Domain.Remote;
 using LanCloud.Domain.Rpc;
+using LanCloud.Interfaces;
 using LanCloud.Models.Dtos;
 using LanCloud.Models.Dtos.Requests;
 using LanCloud.Models.Enums;

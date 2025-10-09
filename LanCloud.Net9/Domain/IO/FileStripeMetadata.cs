@@ -1,8 +1,8 @@
-﻿namespace LanCloud.Domain.FileRef;
+﻿namespace LanCloud.Domain.IO;
 
-public class FileRefStripeMetadata
+public class FileStripeMetadata
 {
-    public FileRefStripeMetadata(int[] indexes)
+    public FileStripeMetadata(int[] indexes)
     {
         Indexes = indexes;
     }

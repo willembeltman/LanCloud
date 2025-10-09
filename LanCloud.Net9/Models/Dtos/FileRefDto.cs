@@ -1,11 +1,11 @@
-﻿using LanCloud.Domain.FileRef;
+﻿using LanCloud.Interfaces;
 
 namespace LanCloud.Models.Dtos;
 
 public class FileRefDto
 {
     public FileRefDto() { }
-    public FileRefDto(IFileRef fileRef)
+    public FileRefDto(IFile fileRef)
     {
         Path = fileRef.Path;
         Exists = fileRef.Exists;

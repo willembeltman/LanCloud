@@ -1,14 +1,19 @@
 ﻿using LanCloud.Domain.Application;
-using LanCloud.Domain.FileRef;
+using LanCloud.Domain.IO.Writer;
+using LanCloud.Domain.Local;
 using LanCloud.Interfaces;
 
-namespace LanCloud.Domain.IO.Writer;
+namespace LanCloud.Domain.IO;
 
-public class FileRefWriter : Stream
+public class FileWriter : Stream
 {
-    public FileRefWriter(LocalFileRef fileRef, int bufferSize)
+    public FileWriter(LocalApplication application, LocalFile fileRef, int bufferSize)
     {
+        Application = application;
         FileRef = fileRef;
+        BufferSize = bufferSize;
+
+        _Length = fileRef.Length;
 
         HashWriter = new HashWriter(this);
         DataStripeWriters = Application.LocalShareStripes
@@ -21,7 +26,6 @@ public class FileRefWriter : Stream
             .GroupBy(a => a.Indexes.ToUniqueKey())
             .Select(sharepart => new ParityStripeWriter(this, bufferSize, sharepart.ToArray()))
             .ToArray();
-
         AllIndexes = Application.LocalShareStripes
             .SelectMany(a => a.Indexes)
             .GroupBy(a => a)
@@ -33,52 +37,59 @@ public class FileRefWriter : Stream
         fileRef.Logger.Info($"Opened virtual ftp file: {fileRef.Name}");
     }
 
-    public LocalFileRef FileRef { get; }
-    public DoubleBuffer Buffer { get; }
+    private long _Length { get; set; }
     private DataStripeWriter[] DataStripeWriters;
     private ParityStripeWriter[] ParityStripeWriters;
     private HashWriter HashWriter;
     private int[] AllIndexes;
     private bool Disposed;
 
+    public LocalApplication Application { get; }
+    public LocalFile FileRef { get; }
+    public int BufferSize { get; }
+    public DoubleBuffer Buffer { get; }
+
     public override long Position { get; set; }
+    public override long Length => throw new NotImplementedException();
     public override bool CanRead => false;
     public override bool CanSeek => false;
     public override bool CanWrite => true;
 
-    public LocalApplication Application => FileRef.Application;
     public ILogger Logger => FileRef.Logger;
 
     public override void Write(byte[] buffer, int offset, int count)
     {
         var bytesWritten = 0;
 
+        Buffer.WriteStartPosition = Position;
         while (bytesWritten < count)
         {
-            var availableSpace = Buffer.WriteBuffer.Length - Buffer.WriteBufferPosition;
-            int bytesToWrite = Math.Min(count - bytesWritten, availableSpace);
+            var availableSpace = Buffer.WriteBuffer.Length - Buffer.WriteDataLength;
+            var totalBytesToWrite = count - bytesWritten;
+            int bytesToWrite = Math.Min(totalBytesToWrite, availableSpace);
 
-            Array.Copy(buffer, offset + bytesWritten, Buffer.WriteBuffer, Buffer.WriteBufferPosition, bytesToWrite);
+            Array.Copy(buffer, offset + bytesWritten, Buffer.WriteBuffer, Buffer.WriteDataLength, bytesToWrite);
 
             bytesWritten += bytesToWrite;
-            Buffer.WriteBufferPosition += bytesToWrite;
+            Buffer.WriteDataLength += bytesToWrite;
             Position += bytesWritten;
 
-            if (Buffer.WriteBufferPosition >= Buffer.WriteBuffer.Length)
+            if (Buffer.WriteDataLength >= Buffer.WriteBuffer.Length)
             {
-                FlipBuffer();
-                Buffer.WriteBufferPosition = 0;
+                StartNext();
+                Buffer.WriteDataLength = 0;
+                Buffer.WriteStartPosition = null;
             }
         }
     }
     public override void Flush()
     {
-        if (Buffer.WriteBufferPosition > 0)
+        if (Buffer.WriteDataLength > 0)
         {
-            FlipBuffer();
+            StartNext();
         }
     }
-    private void FlipBuffer()
+    private void StartNext()
     {
         WaitForDone();
 
@@ -92,7 +103,6 @@ public class FileRefWriter : Stream
         foreach (var item in ParityStripeWriters)
             item.StartNext.Set();
     }
-
     private void WaitForDone()
     {
         if (!HashWriter.WritingIsDone.WaitOne(100000))
@@ -114,9 +124,9 @@ public class FileRefWriter : Stream
             Disposed = true;
 
             // Eventueel de laatste buffer wegschrijven
-            if (Buffer.WriteBufferPosition > 0)
+            if (Buffer.WriteDataLength > 0)
             {
-                FlipBuffer();
+                StartNext();
             }
             WaitForDone();
 
@@ -133,13 +143,14 @@ public class FileRefWriter : Stream
             // Stripes samenstellen
             var stripes = dataStripes
                 .Concat(parityStripes)
-                .Select(a => new FileRefStripeMetadata(a.Indexes))
+                .Select(a => new FileStripeMetadata(a.Indexes))
                 .GroupBy(a => a.GetUniqueIdentifier())
                 .Select(a => a.First())
                 .ToArray();
 
             // En dan de waardes updaten
-            FileRef.Metadata = new FileRefMetadata(length, hash, stripes);
+            var metadata = new FileMetadata(BufferSize, length, hash, stripes);
+            FileRef.SaveMetadata(metadata);
         }
 
         base.Dispose(disposing);
@@ -147,7 +158,6 @@ public class FileRefWriter : Stream
 
     #region Not implemented
 
-    public override long Length => throw new NotImplementedException();
 
     public override void SetLength(long value)
     {

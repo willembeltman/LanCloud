@@ -8,38 +8,73 @@ public class DoubleBuffer
         Width = width;
         Buffer1 = new byte[width * bufferSizeForOne];
         Array.Clear(Buffer1, 0, Buffer1.Length);
-        BufferPosition1 = 0;
+        Position1 = 0;
         Buffer2 = new byte[width * bufferSizeForOne];
         Array.Clear(Buffer2, 0, Buffer2.Length);
-        BufferPosition2 = 0;
+        Position2 = 0;
     }
 
     public int BufferSizeForOne { get; }
     public int Width { get; }
     private byte[] Buffer1 { get; }
     private byte[] Buffer2 { get; }
-    private int BufferPosition1 { get; set; }
-    private int BufferPosition2 { get; set; }
-    public bool CurrentBufferSwitch { get; set; }
+    private int Position1 { get; set; }
+    private int Position2 { get; set; }
+    private long? StartPosition1 { get; set; }
+    private long? StartPosition2 { get; set; }
+    public bool Switch { get; set; }
 
-    public byte[] WriteBuffer => CurrentBufferSwitch ? Buffer1 : Buffer2;
-    public int WriteBufferPosition
+    public byte[] WriteBuffer => Switch ? Buffer1 : Buffer2;
+    public int WriteDataLength
     {
-        get => CurrentBufferSwitch ? BufferPosition1 : BufferPosition2;
+        get => Switch ? Position1 : Position2;
         set
         {
-            if (CurrentBufferSwitch)
-                BufferPosition1 = value;
+            if (Switch)
+                Position1 = value;
             else
-                BufferPosition2 = value;
+                Position2 = value;
+        }
+    }
+    public long? WriteStartPosition
+    {
+        get => Switch ? StartPosition1 : StartPosition2;
+        set
+        {
+            if (Switch)
+                StartPosition1 = value;
+            else
+                StartPosition2 = value;
         }
     }
 
-    public byte[] ReadBuffer => CurrentBufferSwitch ? Buffer2 : Buffer1;
-    public int ReadBufferPosition => CurrentBufferSwitch ? BufferPosition2 : BufferPosition1;
+    public byte[] ReadBuffer => Switch ? Buffer2 : Buffer1;
+    public int ReadDataLength
+    {
+        get => Switch ? Position2 : Position1;
+        set
+        {
+            if (Switch)
+                Position2 = value;
+            else
+                Position1 = value;
+        }
+    }
+    public long? ReadStartPosition
+    {
+        get => Switch ? StartPosition2 : StartPosition1;
+        set
+        {
+            if (Switch)
+                StartPosition2 = value;
+            else
+                StartPosition1 = value;
+        }
+    }
+
 
     public void Flip()
     {
-        CurrentBufferSwitch = !CurrentBufferSwitch;
+        Switch = !Switch;
     }
 }

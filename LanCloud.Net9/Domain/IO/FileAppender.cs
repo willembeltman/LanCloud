@@ -1,15 +1,15 @@
-﻿using LanCloud.Domain.FileRef;
+﻿using LanCloud.Domain.Local;
 using LanCloud.Interfaces;
 
-namespace LanCloud.Domain.IO.Appender;
+namespace LanCloud.Domain.IO;
 
-public class FileRefAppender : System.IO.Stream
+public class FileAppender : Stream
 {
-    public FileRefAppender(LocalFileRef virtualFileInfo)
+    public FileAppender(LocalFile virtualFileInfo)
     {
         VirtualFileInfo = virtualFileInfo;
     }
-    public LocalFileRef VirtualFileInfo { get; }
+    public LocalFile VirtualFileInfo { get; }
 
     public override bool CanRead => false;
     public override bool CanSeek => false;
@@ -43,7 +43,7 @@ public class FileRefAppender : System.IO.Stream
         throw new NotImplementedException();
     }
 
-    public override long Seek(long offset, System.IO.SeekOrigin origin)
+    public override long Seek(long offset, SeekOrigin origin)
     {
         throw new NotImplementedException();
     }

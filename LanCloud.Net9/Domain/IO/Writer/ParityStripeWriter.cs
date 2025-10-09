@@ -1,11 +1,11 @@
-﻿using LanCloud.Domain.FileStripe;
+﻿using LanCloud.Domain.Local;
 using LanCloud.Domain.Share;
 
 namespace LanCloud.Domain.IO.Writer;
 
 public class ParityStripeWriter
 {
-    public ParityStripeWriter(FileRefWriter fileRefWriter, int bufferSize, LocalShareStripe[] localShareParts)
+    public ParityStripeWriter(FileWriter fileRefWriter, int bufferSize, LocalShareStripe[] localShareParts)
     {
         FileRefWriter = fileRefWriter;
         LocalShareParts = localShareParts;
@@ -20,7 +20,7 @@ public class ParityStripeWriter
         Thread.Start();
     }
 
-    public FileRefWriter FileRefWriter { get; }
+    public FileWriter FileRefWriter { get; }
     public LocalShareStripe[] LocalShareParts { get; }
     public DoubleBuffer Buffer { get; }
     public int[] Indexes { get; }
@@ -38,10 +38,10 @@ public class ParityStripeWriter
         {
             if (StartNext.WaitOne(1000))
             {
-                if (!KillSwitch && FileRefWriter.Buffer.ReadBufferPosition > 0)
+                if (!KillSwitch && FileRefWriter.Buffer.ReadDataLength > 0)
                 {
                     var data = FileRefWriter.Buffer.ReadBuffer;
-                    var datalength = FileRefWriter.Buffer.ReadBufferPosition;
+                    var datalength = FileRefWriter.Buffer.ReadDataLength;
                     var width = FileRefWriter.Buffer.Width;
 
                     WriteBufferToStream(data, datalength, width);
@@ -76,7 +76,7 @@ public class ParityStripeWriter
         }
 
         // Set position
-        Buffer.WriteBufferPosition = maxlength;
+        Buffer.WriteDataLength = maxlength;
 
         FlipBuffer();
     }

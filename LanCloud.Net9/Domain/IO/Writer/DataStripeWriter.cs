@@ -1,67 +1,65 @@
-﻿using LanCloud.Domain.FileStripe;
+﻿using LanCloud.Domain.Local;
 using LanCloud.Domain.Share;
-using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.IO.Writer;
 
 public class DataStripeWriter
 {
-    public DataStripeWriter(FileRefWriter fileRefWriter, int bufferSize, int index, LocalShareStripe[] localShareStripes)
+    public DataStripeWriter(FileWriter fileRefWriter, int bufferSize, int index, LocalShareStripe[] localShareStripes)
     {
         FileRefWriter = fileRefWriter;
+        BufferSize = bufferSize;
         Buffer = new DoubleBuffer(bufferSize, 1);
         Index = index;
-        LocalShareStripes = localShareStripes;
-                FileStripeWriters = localShareStripes
+        FileStripeWriters = localShareStripes
             .Select(localSharePart => new FileStripeWriter(fileRefWriter, localSharePart, Buffer))
             .ToArray();
 
-        Thread = new Thread(new ThreadStart(Start));
+        Thread = new Thread(new ThreadStart(Kernel));
         Thread.Start();
     }
 
-    private readonly FileRefWriter FileRefWriter;
+    private readonly FileWriter FileRefWriter;
+
+    private int BufferSize;
     private readonly DoubleBuffer Buffer;
     private readonly int Index;
-    private readonly LocalShareStripe[] LocalShareStripes;
     private readonly FileStripeWriter[] FileStripeWriters;
     private readonly Thread Thread;
     private bool KillSwitch = false;
 
-
     public AutoResetEvent WritingIsDone { get; } = new AutoResetEvent(true);
     public AutoResetEvent StartNext { get; } = new AutoResetEvent(false);
 
-    private void Start()
+    private void Kernel()
     {
         while (!KillSwitch)
         {
             if (StartNext.WaitOne(1000))
             {
-                if (!KillSwitch && FileRefWriter.Buffer.ReadBufferPosition > 0)
+                if (!KillSwitch && FileRefWriter.Buffer.ReadDataLength > 0)
                 {
-                    var data = FileRefWriter.Buffer.ReadBuffer;
-                    var datalength = FileRefWriter.Buffer.ReadBufferPosition;
-                    var width = FileRefWriter.Buffer.Width;
-
-                    WriteBufferToStream(data, datalength, width);
+                    var startposition = FileRefWriter.Buffer.ReadStartPosition;
+                    var buffer = FileRefWriter.Buffer.ReadBuffer;
+                    var datalength = FileRefWriter.Buffer.ReadDataLength;
+                    WriteBufferToStream(startposition, buffer,  datalength);
                 }
 
                 WritingIsDone.Set();
             }
         }
     }
-    private void WriteBufferToStream(byte[] data, int datalength, int width)
+    private void WriteBufferToStream(long? startPosition, byte[] data, int datalength)
     {
-        var sublength = Convert.ToDouble(datalength) / width;
-        var start = Convert.ToInt32(sublength * Index);
-        var end = Convert.ToInt32(sublength * (Index + 1));
+        var start = Convert.ToInt32(BufferSize * Index);
+        var end = Convert.ToInt32(BufferSize * (Index + 1));
         var length = end - start;
 
         Console.WriteLine($"{Buffer.WriteBuffer.Length} - {length}");
 
+        Buffer.WriteStartPosition = startPosition;
+        Buffer.WriteDataLength = length;
         Array.Copy(data, start, Buffer.WriteBuffer, 0, length);
-        Buffer.WriteBufferPosition = length;
 
         FlipBuffer();
     }

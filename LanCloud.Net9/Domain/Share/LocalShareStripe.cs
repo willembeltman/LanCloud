@@ -1,4 +1,5 @@
-﻿using LanCloud.Domain.FileStripe;
+﻿using LanCloud.Domain.Local;
+using LanCloud.Interfaces;
 using LanCloud.Models.Config;
 
 namespace LanCloud.Domain.Share;

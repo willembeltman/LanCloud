@@ -1,11 +1,12 @@
 ﻿using LanCloud.Domain.Application;
+using LanCloud.Interfaces;
 using LanCloud.Models.Dtos;
 
-namespace LanCloud.Domain.FileRef;
+namespace LanCloud.Domain.Remote;
 
-public class RemoteFileRef : IFileRef
+public class RemoteFile : IFile
 {
-    public RemoteFileRef(RemoteApplication application, FileRefDto fileRefDto)
+    public RemoteFile(RemoteApplication application, FileRefDto fileRefDto)
     {
         Application = application;
         FileRefDto = fileRefDto;

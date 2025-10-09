@@ -1,4 +1,4 @@
-﻿namespace LanCloud.Domain.FileStripe;
+﻿namespace LanCloud.Interfaces;
 
 public interface IFileStripe
 {

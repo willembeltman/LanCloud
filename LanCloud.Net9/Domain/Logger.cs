@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
-namespace LanCloud.Domain.Application;
+namespace LanCloud.Domain;
 
 public class Logger : ILogger, IDisposable
 {

@@ -2,9 +2,9 @@ using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.Drive;
 
-public sealed class DriveFileSystemEntry
+public sealed class DriveFileEntry
 {
-    public DriveFileSystemEntry(
+    public DriveFileEntry(
         string path,
         string name,
         bool isDirectory,

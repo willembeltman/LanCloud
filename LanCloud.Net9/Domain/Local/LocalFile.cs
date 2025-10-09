@@ -1,96 +1,98 @@
 ﻿using LanCloud.Domain.Application;
-using LanCloud.Domain.FileStripe;
-using LanCloud.Domain.IO.Appender;
-using LanCloud.Domain.IO.Reader;
-using LanCloud.Domain.IO.Writer;
+using LanCloud.Domain.IO;
 using LanCloud.Interfaces;
 using LanCloud.Repositories;
 
-namespace LanCloud.Domain.FileRef;
+namespace LanCloud.Domain.Local;
 
-public class LocalFileRef : IFileRef
+public class LocalFile : IFile
 {
-    public LocalFileRef(LocalApplication application, string path)
+    public LocalFile(LocalApplication application, string path)
     {
         Application = application;
         Path = path;
         var realFullName = PathTranslator.TranslatePathToFullName(application.RealRoot, path);
         RealInfo = new FileInfo(realFullName);
+        Name = PathTranslator.TranslatePathToName(Path);
+        Extention = PathTranslator.TranslatePathToExtention(Path);
     }
-    public LocalFileRef(LocalApplication application, FileInfo realInfo)
+    public LocalFile(LocalApplication application, FileInfo realInfo)
     {
         Application = application;
         RealInfo = realInfo;
         Path = PathTranslator.TranslateFullnameToPath(application.RealRoot, realInfo);
+        Name = PathTranslator.TranslatePathToName(Path);
+        Extention = PathTranslator.TranslatePathToExtention(Path);
     }
 
     public LocalApplication Application { get; }
     public string Path { get; }
     public ILogger Logger => Application.Logger;
     public FileInfo RealInfo { get; }
+    public string Name { get; }
+    public string Extention { get; }
 
-    public string Name => PathTranslator.TranslatePathToName(Path);
-    public string Extention => PathTranslator.TranslatePathToExtention(Path);
-
-    FileRefMetadata? _Metadata { get; set; }
-    public FileRefMetadata Metadata
+    FileMetadata? _Metadata { get; set; }
+    public FileMetadata Metadata
     {
         get
         {
-            return _Metadata = _Metadata ?? 
-                FileRefRepository.Load(RealInfo) ?? 
+            return _Metadata = _Metadata ??
+                FileRefRepository.Load(RealInfo) ??
                 throw new Exception("Cannot load file metadata");
         }
-        set
+    }
+
+    public void SaveMetadata(FileMetadata? value)
+    {
+        if (value != null)
         {
-            if (value != null)
-            {
-                _Metadata = FileRefRepository.Save(RealInfo, value);
-            }
-            else
-            {
-                RealInfo.Delete();
-                _Metadata = null;
-            }
+            _Metadata = FileRefRepository.Save(RealInfo, value);
+        }
+        else
+        {
+            RealInfo.Delete();
+            _Metadata = null;
         }
     }
+
 
     public DateTime LastWriteTime => RealInfo.LastWriteTime;
     public bool Exists => RealInfo.Exists;
-    public long Length => Metadata!.Length;
-    public string Hash => Metadata!.Hash;
+    public long Length => Metadata?.Length ?? 0;
+    public string Hash => Metadata?.Hash ?? string.Empty;
 
     public Stream Create()
     {
-        Metadata = new FileRefMetadata(this);
-        return new FileRefWriter(this, Application.FileStripeBufferSize);
+        SaveMetadata( new FileMetadata(this));
+        return new FileWriter(Application, this, Application.FileStripeBufferSize);
     }
-
     public Stream OpenRead()
     {
         if (Metadata == null) throw new Exception("No Metadata");
-        return new FileRefReader(this, Application.FileStripeBufferSize);
+        return new FileReader(this, Application.FileStripeBufferSize);
     }
-
     public Stream OpenAppend()
     {
         if (Metadata == null) throw new Exception("No Metadata");
-        return new FileRefAppender(this);
+        return new FileAppender(this);
     }
 
     public void MoveTo(string toPath)
     {
         if (Metadata == null) return;
         if (Metadata.Stripes == null) return;
-        var to = new LocalFileRef(Application, toPath);
+        var to = new LocalFile(Application, toPath);
 
         if (Extention != to.Extention)
         {
             var fileStripes = Metadata.Stripes
                 .SelectMany(fileRefStripe => Application.FindFileStripes(Extention, Metadata, fileRefStripe))
-                .Select(a => new {
-                    OldFileStripe = a, 
-                    NewFileStripe = new LocalFileStripe(a.Info.Directory!, to.Extention, a.Indexes, a.Length!.Value, a.Hash!) })
+                .Select(a => new
+                {
+                    OldFileStripe = a,
+                    NewFileStripe = new LocalFileStripe(a.Info.Directory!, to.Extention, a.Indexes, a.Length!.Value, a.Hash!)
+                })
                 .ToArray();
 
             foreach (var fileStripe in fileStripes)

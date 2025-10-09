@@ -7,28 +7,29 @@ namespace LanCloud.Domain.Rpc;
 
 public class RpcClientConnection : StatusBase, IDisposable
 {
-    public RpcClientConnection(RpcServer server, TcpClient client) : base(server.Application)
+    private readonly TcpClient Client;
+    private readonly IRpcHandler Handler;
+    private readonly RpcServer Server;
+    private readonly Thread Thread;
+    private bool KillSwitch;
+
+    public RpcClientConnection(RpcServer server, TcpClient client, IRpcHandler handler) : base(server.Application)
     {
         Server = server;
         Client = client;
+        Handler = handler;
 
         var RemoteEndPoint = client.Client.RemoteEndPoint as IPEndPoint;
         Name = RemoteEndPoint?.Address.ToString() ?? string.Empty;
 
-        Thread = new Thread(new ThreadStart(Start));
+        Thread = new Thread(new ThreadStart(Kernel));
         Thread.Start();
     }
-
     public string Name { get; }
-    public TcpClient Client { get; }
-    public RpcServer Server { get; }
-    public Thread Thread { get; }
 
-
-    private void Start()
+    private void Kernel()
     {
         Server.AddConnection(this);
-        Status = Logger.Info($"Starting");
 
         using (var stream = Client.GetStream())
         using (var reader = new BinaryReader(stream))
@@ -43,9 +44,9 @@ public class RpcClientConnection : StatusBase, IDisposable
             byte[] responseData = new byte[Server.Application.RpcBufferSize];
             try
             {
-                Status = Logger.Info($"Connected");
+                Status = Logger.Info($"OK");
 
-                while (Client.Connected)
+                while (Client.Connected && !KillSwitch)
                 {
                     requestMessageType = reader.ReadInt32();
                     if (requestMessageType == -1)
@@ -60,7 +61,7 @@ public class RpcClientConnection : StatusBase, IDisposable
                         {
                             reader.Read(requestData, 0, requestDataLength);
                         }
-                        Server.Handler.ProcessRequest(requestMessageType, requestJson, requestData, requestDataLength, out responseJson, responseData, out responseDataLength);
+                        Handler.ProcessRequest(requestMessageType, requestJson, requestData, requestDataLength, out responseJson, responseData, out responseDataLength);
                         writer.Write(responseJson);
                         writer.Write(responseDataLength);
                         if (responseDataLength >= 0)
@@ -76,13 +77,12 @@ public class RpcClientConnection : StatusBase, IDisposable
             }
         }
 
-        Dispose();
+        Server.RemoveConnection(this);
     }
 
     public void Dispose()
     {
+        KillSwitch = true;
         Client.Dispose();
-        Server.RemoveConnection(this);
-        Status = Logger.Info($"Disposed");
     }
 }

@@ -1,6 +1,7 @@
-﻿using System.Data;
+﻿using LanCloud.Interfaces;
+using System.Data;
 
-namespace LanCloud.Domain.FileStripe;
+namespace LanCloud.Domain.Local;
 
 public class LocalFileStripe : IFileStripe
 {

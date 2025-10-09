@@ -3,11 +3,11 @@ using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.Drive;
 
-public sealed class OpenFileHandle : IDisposable
+public sealed class DriveOpenFileHandle : IDisposable
 {
     private Stream? _stream;
 
-    private OpenFileHandle(string path, Stream? stream, bool writable, bool isDirectory)
+    private DriveOpenFileHandle(string path, Stream? stream, bool writable, bool isDirectory)
     {
         Path = path;
         _stream = stream;
@@ -15,17 +15,17 @@ public sealed class OpenFileHandle : IDisposable
         IsDirectoryHandle = isDirectory;
     }
 
-    public OpenFileHandle(string path, Stream? stream, bool writable)
+    public DriveOpenFileHandle(string path, Stream? stream, bool writable)
         : this(path, stream, writable, false)
     {
     }
 
-    private OpenFileHandle(string path)
+    private DriveOpenFileHandle(string path)
         : this(path, stream: null, writable: false, isDirectory: true)
     {
     }
 
-    public static OpenFileHandle Directory(string path) => new OpenFileHandle(path);
+    public static DriveOpenFileHandle Directory(string path) => new DriveOpenFileHandle(path);
 
     public long Id { get; set; }
     public string Path { get; }

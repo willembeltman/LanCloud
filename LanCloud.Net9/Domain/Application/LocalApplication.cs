@@ -1,5 +1,5 @@
-using LanCloud.Domain.FileRef;
-using LanCloud.Domain.FileStripe;
+using LanCloud.Domain.IO;
+using LanCloud.Domain.Local;
 using LanCloud.Domain.Rpc;
 using LanCloud.Domain.Share;
 using LanCloud.Interfaces;
@@ -99,7 +99,7 @@ public class LocalApplication : IDisposable, IRpcHandler
         .ToArray();
 
 
-    public LocalFileStripe[] FindFileStripes(string extention, FileRefMetadata fileRef, FileRefStripeMetadata fileRefBit)
+    public LocalFileStripe[] FindFileStripes(string extention, FileMetadata fileRef, FileStripeMetadata fileRefBit)
     {
         var fileStripes = LocalShares
             .Select(a =>

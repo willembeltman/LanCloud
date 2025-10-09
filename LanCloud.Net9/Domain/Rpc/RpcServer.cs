@@ -38,7 +38,7 @@ public class RpcServer : StatusBase, IDisposable
 
             var client = Listener.EndAcceptTcpClient(result);
 
-            new RpcClientConnection(this, client);
+            new RpcClientConnection(this, client, Handler);
         }
     }
     public RpcClientConnection[] GetActiveConnections()
@@ -51,12 +51,17 @@ public class RpcServer : StatusBase, IDisposable
     public void AddConnection(RpcClientConnection connection)
     {
         lock (this)
+        {
             _ActiveConnections.Add(connection);
+        }
     }
     public void RemoveConnection(RpcClientConnection connection)
     {
         lock (this)
+        {
             _ActiveConnections.Remove(connection);
+            connection.Dispose();
+        }
     }
 
     public void Dispose()

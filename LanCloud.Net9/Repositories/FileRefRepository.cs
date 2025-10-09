@@ -1,15 +1,16 @@
-﻿using LanCloud.Domain.FileRef;
+﻿using LanCloud.Domain.IO;
 
 namespace LanCloud.Repositories
 {
     public static class FileRefRepository
     {
-        public static FileRefMetadata Save(FileInfo fileInfo, FileRefMetadata fileRef)
+        public static FileMetadata Save(FileInfo fileInfo, FileMetadata fileRef)
         {
             if (!fileInfo.Exists) fileInfo.Delete();
             using (var stream = fileInfo.OpenWrite())
             using (var writer = new BinaryWriter(stream))
             {
+                writer.Write(fileRef.BufferSize);
                 writer.Write(fileRef.Length);
                 writer.Write(fileRef.Hash);
                 writer.Write(Convert.ToByte(fileRef.Stripes?.Length ?? 0));
@@ -28,25 +29,26 @@ namespace LanCloud.Repositories
             return fileRef;
         }
 
-        public static FileRefMetadata? Load(FileInfo fileInfo)
+        public static FileMetadata? Load(FileInfo fileInfo)
         {
             if (!fileInfo.Exists) return null;
             using (var stream = fileInfo.OpenRead())
             using (var reader = new BinaryReader(stream))
             {
-                var Length = reader.ReadInt64();
-                var Hash = reader.ReadString();
-                var Bits = new FileRefStripeMetadata[reader.ReadByte()];
-                for (int i = 0; i < Bits.Length; i++)
+                var bufferSize = reader.ReadInt32();
+                var length = reader.ReadInt64();
+                var hash = reader.ReadString();
+                var stripes = new FileStripeMetadata[reader.ReadByte()];
+                for (int i = 0; i < stripes.Length; i++)
                 {
                     var Indexes = new int[reader.ReadByte()];
                     for (int j = 0; j < Indexes.Length; j++)
                     {
                         Indexes[j] = reader.ReadByte();
                     }
-                    Bits[i] = new FileRefStripeMetadata(Indexes);
+                    stripes[i] = new FileStripeMetadata(Indexes);
                 }
-                return new FileRefMetadata(Length, Hash, Bits);
+                return new FileMetadata(bufferSize, length, hash, stripes);
             }
         }
     }

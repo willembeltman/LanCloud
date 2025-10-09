@@ -1,6 +1,6 @@
-﻿namespace LanCloud.Domain.FileRef;
+﻿namespace LanCloud.Interfaces;
 
-public interface IFileRef
+public interface IFile
 {
     bool Exists { get; }
     string Extention { get; }

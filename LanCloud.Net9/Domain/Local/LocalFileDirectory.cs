@@ -1,18 +1,18 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Interfaces;
 
-namespace LanCloud.Domain.FileRef;
+namespace LanCloud.Domain.Local;
 
-public class LocalFileRefDirectory : IFileRefDirectory
+public class LocalFileDirectory : IFileDirectory
 {
-    public LocalFileRefDirectory(LocalApplication application, string path)
+    public LocalFileDirectory(LocalApplication application, string path)
     {
         Application = application;
         Path = path;
         var realFullName = PathTranslator.TranslateDirectoryPathToFullName(application.RealRoot, path);
         RealInfo = new DirectoryInfo(realFullName);
     }
-    public LocalFileRefDirectory(LocalApplication application, DirectoryInfo realInfo)
+    public LocalFileDirectory(LocalApplication application, DirectoryInfo realInfo)
     {
         Application = application;
         RealInfo = realInfo;
@@ -37,17 +37,17 @@ public class LocalFileRefDirectory : IFileRefDirectory
     {
         RealInfo.Delete(false);
     }
-    public LocalFileRefDirectory[] GetDirectories()
+    public LocalFileDirectory[] GetDirectories()
         => RealInfo
             .GetDirectories()
-            .Select(dirinfo => new LocalFileRefDirectory(Application, dirinfo))
+            .Select(dirinfo => new LocalFileDirectory(Application, dirinfo))
             .ToArray();
-    public LocalFileRef[] GetFiles()
+    public LocalFile[] GetFiles()
         => RealInfo
             .GetFiles("*.fileref")
-            .Select(realInfo => new LocalFileRef(Application, realInfo))
+            .Select(realInfo => new LocalFile(Application, realInfo))
             .ToArray();
     
-    IFileRefDirectory[] IFileRefDirectory.GetDirectories() => GetDirectories();
-    IFileRef[] IFileRefDirectory.GetFiles() => GetFiles();
+    IFileDirectory[] IFileDirectory.GetDirectories() => GetDirectories();
+    IFile[] IFileDirectory.GetFiles() => GetFiles();
 }

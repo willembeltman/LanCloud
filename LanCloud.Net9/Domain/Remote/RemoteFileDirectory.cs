@@ -1,11 +1,12 @@
 ﻿using LanCloud.Domain.Application;
+using LanCloud.Interfaces;
 using LanCloud.Models.Dtos;
 
-namespace LanCloud.Domain.FileRef;
+namespace LanCloud.Domain.Remote;
 
-public class RemoteFileRefDirectory : IFileRefDirectory
+public class RemoteFileDirectory : IFileDirectory
 {
-    public RemoteFileRefDirectory(RemoteApplication application, FileRefDirectoryDto fileRefDirectoryDto)
+    public RemoteFileDirectory(RemoteApplication application, FileRefDirectoryDto fileRefDirectoryDto)
     {
         Application = application;
         FileRefDirectoryDto = fileRefDirectoryDto;
@@ -29,12 +30,12 @@ public class RemoteFileRefDirectory : IFileRefDirectory
         throw new NotImplementedException();
     }
 
-    public IFileRefDirectory[] GetDirectories()
+    public IFileDirectory[] GetDirectories()
     {
         throw new NotImplementedException();
     }
 
-    public IFileRef[] GetFiles()
+    public IFile[] GetFiles()
     {
         throw new NotImplementedException();
     }

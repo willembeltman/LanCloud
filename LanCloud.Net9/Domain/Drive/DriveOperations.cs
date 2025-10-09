@@ -10,7 +10,7 @@ internal sealed class DriveOperations : IDokanOperations
 {
     private readonly DriveServer DriveServer;
 
-    private readonly ConcurrentDictionary<long, OpenFileHandle> Handles = new ConcurrentDictionary<long, OpenFileHandle>();
+    private readonly ConcurrentDictionary<long, DriveOpenFileHandle> Handles = new ConcurrentDictionary<long, DriveOpenFileHandle>();
     private long HandleId;
 
     public DriveOperations(DriveServer driveServer)
@@ -41,7 +41,7 @@ internal sealed class DriveOperations : IDokanOperations
         return normalized;
     }
 
-    private OpenFileHandle RegisterHandle(IDokanFileInfo info, OpenFileHandle handle)
+    private DriveOpenFileHandle RegisterHandle(IDokanFileInfo info, DriveOpenFileHandle handle)
     {
         var id = Interlocked.Increment(ref HandleId);
         handle.Id = id;
@@ -50,12 +50,12 @@ internal sealed class DriveOperations : IDokanOperations
         return handle;
     }
 
-    private static OpenFileHandle? GetHandle(IDokanFileInfo info)
-        => info.Context as OpenFileHandle;
+    private static DriveOpenFileHandle? GetHandle(IDokanFileInfo info)
+        => info.Context as DriveOpenFileHandle;
 
     private void CloseHandle(IDokanFileInfo info)
     {
-        if (info.Context is OpenFileHandle handle)
+        if (info.Context is DriveOpenFileHandle handle)
         {
             if (Handles.TryRemove(handle.Id, out var stored))
             {
@@ -104,7 +104,7 @@ internal sealed class DriveOperations : IDokanOperations
                 return DokanResult.PathNotFound;
             }
 
-            RegisterHandle(info, OpenFileHandle.Directory(path));
+            RegisterHandle(info, DriveOpenFileHandle.Directory(path));
             return DokanResult.Success;
         }
 
@@ -129,7 +129,7 @@ internal sealed class DriveOperations : IDokanOperations
                     return DokanResult.AccessDenied;
                 }
 
-                var createHandle = new OpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
+                var createHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
                 RegisterHandle(info, createHandle);
                 return DokanResult.Success;
 
@@ -140,7 +140,7 @@ internal sealed class DriveOperations : IDokanOperations
                     return DokanResult.AccessDenied;
                 }
 
-                var overwriteHandle = new OpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.Create), writable: true);
+                var overwriteHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.Create), writable: true);
                 RegisterHandle(info, overwriteHandle);
                 return DokanResult.Success;
 
@@ -152,7 +152,7 @@ internal sealed class DriveOperations : IDokanOperations
                         return DokanResult.AccessDenied;
                     }
 
-                    var openOrCreateHandle = new OpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
+                    var openOrCreateHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
                     RegisterHandle(info, openOrCreateHandle);
                     return DokanResult.Success;
                 }
@@ -166,7 +166,7 @@ internal sealed class DriveOperations : IDokanOperations
                         return DokanResult.AccessDenied;
                     }
 
-                    var appendHandle = new OpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
+                    var appendHandle = new DriveOpenFileHandle(path, FileSystem.FileOpenWriteAppend(path), writable: true);
                     RegisterHandle(info, appendHandle);
                     return DokanResult.Success;
                 }
@@ -190,7 +190,7 @@ internal sealed class DriveOperations : IDokanOperations
         }
 
         var stream = FileSystem.OpenRead(path);
-        RegisterHandle(info, new OpenFileHandle(path, stream, writable: false));
+        RegisterHandle(info, new DriveOpenFileHandle(path, stream, writable: false));
         return DokanResult.Success;
     }
 
@@ -302,7 +302,7 @@ internal sealed class DriveOperations : IDokanOperations
             FileName = Path.GetFileName(fileName)
         };
 
-        DriveFileSystemEntry? entry = null;
+        DriveFileEntry? entry = null;
         if (FileSystem.FileExists(path))
         {
             entry = FileSystem.GetFile(path);
