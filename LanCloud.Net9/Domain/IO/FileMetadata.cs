@@ -14,11 +14,11 @@ public class FileMetadata
 
     public FileMetadata(LocalFile pathInfo)
     {
-        if (pathInfo.Metadata == null) throw new ArgumentNullException("Metadata cannot be null");
-        BufferSize = pathInfo.Metadata.BufferSize;
-        Length = pathInfo.Metadata.Length;
-        Hash = pathInfo.Metadata.Hash;
-        Stripes = pathInfo.Metadata.Stripes;
+        //if (pathInfo.Metadata == null) throw new ArgumentNullException("Metadata cannot be null");
+        BufferSize = pathInfo.Metadata?.BufferSize ?? pathInfo.Application.FileStripeBufferSize;
+        Length = pathInfo.Metadata?.Length ?? 0;
+        Hash = pathInfo.Metadata?.Hash ?? string.Empty;
+        Stripes = pathInfo.Metadata?.Stripes ?? [];
     }
 
     public int BufferSize { get; }

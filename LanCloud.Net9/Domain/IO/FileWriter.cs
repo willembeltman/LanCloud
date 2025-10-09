@@ -64,27 +64,27 @@ public class FileWriter : Stream
         Buffer.WriteStartPosition = Position;
         while (bytesWritten < count)
         {
-            var availableSpace = Buffer.WriteBuffer.Length - Buffer.WriteDataLength;
+            var availableSpace = Buffer.WriteBuffer.Length - Buffer.WriteBytesWritten;
             var totalBytesToWrite = count - bytesWritten;
             int bytesToWrite = Math.Min(totalBytesToWrite, availableSpace);
 
-            Array.Copy(buffer, offset + bytesWritten, Buffer.WriteBuffer, Buffer.WriteDataLength, bytesToWrite);
+            Array.Copy(buffer, offset + bytesWritten, Buffer.WriteBuffer, Buffer.WriteBytesWritten, bytesToWrite);
 
             bytesWritten += bytesToWrite;
-            Buffer.WriteDataLength += bytesToWrite;
+            Buffer.WriteBytesWritten += bytesToWrite;
             Position += bytesWritten;
 
-            if (Buffer.WriteDataLength >= Buffer.WriteBuffer.Length)
+            if (Buffer.WriteBytesWritten >= Buffer.WriteBuffer.Length)
             {
                 StartNext();
-                Buffer.WriteDataLength = 0;
+                Buffer.WriteBytesWritten = 0;
                 Buffer.WriteStartPosition = null;
             }
         }
     }
     public override void Flush()
     {
-        if (Buffer.WriteDataLength > 0)
+        if (Buffer.WriteBytesWritten > 0)
         {
             StartNext();
         }
@@ -124,7 +124,7 @@ public class FileWriter : Stream
             Disposed = true;
 
             // Eventueel de laatste buffer wegschrijven
-            if (Buffer.WriteDataLength > 0)
+            if (Buffer.WriteBytesWritten > 0)
             {
                 StartNext();
             }

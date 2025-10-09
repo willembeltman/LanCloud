@@ -62,9 +62,9 @@ public class FileStripeReader : IDisposable
                     if (!EndOfFile)
                     {
                         // Do the read
-                        Buffer.WriteDataLength = Stream.Read(Buffer.WriteBuffer, 0, Buffer.WriteBuffer.Length);
+                        Buffer.WriteBytesWritten = Stream.Read(Buffer.WriteBuffer, 0, Buffer.WriteBuffer.Length);
 
-                        if (Buffer.WriteDataLength <= 0)
+                        if (Buffer.WriteBytesWritten <= 0)
                         {
                             EndOfFile = true;
                         }
@@ -74,13 +74,13 @@ public class FileStripeReader : IDisposable
 
                             var time = Stopwatch.ElapsedTicks;
                             Stopwatch.Restart();
-                            var speed = Buffer.WriteDataLength * Stopwatch.Frequency / time;
+                            var speed = Buffer.WriteBytesWritten * Stopwatch.Frequency / time;
                             AddSpeed(speed);
                         }
                     }
                     else
                     {
-                        Buffer.WriteDataLength = 0;
+                        Buffer.WriteBytesWritten = 0;
                     }
 
                     BufferIsWritten.Set();

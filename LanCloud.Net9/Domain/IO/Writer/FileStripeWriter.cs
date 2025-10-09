@@ -42,10 +42,10 @@ public class FileStripeWriter
             {
                 if (StartNext.WaitOne(100))
                 {
-                    if (!KillSwitch && Buffer.ReadDataLength > 0)
+                    if (!KillSwitch && Buffer.ReadBytesWritten > 0)
                     {
                         var data = Buffer.ReadBuffer;
-                        var datalength = Buffer.ReadDataLength;
+                        var datalength = Buffer.ReadBytesWritten;
 
                         stream.Write(data, 0, datalength);
                         Position += datalength;

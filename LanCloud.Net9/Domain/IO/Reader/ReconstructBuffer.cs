@@ -1,6 +1,5 @@
 ﻿using LanCloud.Domain.Application;
 using LanCloud.Domain.Local;
-using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.IO.Reader;
 
@@ -65,7 +64,7 @@ public class ReconstructBuffer : IDisposable
         {
             if (StartNext.WaitOne(100))
             {
-                Buffer.WriteDataLength = 0;
+                Buffer.WriteBytesWritten = 0;
 
                 var goodReaders = FileStripeReaders.Where(a => a.Exception == null).ToArray();
                 if (goodReaders.Length < AllIndexes.Length)
@@ -165,7 +164,7 @@ public class ReconstructBuffer : IDisposable
                             if (parityreader != null)
                             {
                                 var buffer = parityreader.Buffer.ReadBuffer;
-                                var length = parityreader.Buffer.ReadDataLength;
+                                var length = parityreader.Buffer.ReadBytesWritten;
 
                                 var otherNormals = normals
                                     .Where(foundNormal => parityreader.Indexes.Contains(foundNormal.Index))
@@ -186,9 +185,9 @@ public class ReconstructBuffer : IDisposable
                                         }
                                     }
 
-                                    Array.Copy(buffer, 0, Buffer.WriteBuffer, Buffer.WriteDataLength, length);
+                                    Array.Copy(buffer, 0, Buffer.WriteBuffer, Buffer.WriteBytesWritten, length);
 
-                                    Buffer.WriteDataLength += length;
+                                    Buffer.WriteBytesWritten += length;
                                 }
                                 else
                                 {
@@ -216,13 +215,13 @@ public class ReconstructBuffer : IDisposable
 
     private void ReadItem(FileStripeReader item)
     {
-        if (item.Buffer.ReadDataLength > 0)
+        if (item.Buffer.ReadBytesWritten > 0)
         {
-            var length = item.Buffer.ReadDataLength;
+            var length = item.Buffer.ReadBytesWritten;
 
-            Array.Copy(item.Buffer.ReadBuffer, 0, Buffer.WriteBuffer, Buffer.WriteDataLength, length);
+            Array.Copy(item.Buffer.ReadBuffer, 0, Buffer.WriteBuffer, Buffer.WriteBytesWritten, length);
 
-            Buffer.WriteDataLength += length;
+            Buffer.WriteBytesWritten += length;
         }
     }
 

@@ -38,10 +38,10 @@ public class ParityStripeWriter
         {
             if (StartNext.WaitOne(1000))
             {
-                if (!KillSwitch && FileRefWriter.Buffer.ReadDataLength > 0)
+                if (!KillSwitch && FileRefWriter.Buffer.ReadBytesWritten > 0)
                 {
                     var data = FileRefWriter.Buffer.ReadBuffer;
-                    var datalength = FileRefWriter.Buffer.ReadDataLength;
+                    var datalength = FileRefWriter.Buffer.ReadBytesWritten;
                     var width = FileRefWriter.Buffer.Width;
 
                     WriteBufferToStream(data, datalength, width);
@@ -76,7 +76,7 @@ public class ParityStripeWriter
         }
 
         // Set position
-        Buffer.WriteDataLength = maxlength;
+        Buffer.WriteBytesWritten = maxlength;
 
         FlipBuffer();
     }

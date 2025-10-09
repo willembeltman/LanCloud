@@ -33,13 +33,12 @@ public class LocalFile : IFile
     public string Extention { get; }
 
     FileMetadata? _Metadata { get; set; }
-    public FileMetadata Metadata
+    public FileMetadata? Metadata
     {
         get
         {
             return _Metadata = _Metadata ??
-                FileRefRepository.Load(RealInfo) ??
-                throw new Exception("Cannot load file metadata");
+                FileRefRepository.Load(RealInfo);
         }
     }
 
@@ -64,7 +63,8 @@ public class LocalFile : IFile
 
     public Stream Create()
     {
-        SaveMetadata( new FileMetadata(this));
+        var metadata = new FileMetadata(this);
+        SaveMetadata(metadata);
         return new FileWriter(Application, this, Application.FileStripeBufferSize);
     }
     public Stream OpenRead()

@@ -22,7 +22,7 @@ class Program
                 //logger.Info("OK");
                 //var res = localApplication.RemoteApplications.First().Ping();
 
-                DoTest(application.FileSystem);
+                //DoTest(application.FileSystem);
                 //DoTest2(virtualFtpServer);
                 
                 //Console.WriteLine("Press any key to stop...");

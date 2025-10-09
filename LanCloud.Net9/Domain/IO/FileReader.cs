@@ -36,9 +36,9 @@ public class FileReader : Stream
         }
 
         var read = 0;
-        while (read < count && BufferPosition < ReconstructBuffer.Buffer.ReadDataLength)
+        while (read < count && BufferPosition < ReconstructBuffer.Buffer.ReadBytesWritten)
         {
-            var availableSpace = ReconstructBuffer.Buffer.ReadDataLength - BufferPosition;
+            var availableSpace = ReconstructBuffer.Buffer.ReadBytesWritten - BufferPosition;
             int bytesToWrite = Math.Min(count - read, availableSpace);
 
             Array.Copy(ReconstructBuffer.Buffer.ReadBuffer, BufferPosition, buffer, offset + read, bytesToWrite);

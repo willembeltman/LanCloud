@@ -28,10 +28,10 @@ public class HashWriter
         {
             if (StartNext.WaitOne(1000))
             {
-                if (!KillSwitch && FileRefWriter.Buffer.ReadDataLength > 0)
+                if (!KillSwitch && FileRefWriter.Buffer.ReadBytesWritten > 0)
                 {
                     var data = FileRefWriter.Buffer.ReadBuffer;
-                    var datalength = FileRefWriter.Buffer.ReadDataLength;
+                    var datalength = FileRefWriter.Buffer.ReadBytesWritten;
 
                     IncrementalHash.AppendData(data, 0, datalength);
                 }

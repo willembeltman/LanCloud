@@ -37,11 +37,11 @@ public class DataStripeWriter
         {
             if (StartNext.WaitOne(1000))
             {
-                if (!KillSwitch && FileRefWriter.Buffer.ReadDataLength > 0)
+                if (!KillSwitch && FileRefWriter.Buffer.ReadBytesWritten > 0)
                 {
                     var startposition = FileRefWriter.Buffer.ReadStartPosition;
                     var buffer = FileRefWriter.Buffer.ReadBuffer;
-                    var datalength = FileRefWriter.Buffer.ReadDataLength;
+                    var datalength = FileRefWriter.Buffer.ReadBytesWritten;
                     WriteBufferToStream(startposition, buffer,  datalength);
                 }
 
@@ -58,7 +58,7 @@ public class DataStripeWriter
         Console.WriteLine($"{Buffer.WriteBuffer.Length} - {length}");
 
         Buffer.WriteStartPosition = startPosition;
-        Buffer.WriteDataLength = length;
+        Buffer.WriteBytesWritten = length;
         Array.Copy(data, start, Buffer.WriteBuffer, 0, length);
 
         FlipBuffer();

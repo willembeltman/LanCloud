@@ -18,5 +18,5 @@ public class StatusBase(LocalApplication application)
         }
     }
 
-    public ILogger Logger => Logger;
+    public ILogger Logger => Application.Logger;
 }
