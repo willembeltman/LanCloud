@@ -9,6 +9,6 @@ public class CloseFileStripeSessionRequest
         Indexes = indexes;
     }
 
-    public string? Extention { get; set; }
-    public int[]? Indexes { get; set; }
+    public string Extention { get; set; } = string.Empty;
+    public int[] Indexes { get; set; } = [];
 }

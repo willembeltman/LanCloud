@@ -1,27 +1,26 @@
 ﻿using LanCloud.Domain.Local;
 using LanCloud.Domain.Share;
-using LanCloud.Interfaces;
 
 namespace LanCloud.Domain.IO.Writer;
 
 public class FileStripeWriter
 {
-    public FileStripeWriter(FileWriter fileRefWriter, LocalShareStripe localSharePart, DoubleBuffer buffer)
+    public FileStripeWriter(FileWriter fileWriter, LocalShare localShare, DoubleBuffer buffer)
     {
-        FileRefWriter = fileRefWriter;
-        LocalShareStripe = localSharePart;
+        FileWriter = fileWriter;
+        LocalShare = localShare;
         Buffer = buffer;
 
-        FileStripe = LocalShareStripe.CreateFileStripeSession(FileRefWriter.FileRef.Extention);
+        FileStripe = LocalShare.CreateFileStripeSession(FileWriter.FileRef.Extention);
 
         Thread = new Thread(new ThreadStart(Kernel));
         Thread.Start();
 
-        fileRefWriter.Logger.Info($"Opened {FileStripe.Info.Name} as output for parts: {string.Join(" xor ", Indexes.OrderBy(a => a).Select(a => $"#{a}"))}");
+        fileWriter.Logger.Info($"Opened {FileStripe.Info.Name} as output for parts: {string.Join(" xor ", Indexes.OrderBy(a => a).Select(a => $"#{a}"))}");
     }
 
-    public FileWriter FileRefWriter { get; }
-    public LocalShareStripe LocalShareStripe { get; }
+    public FileWriter FileWriter { get; }
+    public LocalShare LocalShare { get; }
     public DoubleBuffer Buffer { get; }
     public LocalFileStripe FileStripe { get; }
 
@@ -32,7 +31,7 @@ public class FileStripeWriter
     public int Position { get; private set; } = 0;
     private bool KillSwitch { get; set; } = false;
 
-    public int[] Indexes => LocalShareStripe.Indexes;
+    public int[] Indexes => LocalShare.Indexes;
 
     private void Kernel()
     {
@@ -66,7 +65,7 @@ public class FileStripeWriter
         Thread.Join();
 
         FileStripe.Update(length, hash);
-        LocalShareStripe.LocalShare.AddFileStripe(FileStripe);
+        LocalShare.AddFileStripe(FileStripe);
         return FileStripe;
     }
 

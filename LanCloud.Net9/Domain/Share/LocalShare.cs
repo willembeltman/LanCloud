@@ -26,10 +26,6 @@ public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
             .Select(fileRefInfo => new LocalFileStripe(fileRefInfo))
             .ToDictionary(a => a.Name);
 
-        LocalShareStripes = config.Parts
-            .Select(part => new LocalShareStripe(this, part))
-            .ToArray();
-
         if (Application.ApplicationConfig != null)
         {
             Server = new RpcServer(this, Application, IPAddress.Any, Port);
@@ -40,7 +36,7 @@ public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
     public LocalShareConfig Config { get; }
     public int Port { get; }
     private Dictionary<string, LocalFileStripe> LocalFileStripeInfos { get; }
-    public LocalShareStripe[] LocalShareStripes { get; }
+    public int[] Indexes => Config.Indexes;
 
     public string HostName => Application.ApplicationConfig?.HostName ?? string.Empty;
     public string RootFullName => Config.DirectoryName ?? string.Empty;
@@ -72,7 +68,7 @@ public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
         }
     }
 
-    public void ProcessRequest(int requestMessageType, string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
+    public void ProcessRequest(int requestMessageType, string? requestJson, byte[]? requestData, int requestDataLength, out string? responseJson, byte[]? responseData, out int responseDataLength)
     {
         switch (requestMessageType)
         {
@@ -93,65 +89,104 @@ public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
         }
     }
 
-    private void Handle_FindFileStripe(string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
+    private void Handle_FindFileStripe(string? requestJson, byte[]? requestData, int requestDataLength, out string? responseJson, byte[]? responseData, out int responseDataLength)
     {
-        var request = JsonConvert.DeserializeObject<FindFileStripesRequest>(requestJson);
-        var localFileStripe = FindFileStripe(request.Extention, request.Hash, request.Length, request.Indexes);
-        var remoteFileStripe = new FileStripeDto(localFileStripe);
-        responseJson = JsonConvert.SerializeObject(remoteFileStripe);
-        responseDataLength = 0;
-    }
-
-    private void Handle_CreateFileStripeSession(string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
-    {
-        var request = JsonConvert.DeserializeObject<CreateFileStripeSessionRequest>(requestJson);
-
-        var shareStripe = LocalShareStripes.FirstOrDefault(a => a.Indexes.Matches(request.Indexes));
-        if (shareStripe == null)
+        if (requestJson == null)
         {
             responseJson = null;
             responseDataLength = 0;
             return;
         }
 
-        var localFileStripe = shareStripe.CreateFileStripeSession(request.Extention);
+        var request = JsonConvert.DeserializeObject<FindFileStripesRequest>(requestJson);
+        if (request == null)
+        {
+            responseJson = null;
+            responseDataLength = 0;
+            return;
+        }
+
+        var localFileStripe = FindFileStripe(request.Extention, request.Hash, request.Length, request.Indexes); 
+        if (localFileStripe == null)
+        {
+            responseJson = null;
+            responseDataLength = 0;
+            return;
+        }
+
+        var remoteFileStripe = new FileStripeDto(localFileStripe);
+        responseJson = JsonConvert.SerializeObject(remoteFileStripe);
+        responseDataLength = 0;
+    }
+
+    private void Handle_CreateFileStripeSession(string? requestJson, byte[]? requestData, int requestDataLength, out string? responseJson, byte[]? responseData, out int responseDataLength)
+    {
+        if (requestJson == null)
+        {
+            responseJson = null;
+            responseDataLength = 0;
+            return;
+        }
+
+        var request = JsonConvert.DeserializeObject<CreateFileStripeSessionRequest>(requestJson);
+
+        if (request == null)
+        {
+            responseJson = null;
+            responseDataLength = 0;
+            return;
+        }
+
+        var localFileStripe = CreateFileStripeSession(request.Extention);
         var fileStripeDto = new FileStripeDto(localFileStripe);
 
         var response = new CreateFileStripeSessionResponse(fileStripeDto);
         responseJson = JsonConvert.SerializeObject(response);
         responseDataLength = 0;
     }
-    private void Handle_StoreFileStripeChunk(string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
+    private void Handle_StoreFileStripeChunk(string? requestJson, byte[]? requestData, int requestDataLength, out string? responseJson, byte[]? responseData, out int responseDataLength)
     {
-        var request = JsonConvert.DeserializeObject<StoreFileStripeChunkRequest>(requestJson);
-
-        var shareStripe = LocalShareStripes.FirstOrDefault(a => a.Indexes.Matches(request.Indexes));
-        if (shareStripe == null)
+        if (requestJson == null)
         {
             responseJson = null;
             responseDataLength = 0;
             return;
         }
 
-        var succes = shareStripe.StoreFileStripeChunk(request.Extention, request.Index, requestData, requestDataLength);
+        var request = JsonConvert.DeserializeObject<StoreFileStripeChunkRequest>(requestJson);
+
+        if (request == null)
+        {
+            responseJson = null;
+            responseDataLength = 0;
+            return;
+        }
+
+        var succes = StoreFileStripeChunk(request.Extention, request.Index, requestData, requestDataLength);
 
         var response = new StoreFileStripeChunkResponse(succes);
         responseJson = JsonConvert.SerializeObject(response);
         responseDataLength = 0;
     }
-    private void Handle_CloseFileStripeSession(string requestJson, byte[] requestData, int requestDataLength, out string? responseJson, byte[] responseData, out int responseDataLength)
+    private void Handle_CloseFileStripeSession(string? requestJson, byte[]? requestData, int requestDataLength, out string? responseJson, byte[]? responseData, out int responseDataLength)
     {
-        var request = JsonConvert.DeserializeObject<CloseFileStripeSessionRequest>(requestJson);
-
-        var shareStripe = LocalShareStripes.FirstOrDefault(a => a.Indexes.Matches(request.Indexes));
-        if (shareStripe == null)
+        if (requestJson == null)
         {
             responseJson = null;
             responseDataLength = 0;
             return;
         }
 
-        LocalFileStripe localFileStripe = shareStripe.CloseFileStripeSession(request.Extention);
+        var request = JsonConvert.DeserializeObject<CloseFileStripeSessionRequest>(requestJson);
+
+        if (request == null)
+        {
+            responseJson = null;
+            responseDataLength = 0;
+            return;
+        }
+
+        LocalFileStripe localFileStripe = CloseFileStripeSession(request.Extention);
         var fileStripeDto = new FileStripeDto(localFileStripe);
 
         var response = new CloseFileStripeSessionResponse(fileStripeDto);
@@ -159,17 +194,28 @@ public class LocalShare : StatusBase, IRpcHandler, IDisposable, IShare
         responseDataLength = 0;
     }
 
-    public void Dispose()
+    public LocalFileStripe CreateFileStripeSession(string extention)
     {
-        Server.Dispose();
+        return new LocalFileStripe(Root, extention, Indexes);
     }
 
+    public bool StoreFileStripeChunk(string extention, long index, byte[] requestData, int requestDataLength)
+    {
+        throw new NotImplementedException();
+    }
 
-    #region IShare interface
-    IShareStripe[] IShare.ShareStripes => LocalShareStripes;
+    internal LocalFileStripe CloseFileStripeSession(string extention)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Dispose()
+    {
+        Server?.Dispose();
+    }
+
     IFileStripe? IShare.FindFileStripe(string extention, string hash, long length, int[] indexes)
     {
         return FindFileStripe(extention, hash, length, indexes);
     }
-    #endregion
 }

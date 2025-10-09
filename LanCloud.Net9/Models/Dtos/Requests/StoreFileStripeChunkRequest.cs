@@ -10,7 +10,7 @@ public class StoreFileStripeChunkRequest
         Index = index;
     }
 
-    public string? Extention { get; set; }
-    public int[]? Indexes { get; set; }
+    public string Extention { get; set; } = string.Empty;
+    public int[] Indexes { get; set; } = [];
     public long Index { get; set; }
 }

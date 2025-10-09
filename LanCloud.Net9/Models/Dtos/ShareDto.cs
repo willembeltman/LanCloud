@@ -10,12 +10,10 @@ public class ShareDto : IRpcProxyConfig
     {
         HostName = localShare.HostName;
         Port = localShare.Port;
-        ShareStripes = localShare.LocalShareStripes
-            .Select(a => new ShareStripeDto(a))
-            .ToArray();
+        Indexes = localShare.Indexes;
     }
 
-    public string HostName { get; set; }
+    public string HostName { get; set; } = string.Empty;
     public int Port { get; set; }
-    public ShareStripeDto[] ShareStripes { get; set; }
+    public int[] Indexes { get; set; } = [];
 }

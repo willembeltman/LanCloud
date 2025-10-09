@@ -9,6 +9,6 @@ public class CreateFileStripeSessionRequest
         Indexes = Indexes;
     }
 
-    public string? Extention { get; }
-    public int[]? Indexes { get; set; }
+    public string Extention { get; } = string.Empty;
+    public int[] Indexes { get; set; } = [];
 }

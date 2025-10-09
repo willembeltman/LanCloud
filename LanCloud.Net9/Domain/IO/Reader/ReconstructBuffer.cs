@@ -9,11 +9,11 @@ public class ReconstructBuffer : IDisposable
     {
         FileRefReader = fileRefReader;
 
-        FileStripeReaders = FileRef.Stripes
+        FileStripeReaders = Metadata.Stripes
             .Select(fileRefBit =>
             {
                 var fileStripe = Application
-                    .FindFileStripes(PathInfo.Extention, FileRef, fileRefBit)
+                    .FindFileStripes(File.Extention, Metadata, fileRefBit)
                     .FirstOrDefault();
                 if (fileStripe == null)
                     throw new Exception("Filestripe not found");
@@ -46,9 +46,9 @@ public class ReconstructBuffer : IDisposable
     private AutoResetEvent StartNext { get; } = new AutoResetEvent(true);
     private AutoResetEvent BufferIsWritten { get; } = new AutoResetEvent(false);
 
-    public LocalFile PathInfo => FileRefReader.File;
-    public LocalApplication Application => PathInfo.Application;
-    public FileMetadata FileRef => PathInfo.Metadata;
+    public LocalFile File => FileRefReader.File;
+    public LocalApplication Application => File.Application;
+    public FileMetadata Metadata => File.Metadata!;
     bool KillSwitch { get; set; }
 
     public void FlipBuffer()
@@ -229,7 +229,7 @@ public class ReconstructBuffer : IDisposable
     {
         var badReaders = FileStripeReaders.Where(a => a.Exception != null).ToArray();
         var message = $"Data is lost...{Environment.NewLine}";
-        message += $"Path: {PathInfo.Path}{Environment.NewLine}";
+        message += $"Path: {File.Path}{Environment.NewLine}";
         foreach (var badReader in badReaders)
         {
             message += $"{Environment.NewLine}";

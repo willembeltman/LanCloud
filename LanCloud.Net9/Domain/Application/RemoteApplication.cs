@@ -14,16 +14,10 @@ public class RemoteApplication : RpcProxy
         LocalApplication application,
         RemoteApplicationConfig config) : base(config, application)
     {
-        Config = config;
-
-        RemoteShares = new RemoteShare[0];
-
         StateChanged += RemoteApplication_StateChanged;
     }
 
-    public RemoteApplicationConfig Config { get; }
-
-    public RemoteShare[] RemoteShares { get; private set; }
+    public RemoteShare[] RemoteShares { get; private set; } = [];
 
     private void RemoteApplication_StateChanged(object? sender, System.EventArgs? e)
     {
@@ -47,7 +41,7 @@ public class RemoteApplication : RpcProxy
     {
         string responseJson = "";
         int responseDataLength = 0;
-        SendRequest((int)ApplicationMessageEnum.GetShares, string.Empty, [], 0, out responseJson, null, out responseDataLength);
+        SendRequest((int)ApplicationMessageEnum.GetShares, string.Empty, null, 0, out responseJson, null, out responseDataLength);
         var response = JsonConvert.DeserializeObject<ShareDto[]>(responseJson);
         if (response == null) throw new Exception();
         return response;

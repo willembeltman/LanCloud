@@ -5,14 +5,14 @@ namespace LanCloud.Domain.IO.Writer;
 
 public class ParityStripeWriter
 {
-    public ParityStripeWriter(FileWriter fileRefWriter, int bufferSize, LocalShareStripe[] localShareParts)
+    public ParityStripeWriter(FileWriter fileRefWriter, int bufferSize, LocalShare[] localShares)
     {
         FileRefWriter = fileRefWriter;
-        LocalShareParts = localShareParts;
+        LocalShares = localShares;
 
         Buffer = new DoubleBuffer(bufferSize, 1);
-        Indexes = localShareParts.First().Indexes;
-        FileStripeWriters = localShareParts
+        Indexes = localShares.First().Indexes;
+        FileStripeWriters = localShares
             .Select(localSharePart => new FileStripeWriter(fileRefWriter, localSharePart, Buffer))
             .ToArray();
 
@@ -21,7 +21,7 @@ public class ParityStripeWriter
     }
 
     public FileWriter FileRefWriter { get; }
-    public LocalShareStripe[] LocalShareParts { get; }
+    public LocalShare[] LocalShares { get; }
     public DoubleBuffer Buffer { get; }
     public int[] Indexes { get; }
     public FileStripeWriter[] FileStripeWriters { get; }

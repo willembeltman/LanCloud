@@ -13,14 +13,14 @@ public class RemoteShare : RpcProxy, IShare
 {
     public RemoteShare(RemoteApplication remoteApplication, ShareDto config) : base(config, remoteApplication.Application)
     {
-        ShareStripes = config.ShareStripes
-            .Select(a => new RemoteShareStripe(this, a))
-            .ToArray();
+        Share = config;
+        RemoteApplication = remoteApplication;
     }
 
-    public RemoteShareStripe[] ShareStripes { get; }
+    public ShareDto Share { get; }
+    public RemoteApplication RemoteApplication { get; }
 
-    IShareStripe[] IShare.ShareStripes => ShareStripes;
+    public int[] Indexes => Share.Indexes;
 
     public IFileStripe? FindFileStripe(string extention, string hash, long length, int[] indexes)
     {

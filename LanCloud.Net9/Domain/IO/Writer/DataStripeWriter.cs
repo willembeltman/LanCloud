@@ -5,14 +5,14 @@ namespace LanCloud.Domain.IO.Writer;
 
 public class DataStripeWriter
 {
-    public DataStripeWriter(FileWriter fileRefWriter, int bufferSize, int index, LocalShareStripe[] localShareStripes)
+    public DataStripeWriter(FileWriter fileRefWriter, int bufferSize, int index, LocalShare[] localShares)
     {
         FileRefWriter = fileRefWriter;
         BufferSize = bufferSize;
         Buffer = new DoubleBuffer(bufferSize, 1);
         Index = index;
-        FileStripeWriters = localShareStripes
-            .Select(localSharePart => new FileStripeWriter(fileRefWriter, localSharePart, Buffer))
+        FileStripeWriters = localShares
+            .Select(localShare => new FileStripeWriter(fileRefWriter, localShare, Buffer))
             .ToArray();
 
         Thread = new Thread(new ThreadStart(Kernel));

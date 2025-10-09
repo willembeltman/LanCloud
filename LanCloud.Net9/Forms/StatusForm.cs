@@ -67,7 +67,7 @@ public partial class StatusForm : Form
 
         treeView1.Nodes.Add(applicationNode);
 
-        if (Application.LocalShareStripes?.Any() == true)
+        if (Application.LocalShares?.Any() == true)
         {
             var localSharesNode = new TreeNode("Local Shares");
             foreach (var localShare in Application.LocalShares)
@@ -131,7 +131,7 @@ public partial class StatusForm : Form
         {
             var virtualDriveState =
                 $"{Application.Config.VirtualDriveMountPoint} " +
-                $"{Application.VirtualDriveServer.DriveServer.Status}";
+                $"{Application.VirtualDriveServer?.DriveServer?.Status}";
 
             var virtualDriveNode = new TreeNode("Virtual Drive Server");
             virtualDriveNode.Nodes.Add(new TreeNode(virtualDriveState));

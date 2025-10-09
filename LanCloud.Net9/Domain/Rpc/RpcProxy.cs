@@ -8,10 +8,10 @@ namespace LanCloud.Domain.Rpc;
 
 public class RpcProxy : StatusBase, IDisposable
 {
-    private readonly IRpcProxyConfig Config;
+    protected readonly IRpcProxyConfig Config;
     private readonly Thread Thread;
 
-    private readonly ConcurrentQueue<RpcProxyQueueItem> Queue  = new ConcurrentQueue<RpcProxyQueueItem>();
+    private readonly ConcurrentQueue<RpcProxyQueueItem> Queue = new ConcurrentQueue<RpcProxyQueueItem>();
     private readonly AutoResetEvent Enqueued = new AutoResetEvent(false);
 
     public event EventHandler<EventArgs?>? StateChanged;
@@ -69,12 +69,29 @@ public class RpcProxy : StatusBase, IDisposable
                                 writer.Write(requestItem.RequestDataLength);
                                 if (requestItem.RequestDataLength > 0)
                                 {
+                                    if (requestItem.RequestData == null)
+                                    {
+                                        requestItem.RequestData = new byte[requestItem.RequestDataLength];
+                                    }
                                     writer.Write(requestItem.RequestData, 0, requestItem.RequestDataLength);
                                 }
-                                requestItem.ResponseJson = reader.ReadString();
+                                var responseJsonIsNull = reader.ReadBoolean();
+                                if (!responseJsonIsNull)
+                                {
+                                    requestItem.ResponseJson = null;
+                                }
+                                else
+                                {
+                                    requestItem.ResponseJson = reader.ReadString();
+                                }
+
                                 requestItem.ResponseDataLength = reader.ReadInt32();
                                 if (requestItem.ResponseDataLength > 0)
                                 {
+                                    if (requestItem.ResponseData == null)
+                                    {
+                                        requestItem.ResponseData = new byte[requestItem.ResponseDataLength];
+                                    }
                                     reader.Read(requestItem.ResponseData, 0, requestItem.ResponseDataLength);
                                 }
                                 requestItem.Done.Set();
@@ -108,7 +125,7 @@ public class RpcProxy : StatusBase, IDisposable
         StateChanged?.Invoke(this, null);
     }
 
-    public void SendRequest(int requestMessageType, string requestJson, byte[] requestData, int requestDataLength, out string responseJson, byte[] responseData, out int responseDataLength)
+    public void SendRequest(int requestMessageType, string requestJson, byte[]? requestData, int requestDataLength, out string responseJson, byte[]? responseData, out int responseDataLength)
     {
         var queueItem = new RpcProxyQueueItem(requestMessageType, requestJson, requestData, requestDataLength, responseData);
         Queue.Enqueue(queueItem);

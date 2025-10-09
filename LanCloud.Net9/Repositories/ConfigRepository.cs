@@ -26,78 +26,48 @@ public class ConfigRepository
                 RefDirectoryName = "E:\\Test\\Ref",
                 FileStripeBufferSize = 1024 * 4,
                 FtpBufferMultiplier = 1,
+                VirtualDriveBufferMultiplier = 1,
                 RpcBufferMultiplier = 4,
                 EnableFtpServer = true,
                 EnableVirtualDrive = true,
                 VirtualDriveMountPoint = "N:\\",
                 VirtualDriveVolumeLabel = "LANCloud",
                 VirtualDriveReadOnly = false,
+                
                 Servers = new RemoteApplicationConfig[]
                 {
                     new RemoteApplicationConfig()
                     {
-                        HostName = "192.168.178.67",
+                        HostName = "192.168.178.69",
                         Port = 8080,
                         IsThisComputer = true
                     },
-                    new RemoteApplicationConfig()
-                    {
-                        HostName = "192.168.178.32",
-                        Port = 8080,
-                        IsThisComputer = false
-                    }
+                    //new RemoteApplicationConfig()
+                    //{
+                    //    HostName = "192.168.178.32",
+                    //    Port = 8080,
+                    //    IsThisComputer = false
+                    //}
                 },
                 Shares = new LocalShareConfig[]
                 {
                     new LocalShareConfig()
                     {
-                        DirectoryName = "E:\\Test\\256-1",
+                        DirectoryName = "E:\\Test\\1",
                         IsSSD = true,
-                        Parts = new LocalShareBitConfig[]
-                        {
-                            new LocalShareBitConfig(0, 1),
-                        }
+                        Indexes = [0]
                     },
                     new LocalShareConfig()
                     {
-                        DirectoryName = "E:\\Test\\256-2",
+                        DirectoryName = "E:\\Test\\2",
                         IsSSD = true,
-                        Parts = new LocalShareBitConfig[]
-                        {
-                            new LocalShareBitConfig(2, 3)
-                        }
+                        Indexes = [1]
                     },
                     new LocalShareConfig()
                     {
-                        DirectoryName = "E:\\Test\\512-1",
+                        DirectoryName = "E:\\Test\\P",
                         IsSSD = true,
-                        Parts = new LocalShareBitConfig[]
-                        {
-                            new LocalShareBitConfig(0),
-                            new LocalShareBitConfig(2)
-                        }
-                    },
-                    new LocalShareConfig()
-                    {
-                        DirectoryName = "E:\\Test\\521-2",
-                        IsSSD = true,
-                        Parts = new LocalShareBitConfig[]
-                        {
-                            new LocalShareBitConfig(1),
-                            new LocalShareBitConfig(3)
-                        }
-                    },
-                    new LocalShareConfig()
-                    {
-                        DirectoryName = "E:\\Test\\1024",
-                        IsSSD = true,
-                        Parts = new LocalShareBitConfig[]
-                        {
-                            new LocalShareBitConfig(0),
-                            new LocalShareBitConfig(1),
-                            new LocalShareBitConfig(2),
-                            new LocalShareBitConfig(3)
-                        }
+                        Indexes = [0, 1]
                     }
                 },
 
@@ -112,8 +82,8 @@ public class ConfigRepository
             var json = reader.ReadToEnd();
             var config = JsonConvert.DeserializeObject<ApplicationConfig>(json);
 
-            if ((config.Servers == null || config.Servers.Length == 0) &&
-                (config.Shares == null || config.Shares.Length == 0))
+            if ((config?.Servers == null || config.Servers.Length == 0) &&
+                (config?.Shares == null || config.Shares.Length == 0))
                 throw new Exception("Nothing is configured, please setup LanCloud.config file.");
 
             if (string.IsNullOrWhiteSpace(config.VirtualDriveMountPoint))

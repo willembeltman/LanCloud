@@ -94,10 +94,6 @@ public class LocalApplication : IDisposable, IRpcHandler
     public int FtpBufferSize => Config.FtpBufferMultiplier * Config.FileStripeBufferSize;
     public int VirtualDriveBufferSize => Config.VirtualDriveBufferMultiplier * Config.FileStripeBufferSize;
     public int? Port => ApplicationConfig?.Port;
-    public LocalShareStripe[] LocalShareStripes => LocalShares
-        .SelectMany(a => a.LocalShareStripes)
-        .ToArray();
-
 
     public LocalFileStripe[] FindFileStripes(string extention, FileMetadata fileRef, FileStripeMetadata fileRefBit)
     {
@@ -114,8 +110,8 @@ public class LocalApplication : IDisposable, IRpcHandler
     }
 
     public void ProcessRequest(
-        int requestMessageType, string requestJson, byte[] requestData, int requestDataLength,
-        out string responseJson, byte[] responseData, out int responseDataLength)
+        int requestMessageType, string? requestJson, byte[]? requestData, int requestDataLength,
+        out string responseJson, byte[]? responseData, out int responseDataLength)
     {
         switch (requestMessageType)
         {

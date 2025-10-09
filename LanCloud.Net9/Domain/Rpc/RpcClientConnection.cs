@@ -62,7 +62,15 @@ public class RpcClientConnection : StatusBase, IDisposable
                             reader.Read(requestData, 0, requestDataLength);
                         }
                         Handler.ProcessRequest(requestMessageType, requestJson, requestData, requestDataLength, out responseJson, responseData, out responseDataLength);
-                        writer.Write(responseJson);
+                        if (responseJson == null)
+                        {
+                            writer.Write(true);
+                        }
+                        else
+                        {
+                            writer.Write(false);
+                            writer.Write(responseJson);
+                        }
                         writer.Write(responseDataLength);
                         if (responseDataLength >= 0)
                         {

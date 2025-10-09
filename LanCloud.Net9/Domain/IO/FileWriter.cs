@@ -14,17 +14,17 @@ public class FileWriter : Stream
         BufferSize = bufferSize;
 
         HashWriter = new HashWriter(this);
-        DataStripeWriters = Application.LocalShareStripes
+        DataStripeWriters = Application.LocalShares
             .Where(a => a.Indexes.Length == 1)
             .GroupBy(a => a.Indexes.First())
             .Select(sharepart => new DataStripeWriter(this, bufferSize, sharepart.Key, sharepart.ToArray()))
             .ToArray();
-        ParityStripeWriters = Application.LocalShareStripes
+        ParityStripeWriters = Application.LocalShares
             .Where(a => a.Indexes.Length > 1)
             .GroupBy(a => a.Indexes.ToUniqueKey())
             .Select(sharepart => new ParityStripeWriter(this, bufferSize, sharepart.ToArray()))
             .ToArray();
-        AllIndexes = Application.LocalShareStripes
+        AllIndexes = Application.LocalShares
             .SelectMany(a => a.Indexes)
             .GroupBy(a => a)
             .Select(a => a.Key)
