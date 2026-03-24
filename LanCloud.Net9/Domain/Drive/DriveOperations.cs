@@ -1,5 +1,6 @@
 using DokanNet;
 using LanCloud.Domain.Application;
+using LanCloud.Interfaces;
 using System.Collections.Concurrent;
 using System.Security.AccessControl;
 using FileAccess = DokanNet.FileAccess;
@@ -15,6 +16,7 @@ internal sealed class DriveOperations(DriveServer driveServer) : IDokanOperation
     private FileSystem FileSystem => DriveServer.FileSystem;
     private DriveMountOptions Options => DriveServer.Options;
     private bool IsReadOnly => Options.ReadOnly;
+    private ILogger Logger => DriveServer.Logger;
 
     private static string NormalizePath(string fileName)
     {
@@ -66,125 +68,133 @@ internal sealed class DriveOperations(DriveServer driveServer) : IDokanOperation
         FileAttributes attributes,
         IDokanFileInfo info)
     {
-        var path = NormalizePath(fileName);
-        var isDirectoryRequest = info.IsDirectory;
-
-        if (isDirectoryRequest)
+        try
         {
-            info.IsDirectory = true;
+            var path = NormalizePath(fileName);
+            var isDirectoryRequest = info.IsDirectory;
 
-            if (mode == FileMode.CreateNew)
+            if (isDirectoryRequest)
             {
-                if (FileSystem.DirectoryExists(path))
+                info.IsDirectory = true;
+
+                if (mode == FileMode.CreateNew)
                 {
-                    return DokanResult.AlreadyExists;
-                }
+                    if (FileSystem.DirectoryExists(path))
+                    {
+                        return DokanResult.AlreadyExists;
+                    }
 
-                if (IsReadOnly)
-                {
-                    return DokanResult.AccessDenied;
-                }
-
-                FileSystem.CreateDirectory(path);
-                return DokanResult.Success;
-            }
-
-            if (!FileSystem.DirectoryExists(path))
-            {
-                return DokanResult.PathNotFound;
-            }
-
-            RegisterHandle(info, DriveOpenFileHandle.Directory(path));
-            return DokanResult.Success;
-        }
-
-        var requestingWrite = (access & (FileAccess.GenericWrite | FileAccess.WriteData | FileAccess.AppendData)) != 0;
-        if (requestingWrite && IsReadOnly)
-        {
-            return DokanResult.AccessDenied;
-        }
-
-        var fileExists = FileSystem.FileExists(path);
-
-        switch (mode)
-        {
-            case FileMode.CreateNew:
-                if (fileExists)
-                {
-                    return DokanResult.AlreadyExists;
-                }
-
-                if (IsReadOnly)
-                {
-                    return DokanResult.AccessDenied;
-                }
-
-                var createHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
-                RegisterHandle(info, createHandle);
-                return DokanResult.Success;
-
-            case FileMode.Create:
-            case FileMode.Truncate:
-                if (IsReadOnly)
-                {
-                    return DokanResult.AccessDenied;
-                }
-
-                var overwriteHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.Create), writable: true);
-                RegisterHandle(info, overwriteHandle);
-                return DokanResult.Success;
-
-            case FileMode.OpenOrCreate:
-                if (!fileExists)
-                {
                     if (IsReadOnly)
                     {
                         return DokanResult.AccessDenied;
                     }
 
-                    var openOrCreateHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
-                    RegisterHandle(info, openOrCreateHandle);
+                    FileSystem.CreateDirectory(path);
                     return DokanResult.Success;
                 }
-                break;
 
+                if (!FileSystem.DirectoryExists(path))
+                {
+                    return DokanResult.PathNotFound;
+                }
 
+                RegisterHandle(info, DriveOpenFileHandle.Directory(path));
+                return DokanResult.Success;
+            }
 
-            case FileMode.Append:
-                return DokanResult.NotImplemented;
-                //if (!fileExists)
-                //{
-                //    if (IsReadOnly)
-                //    {
-                //        return DokanResult.AccessDenied;
-                //    }
-
-                //    var appendHandle = new DriveOpenFileHandle(path, FileSystem.FileOpenWriteAppend(path), writable: true);
-                //    RegisterHandle(info, appendHandle);
-                //    return DokanResult.Success;
-                //}
-                //break;
-        }
-
-        if (!fileExists)
-        {
-            return DokanResult.FileNotFound;
-        }
-
-        if (requestingWrite)
-        {
-            if (IsReadOnly)
+            var requestingWrite = (access & (FileAccess.GenericWrite | FileAccess.WriteData | FileAccess.AppendData)) != 0;
+            if (requestingWrite && IsReadOnly)
             {
                 return DokanResult.AccessDenied;
             }
 
-            // Existing file random updates are not supported.
-            return DokanResult.NotImplemented;
-        }
+            var fileExists = FileSystem.FileExists(path);
 
-        var stream = FileSystem.OpenRead(path);
-        RegisterHandle(info, new DriveOpenFileHandle(path, stream, writable: false));
-        return DokanResult.Success;
+            switch (mode)
+            {
+                case FileMode.CreateNew:
+                    if (fileExists)
+                    {
+                        return DokanResult.AlreadyExists;
+                    }
+
+                    if (IsReadOnly)
+                    {
+                        return DokanResult.AccessDenied;
+                    }
+
+                    var createHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
+                    RegisterHandle(info, createHandle);
+                    return DokanResult.Success;
+
+                case FileMode.Create:
+                case FileMode.Truncate:
+                    if (IsReadOnly)
+                    {
+                        return DokanResult.AccessDenied;
+                    }
+
+                    var overwriteHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.Create), writable: true);
+                    RegisterHandle(info, overwriteHandle);
+                    return DokanResult.Success;
+
+                case FileMode.OpenOrCreate:
+                    if (!fileExists)
+                    {
+                        if (IsReadOnly)
+                        {
+                            return DokanResult.AccessDenied;
+                        }
+
+                        var openOrCreateHandle = new DriveOpenFileHandle(path, FileSystem.OpenWrite(path, FileMode.CreateNew), writable: true);
+                        RegisterHandle(info, openOrCreateHandle);
+                        return DokanResult.Success;
+                    }
+                    break;
+
+
+
+                case FileMode.Append:
+                    return DokanResult.NotImplemented;
+                    //if (!fileExists)
+                    //{
+                    //    if (IsReadOnly)
+                    //    {
+                    //        return DokanResult.AccessDenied;
+                    //    }
+
+                    //    var appendHandle = new DriveOpenFileHandle(path, FileSystem.FileOpenWriteAppend(path), writable: true);
+                    //    RegisterHandle(info, appendHandle);
+                    //    return DokanResult.Success;
+                    //}
+                    //break;
+            }
+
+            if (!fileExists)
+            {
+                return DokanResult.FileNotFound;
+            }
+
+            if (requestingWrite)
+            {
+                if (IsReadOnly)
+                {
+                    return DokanResult.AccessDenied;
+                }
+
+                // Existing file random updates are not supported.
+                return DokanResult.NotImplemented;
+            }
+
+            var stream = FileSystem.OpenRead(path);
+            RegisterHandle(info, new DriveOpenFileHandle(path, stream, writable: false));
+            return DokanResult.Success;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"CreateFile({fileName}) failed: {ex}");
+            return DokanResult.Error;
+        }
     }
 
     public void Cleanup(string fileName, IDokanFileInfo info)
@@ -240,8 +250,17 @@ internal sealed class DriveOperations(DriveServer driveServer) : IDokanOperation
             return DokanResult.Error;
         }
 
-        bytesRead = handle.Stream.Read(buffer, 0, buffer.Length);
-        return DokanResult.Success;
+        try
+        {
+            bytesRead = handle.Stream.Read(buffer, 0, buffer.Length);
+            return DokanResult.Success;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"ReadFile({fileName}) failed: {ex}");
+            bytesRead = 0;
+            return DokanResult.Error;
+        }
     }
 
     public NtStatus WriteFile(
@@ -263,14 +282,29 @@ internal sealed class DriveOperations(DriveServer driveServer) : IDokanOperation
             return DokanResult.AccessDenied;
         }
 
-        if (offset != handle.Stream.Position)
+        try
         {
-            return DokanResult.NotImplemented;
-        }
+            if (offset != handle.Stream.Position)
+            {
+                if (handle.Stream.CanSeek)
+                {
+                    handle.Stream.Position = offset;
+                }
+                else
+                {
+                    return DokanResult.NotImplemented;
+                }
+            }
 
-        handle.Stream.Write(buffer, 0, buffer.Length);
-        bytesWritten = buffer.Length;
-        return DokanResult.Success;
+            handle.Stream.Write(buffer, 0, buffer.Length);
+            bytesWritten = buffer.Length;
+            return DokanResult.Success;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"WriteFile failed for {fileName}: {ex}");
+            return DokanResult.Error;
+        }
     }
 
     public NtStatus FlushFileBuffers(string fileName, IDokanFileInfo info)
@@ -289,33 +323,42 @@ internal sealed class DriveOperations(DriveServer driveServer) : IDokanOperation
         out FileInformation fileInfo,
         IDokanFileInfo info)
     {
-        var path = NormalizePath(fileName);
-        fileInfo = new FileInformation
+        try
         {
-            FileName = Path.GetFileName(fileName)
-        };
+            var path = NormalizePath(fileName);
+            fileInfo = new FileInformation
+            {
+                FileName = Path.GetFileName(fileName)
+            };
 
-        DriveFileEntry? entry = null;
-        if (FileSystem.FileExists(path))
-        {
-            entry = FileSystem.GetFile(path);
-        }
-        else if (FileSystem.DirectoryExists(path))
-        {
-            entry = FileSystem.GetDirectory(path);
-        }
+            DriveFileEntry? entry = null;
+            if (FileSystem.FileExists(path))
+            {
+                entry = FileSystem.GetFile(path);
+            }
+            else if (FileSystem.DirectoryExists(path))
+            {
+                entry = FileSystem.GetDirectory(path);
+            }
 
-        if (entry == null)
-        {
-            return DokanResult.FileNotFound;
-        }
+            if (entry == null)
+            {
+                return DokanResult.FileNotFound;
+            }
 
-        fileInfo.Attributes = entry.Attributes;
-        fileInfo.CreationTime = entry.CreationTime;
-        fileInfo.LastAccessTime = entry.LastAccessTime;
-        fileInfo.LastWriteTime = entry.LastWriteTime;
-        fileInfo.Length = entry.Length ?? 0;
-        return DokanResult.Success;
+            fileInfo.Attributes = entry.Attributes;
+            fileInfo.CreationTime = entry.CreationTime;
+            fileInfo.LastAccessTime = entry.LastAccessTime;
+            fileInfo.LastWriteTime = entry.LastWriteTime;
+            fileInfo.Length = entry.Length ?? 0;
+            return DokanResult.Success;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"GetFileInformation({fileName}) failed: {ex}");
+            fileInfo = new FileInformation { FileName = fileName };
+            return DokanResult.Error;
+        }
     }
 
     public NtStatus FindFiles(
@@ -323,26 +366,35 @@ internal sealed class DriveOperations(DriveServer driveServer) : IDokanOperation
         out IList<FileInformation> files,
         IDokanFileInfo info)
     {
-        var path = NormalizePath(fileName);
-        if (!FileSystem.DirectoryExists(path))
+        try
         {
-            files = Array.Empty<FileInformation>();
-            return DokanResult.FileNotFound;
-        }
-
-        files = FileSystem.EnumerateDirectory(path)
-            .Select(entry => new FileInformation
+            var path = NormalizePath(fileName);
+            if (!FileSystem.DirectoryExists(path))
             {
-                FileName = entry.Name,
-                Attributes = entry.Attributes,
-                CreationTime = entry.CreationTime,
-                LastAccessTime = entry.LastAccessTime,
-                LastWriteTime = entry.LastWriteTime,
-                Length = entry.Length ?? 0
-            })
-            .ToList();
+                files = Array.Empty<FileInformation>();
+                return DokanResult.FileNotFound;
+            }
 
-        return DokanResult.Success;
+            files = FileSystem.EnumerateDirectory(path)
+                .Select(entry => new FileInformation
+                {
+                    FileName = entry.Name,
+                    Attributes = entry.Attributes,
+                    CreationTime = entry.CreationTime,
+                    LastAccessTime = entry.LastAccessTime,
+                    LastWriteTime = entry.LastWriteTime,
+                    Length = entry.Length ?? 0
+                })
+                .ToList();
+
+            return DokanResult.Success;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"FindFiles({fileName}) failed: {ex}");
+            files = Array.Empty<FileInformation>();
+            return DokanResult.Error;
+        }
     }
     public NtStatus FindFilesWithPattern(
         string fileName,
@@ -519,12 +571,55 @@ internal sealed class DriveOperations(DriveServer driveServer) : IDokanOperation
 
     public NtStatus SetEndOfFile(string fileName, long length, IDokanFileInfo info)
     {
-        return DokanResult.NotImplemented;
+        var handle = GetHandle(info);
+        if (handle == null)
+        {
+            return DokanResult.InvalidHandle;
+        }
+
+        if (!handle.CanWrite)
+        {
+            return DokanResult.AccessDenied;
+        }
+
+        try
+        {
+            handle.Stream.SetLength(length);
+            return DokanResult.Success;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"SetEndOfFile failed for {fileName}: {ex}");
+            return DokanResult.Error;
+        }
     }
 
     public NtStatus SetAllocationSize(string fileName, long length, IDokanFileInfo info)
     {
-        return DokanResult.NotImplemented;
+        var handle = GetHandle(info);
+        if (handle == null)
+        {
+            return DokanResult.InvalidHandle;
+        }
+
+        if (!handle.CanWrite)
+        {
+            return DokanResult.AccessDenied;
+        }
+
+        try
+        {
+            if (length > handle.Stream.Length)
+            {
+                handle.Stream.SetLength(length);
+            }
+            return DokanResult.Success;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"SetAllocationSize failed for {fileName}: {ex}");
+            return DokanResult.Error;
+        }
     }
 
     public NtStatus Mounted(string mountPoint, IDokanFileInfo info)

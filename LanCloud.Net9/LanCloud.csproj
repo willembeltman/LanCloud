@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net9.0-windows</TargetFramework>
+		<TargetFramework>net10.0-windows</TargetFramework>
 		<UseWindowsForms>true</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -11,7 +11,6 @@
 
 	<ItemGroup>
 	  <PackageReference Include="DokanNet" Version="2.3.0.1" />
-	  <PackageReference Include="gAPI" Version="0.0.1-alpha" />
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	</ItemGroup>
 

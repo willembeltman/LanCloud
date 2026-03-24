@@ -32,7 +32,7 @@ public class FileReader : Stream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        File.Logger.Info($"Reading virtual file: {File.Name} {offset} + {count} bytes");
+        File.Logger.Debug($"Reading virtual file: {File.Name} {offset} + {count} bytes");
 
         if (ReconstructBuffer == null)
         {
