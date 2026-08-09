@@ -1,0 +1,3 @@
+[submodule "LanCloud.Net10/gAPI"]
+	path = LanCloud.Net10/gAPI
+	url = https://github.com/willembeltman/gAPI.git
