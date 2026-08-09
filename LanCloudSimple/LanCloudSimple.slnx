@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="LanCloudSimple.Api/LanCloudSimple.Api.csproj" />
+  <Project Path="LanCloudSimple.Client/LanCloudSimple.Client.csproj" />
+  <Project Path="LanCloudSimple.Shared/LanCloudSimple.Shared.csproj" />
+</Solution>
