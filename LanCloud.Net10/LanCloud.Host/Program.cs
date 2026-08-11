@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<HostService>();
+builder.Services.AddHostedService<HostHub>();
 builder.Services.AddAutoWss("https://localhost:7087", "wss://127.0.0.1:7087");
 
 //builder.Services.AddAuthenticationServices<State>(builder.Configuration["FrontendConfig:ApiBackendUrl"] ?? "https://api.dinostamp.nl");

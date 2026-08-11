@@ -251,7 +251,7 @@ public class CloudService : IHostedService
                             Path = segments[0],
                             IsDirectory = false,
                             Size = file.Size,
-                            MediaDate = file.MediaDate,
+                            ModifiedDate = file.MediaDate,
                             ClientId = clientId
                         });
                     }
@@ -272,7 +272,7 @@ public class CloudService : IHostedService
                             Path = path + "/" + segments[0],
                             IsDirectory = false,
                             Size = file.Size,
-                            MediaDate = file.MediaDate,
+                            ModifiedDate = file.MediaDate,
                             ClientId = clientId
                         });
                     }

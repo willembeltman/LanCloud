@@ -98,12 +98,12 @@ public class WebDavController : ControllerBase
         if (isDirectory)
             AddResponse(path, isRoot ? "Root" : System.IO.Path.GetFileName(path), true, 0, null);
         else if (targetFile != null)
-            AddResponse(targetFile.Path, targetFile.Name, false, targetFile.Size, targetFile.MediaDate);
+            AddResponse(targetFile.Path, targetFile.Name, false, targetFile.Size, targetFile.ModifiedDate);
 
         if (isDirectory && depth == "1")
         {
             foreach (var child in _cloudService.Browse(path))
-                AddResponse(child.Path, child.Name, child.IsDirectory, child.Size, child.MediaDate);
+                AddResponse(child.Path, child.Name, child.IsDirectory, child.Size, child.ModifiedDate);
         }
 
         var xmlDoc = new XDocument(new XDeclaration("1.0", "utf-8", null), multistatus);
