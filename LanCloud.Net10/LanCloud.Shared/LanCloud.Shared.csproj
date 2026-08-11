@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\gAPI\gAPI.Core\gAPI.Core.csproj" />
+  </ItemGroup>
+
 </Project>

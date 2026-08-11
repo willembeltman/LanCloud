@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using gAPI.Core.Attributes;
 
 namespace StorageApi.Shared.Interfaces;
 
+[GenerateApi]
 public interface IHostApi
 {
+    Task SignalAsync(string txt);
 }
