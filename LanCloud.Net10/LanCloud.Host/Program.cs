@@ -1,4 +1,5 @@
 ﻿using gAPI.Generated;
+using LanCloud.Host.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

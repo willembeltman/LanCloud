@@ -6,5 +6,6 @@ namespace LanCloud.Shared.Interfaces;
 [GenerateHub]
 public interface IHostHub
 {
-    IAsyncEnumerable<FileInfoDto> ListDirectory(string relativeName, CancellationToken ct);
+    IAsyncEnumerable<ShareEntryDto> ListDirectory(string relativePath, CancellationToken ct);
+    IAsyncEnumerable<ShareEntryDto> Get(string relativeFullName, CancellationToken ct);
 }

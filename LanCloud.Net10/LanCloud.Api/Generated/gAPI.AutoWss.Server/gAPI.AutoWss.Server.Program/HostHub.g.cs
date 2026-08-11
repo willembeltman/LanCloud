@@ -29,16 +29,16 @@ public class HostHub(
     readonly ServiceId ___serviceId = new("IHostHub");
 
 
-    public async IAsyncEnumerable<FileInfoDto> ListDirectory(
-        string relativeName,
+    public async IAsyncEnumerable<ShareEntryDto> ListDirectory(
+        string relativePath,
         [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " ListDirectory({relativeName})", relativeName);
+            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " ListDirectory({relativePath})", relativePath);
 
         var serviceMethodId = new ServiceMethodId("ListDirectory");
         var payload = IHostHub_ListDirectory_Serializer(
-            relativeName);
+            relativePath);
 
         var responses = ___fabricClient.InvokeAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, ct);
         await foreach (var response in responses)
@@ -48,20 +48,56 @@ public class HostHub(
 
             var ___offset = 0;
             var ___span = new Span<byte>(response.BinaryData);
-            yield return FileInfoDtoSpanSerializer.ReadFileInfoDto(___span, ref ___offset);
+            yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
+        }
+    }
+    public async IAsyncEnumerable<ShareEntryDto> Get(
+        string relativeFullName,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Get({relativeFullName})", relativeFullName);
+
+        var serviceMethodId = new ServiceMethodId("Get");
+        var payload = IHostHub_Get_Serializer(
+            relativeFullName);
+
+        var responses = ___fabricClient.InvokeAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, ct);
+        await foreach (var response in responses)
+        {
+            if (ct.IsCancellationRequested)
+                yield break;
+
+            var ___offset = 0;
+            var ___span = new Span<byte>(response.BinaryData);
+            yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
         }
     }
 
     public byte[] IHostHub_ListDirectory_Serializer(
-        string relativeName)
+        string relativePath)
     {
         var ___offset = 0;
-        PrimitivesSpanSerializer.LengthString(ref ___offset, relativeName);
+        PrimitivesSpanSerializer.LengthString(ref ___offset, relativePath);
         var ___buffer = new byte[___offset];
         var ___span = new Span<byte>(___buffer);
         var ___length = ___offset;
         ___offset = 0;
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, relativeName);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, relativePath);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    public byte[] IHostHub_Get_Serializer(
+        string relativeFullName)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, relativeFullName);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, relativeFullName);
         if (___length != ___offset)
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;

@@ -133,11 +133,11 @@ public class ClientConnection
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
-                                var relativeName = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                var relativePath = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.ListDirectory(
-                                        relativeName,
+                                        relativePath,
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
@@ -148,6 +148,38 @@ public class ClientConnection
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
                                                 BinaryData = IHostHub_ListDirectory_Serializer(response)
+                                            }, ___ct);
+                                    }
+                                }
+
+                                await Send_InvokeResponseDone_ToServerAsync(
+                                    new InvokeResponseDoneDto()
+                                    {
+                                        RequestId = ___invokeRequest.RequestId,
+                                        ServiceId = ___invokeRequest.ServiceId,
+                                        MethodId = ___invokeRequest.MethodId
+                                    }, ___ct);
+                            }
+                            return;
+                        case "Get":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
+                                var relativeFullName = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                foreach (var client in clients)
+                                {
+                                    var responses = client.Get(
+                                        relativeFullName,
+                                        ___ct);
+                                    await foreach (var response in responses)
+                                    {
+                                        await Send_InvokeResponse_ToServerAsync(
+                                            new InvokeResponseDto()
+                                            {
+                                                RequestId = ___invokeRequest.RequestId,
+                                                ServiceId = ___invokeRequest.ServiceId,
+                                                MethodId = ___invokeRequest.MethodId,
+                                                BinaryData = IHostHub_Get_Serializer(response)
                                             }, ___ct);
                                     }
                                 }
@@ -192,11 +224,19 @@ public class ClientConnection
         throw new Exception($"Service \"{___invokeResponseDone.ServiceId.Value}\" / Method \"{___invokeResponseDone.MethodId.Value}\" not found");
     }
 
-    public byte[] IHostHub_ListDirectory_Serializer(FileInfoDto value)
+    public byte[] IHostHub_ListDirectory_Serializer(ShareEntryDto value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
-        FileInfoDtoSpanSerializer.Write(ref ___span, ref ___offset, value);
+        ShareEntryDtoSpanSerializer.Write(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public byte[] IHostHub_Get_Serializer(ShareEntryDto value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        ShareEntryDtoSpanSerializer.Write(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
 }

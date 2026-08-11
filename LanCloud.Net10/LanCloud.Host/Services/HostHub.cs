@@ -5,6 +5,8 @@ using LanCloud.Shared.Interfaces;
 using Microsoft.Extensions.Hosting;
 using System.Runtime.CompilerServices;
 
+namespace LanCloud.Host.Services;
+
 public class HostHub(
     IClientConnection clientConnection,
     HostConfig config)
@@ -17,7 +19,7 @@ public class HostHub(
     async Task IHostedService.StopAsync(CancellationToken ct)
         => await clientConnection.UnsubscribeAsync(this, ct);
 
-    async IAsyncEnumerable<FileInfoDto> IHostHub.ListDirectory(
+    async IAsyncEnumerable<ShareEntryDto> IHostHub.ListDirectory(
         string relativeName,
         [EnumeratorCancellation] CancellationToken ct)
     {
@@ -33,5 +35,12 @@ public class HostHub(
             if (ct.IsCancellationRequested)
                 yield break;
         }
+    }
+
+    IAsyncEnumerable<ShareEntryDto> IHostHub.Get(
+        string relativeFullName,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        throw new NotImplementedException();
     }
 }
