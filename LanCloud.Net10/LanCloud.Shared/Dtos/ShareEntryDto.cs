@@ -1,4 +1,6 @@
-﻿namespace LanCloud.Shared.Dtos;
+﻿using gAPI.Core.Ids;
+
+namespace LanCloud.Shared.Dtos;
 
 public class ShareEntryDto
 {
@@ -8,6 +10,7 @@ public class ShareEntryDto
     public long Size { get; set; }
     public DateTime Created { get; set; }
     public DateTime LastModified { get; set; }
+    public SessionId SessionId { get; set; }
 
     public DateTime GetLastDate()
     {

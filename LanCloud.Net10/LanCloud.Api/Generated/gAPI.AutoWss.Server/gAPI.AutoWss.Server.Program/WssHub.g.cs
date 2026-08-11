@@ -50,8 +50,8 @@ public class WssHub : WssConnection
             case "IHostApi":
                 switch (___sendRequest.MethodId.Value)
                 {
-                    case "SignalAsync":
-                        return IHostApi_SignalAsync(
+                    case "TestAsync":
+                        return IHostApi_TestAsync(
                             ___sendRequest,
                             PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
                             ___ct);
@@ -70,15 +70,15 @@ public class WssHub : WssConnection
         throw new Exception($"Invoke {___invokeRequest.ServiceId.Value}.{___invokeRequest.MethodId.Value} not implemented");
     }
 
-    public async Task IHostApi_SignalAsync(
+    public async Task IHostApi_TestAsync(
         ApiSendRequestDto ___sendRequest, 
         string txt,
         CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " IHostApi_SignalAsync({___sendRequest})", ___sendRequest);
+            ___logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " IHostApi_TestAsync({___sendRequest})", ___sendRequest);
 
-        await HostApi.SignalAsync(
+        await HostApi.TestAsync(
             txt);
     }
 

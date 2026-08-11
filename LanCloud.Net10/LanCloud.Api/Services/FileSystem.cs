@@ -1,37 +1,45 @@
 ﻿using gAPI.Generated;
+using LanCloud.Api.Helpers;
 using LanCloud.Api.Interfaces;
 using LanCloud.Api.Models;
-using LanCloud.Shared.Dtos;
+using LanCloud.Shared.Models;
+using System.Runtime.CompilerServices;
 
 namespace LanCloud.Api.Services;
 
 public class FileSystem(
     IClientContext clientContext,
+    RemovedItemsCollection removedEntities,
     ApiConfig apiConfig)
     : IFileSystem
 {
-    private readonly Dictionary<FileSystemEntry, ShareEntryDto> RespondedEntries = [];
+    private readonly Dictionary<string, Entry> RespondedEntries = [];
+
+    public LocalShare LocalShare =>
+        apiConfig.LocalShare
+        ?? new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalFiles"));
 
     public async Task CreateDirectory(string path, CancellationToken ct = default)
     {
-        if (apiConfig.StorageShare == null) return;
-        apiConfig.StorageShare.CreateDirectory(path, ct);
-        // Todo uit lijst verwijderde items halen.
+        await LocalShare.CreateDirectory(path, ct);
+        await removedEntities.CreateDirectory(path, ct);
     }
 
-    public Task Delete(string path, CancellationToken ct = default)
+    public async Task Delete(string path, CancellationToken ct = default)
     {
-        // Todo lijst opslaan en daarmee filteren
-        throw new NotImplementedException();
+        await LocalShare.Delete(path, ct);
+        await removedEntities.Delete(path, ct);
     }
 
     public async Task<FileSystemEntry?> Get(string path, CancellationToken ct = default)
     {
+        if (await removedEntities.IsRemoved(path, ct))
+            return null;
+
         var allShareFiles = await clientContext.HostHub.ToAll.Get(path, ct).ToListAsync();
-        var localShareFiles = apiConfig.StorageShare?.Get(path, ct);
-        if (localShareFiles != null)
-            await foreach (var localFile in localShareFiles)
-                allShareFiles.Add(localFile);
+        var localShareFiles = LocalShare.Get(path, ct);
+        await foreach (var localFile in localShareFiles)
+            allShareFiles.Add(localFile);
 
         var shareFile = allShareFiles
             .OrderByDescending(a => a.GetLastDate())
@@ -45,22 +53,60 @@ public class FileSystem(
             shareFile.Size,
             shareFile.Created,
             shareFile.LastModified);
+        var entry = new Entry(fsFile, shareFile);
+        RespondedEntries[path] = entry;
 
-        RespondedEntries[fsFile] = shareFile;
         return fsFile;
     }
-    public IAsyncEnumerable<FileSystemEntry> ListDirectory(string path, CancellationToken ct = default)
+    public async IAsyncEnumerable<FileSystemEntry> ListDirectory(
+        string path,
+        [EnumeratorCancellation] CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var allShareFiles = await clientContext.HostHub.ToAll.ListDirectory(path, ct).ToListAsync();
+        var localShareFiles = LocalShare.ListDirectory(path, ct);
+        await foreach (var localFile in localShareFiles)
+            allShareFiles.Add(localFile);
+
+        var files = allShareFiles
+            .GroupBy(a => a.Path)
+            .Select(a => a.OrderByDescending(b => b.GetLastDate()).First());
+
+        foreach (var shareFile in files)
+        {
+            if (await removedEntities.IsRemoved(shareFile.Path, ct))
+                continue;
+
+            var fsFile = new FileSystemEntry(
+                shareFile.Name,
+                shareFile.Path,
+                shareFile.IsDirectory,
+                shareFile.Size,
+                shareFile.Created,
+                shareFile.LastModified);
+            var entry = new Entry(fsFile, shareFile);
+            RespondedEntries[path] = entry;
+            yield return fsFile;
+        }
     }
 
-    public Task<Stream?> OpenRead(string path, CancellationToken ct = default)
+    public async Task<Stream?> OpenRead(string path, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        if (await removedEntities.IsRemoved(path, ct))
+            return null;
+
+        if (!RespondedEntries.TryGetValue(path, out var respondedEntity))
+            return null;
+
+        var fileChunks = clientContext.HostHub
+            .ToSession(respondedEntity.ShareEntryDto.SessionId)
+            .ReadFile(path, ct);
+
+        return new ChunkedStream(fileChunks, respondedEntity, ct);
     }
 
-    public Task Write(string path, Stream content, CancellationToken ct = default)
+    public async Task Write(string path, Stream stream, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        await LocalShare.Write(path, stream, ct);
+        await removedEntities.Write(path, ct);
     }
 }

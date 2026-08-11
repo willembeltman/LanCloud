@@ -1,0 +1,1 @@
+﻿#error gAPI.AutoWss: Method 'Test' on interface 'LanCloud.Shared.Interfaces.IHostHub' returns Task<T>. Please use IAsyncEnumerable<T> instead. When communicating from server to client, the number of client responses is unknown, therefore response methods must use IAsyncEnumerable<T>.

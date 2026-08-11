@@ -73,6 +73,28 @@ public class HostHub(
             yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
         }
     }
+    public async IAsyncEnumerable<FileChunkDto> ReadFile(
+        string relativeFullName,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " ReadFile({relativeFullName})", relativeFullName);
+
+        var serviceMethodId = new ServiceMethodId("ReadFile");
+        var payload = IHostHub_ReadFile_Serializer(
+            relativeFullName);
+
+        var responses = ___fabricClient.InvokeAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, ct);
+        await foreach (var response in responses)
+        {
+            if (ct.IsCancellationRequested)
+                yield break;
+
+            var ___offset = 0;
+            var ___span = new Span<byte>(response.BinaryData);
+            yield return FileChunkDtoSpanSerializer.ReadFileChunkDto(___span, ref ___offset);
+        }
+    }
 
     public byte[] IHostHub_ListDirectory_Serializer(
         string relativePath)
@@ -89,6 +111,20 @@ public class HostHub(
         return ___buffer;
     }
     public byte[] IHostHub_Get_Serializer(
+        string relativeFullName)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, relativeFullName);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, relativeFullName);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    public byte[] IHostHub_ReadFile_Serializer(
         string relativeFullName)
     {
         var ___offset = 0;

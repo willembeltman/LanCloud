@@ -20,15 +20,15 @@ public class HostHub(
         => await clientConnection.UnsubscribeAsync(this, ct);
 
     async IAsyncEnumerable<ShareEntryDto> IHostHub.ListDirectory(
-        string relativeName,
+        string relativeFullName,
         [EnumeratorCancellation] CancellationToken ct)
     {
         foreach (var share in config.Shares)
         {
-            var list = share.ListDirectory(relativeName, ct);
-            await foreach (var file in list)
+            var entries = share.ListDirectory(relativeFullName, ct);
+            await foreach (var entry in entries)
             {
-                yield return file;
+                yield return entry;
                 if (ct.IsCancellationRequested)
                     yield break;
             }
@@ -37,7 +37,25 @@ public class HostHub(
         }
     }
 
-    IAsyncEnumerable<ShareEntryDto> IHostHub.Get(
+    async IAsyncEnumerable<ShareEntryDto> IHostHub.Get(
+        string relativeFullName,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        foreach (var share in config.Shares)
+        {
+            var entries = share.Get(relativeFullName, ct);
+            await foreach (var entry in entries)
+            {
+                yield return entry;
+                if (ct.IsCancellationRequested)
+                    yield break;
+            }
+            if (ct.IsCancellationRequested)
+                yield break;
+        }
+    }
+
+    async IAsyncEnumerable<FileChunkDto> IHostHub.ReadFile(
         string relativeFullName,
         [EnumeratorCancellation] CancellationToken ct)
     {

@@ -29,7 +29,7 @@ public sealed class HostApi(
     readonly ConcurrentDictionary<RequestId, Channel<ApiInvokeResponseDto>> ___PendingRequests = new();
     readonly ServiceId ___ServiceId = new("IHostApi");
 
-    public async Task SignalAsync(
+    public async Task TestAsync(
         string txt)
     {
         //if (___clientConnection.Initialized == false)
@@ -37,7 +37,7 @@ public sealed class HostApi(
 
         if (___Logger.IsEnabled(LogLevel.Trace))
         {
-            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " SignalAsync({txt})", txt);
+            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " TestAsync({txt})", txt);
         }
 
         var ___activityCts = ___Cts;
@@ -47,10 +47,10 @@ public sealed class HostApi(
         await ___clientConnection.Send_SendRequest_ToServerAsync(new ApiSendRequestDto()
         {
             ServiceId = ___ServiceId,
-            MethodId = new("SignalAsync"),
+            MethodId = new("TestAsync"),
             SessionId = ___httpClient.SessionId,
             StateData = ___httpClient.IsStateChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = IHostApi_SignalAsync_Serializer(txt)
+            BinaryData = IHostApi_TestAsync_Serializer(txt)
         }, ___activityCts.Token);
     }
 
@@ -77,7 +77,7 @@ public sealed class HostApi(
             ___channel.Writer.TryComplete();
     }
 
-    public byte[] IHostApi_SignalAsync_Serializer(
+    public byte[] IHostApi_TestAsync_Serializer(
         string txt)
     {
         var ___offset = 0;
