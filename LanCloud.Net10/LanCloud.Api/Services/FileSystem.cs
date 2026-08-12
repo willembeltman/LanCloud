@@ -2,6 +2,7 @@
 using LanCloud.Api.Helpers;
 using LanCloud.Api.Interfaces;
 using LanCloud.Api.Models;
+using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Models;
 using System.Runtime.CompilerServices;
 
@@ -9,12 +10,10 @@ namespace LanCloud.Api.Services;
 
 public class FileSystem(
     IClientContext clientContext,
-    RemovedItemsCollection removedEntities,
+    EntryCollection entryCollection,
     ApiConfig apiConfig)
     : IFileSystem
 {
-    private readonly Dictionary<string, Entry> RespondedEntries = [];
-
     public LocalShare LocalShare =>
         apiConfig.LocalShare
         ?? new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalFiles"));
@@ -22,18 +21,18 @@ public class FileSystem(
     public async Task CreateDirectory(string path, CancellationToken ct = default)
     {
         await LocalShare.CreateDirectory(path, ct);
-        await removedEntities.CreateDirectory(path, ct);
+        await entryCollection.CreateDirectory(path, ct);
     }
 
     public async Task Delete(string path, CancellationToken ct = default)
     {
         await LocalShare.Delete(path, ct);
-        await removedEntities.Delete(path, ct);
+        await entryCollection.Delete(path, ct);
     }
 
     public async Task<FileSystemEntry?> Get(string path, CancellationToken ct = default)
     {
-        if (await removedEntities.IsRemoved(path, ct))
+        if (entryCollection.IsRemoved(path))
             return null;
 
         var allShareFiles = await clientContext.HostHub.ToAll.Get(path, ct).ToListAsync();
@@ -46,17 +45,7 @@ public class FileSystem(
             .FirstOrDefault();
         if (shareFile == null) return null;
 
-        var fsFile = new FileSystemEntry(
-            shareFile.Name,
-            shareFile.Path,
-            shareFile.IsDirectory,
-            shareFile.Size,
-            shareFile.Created,
-            shareFile.LastModified);
-        var entry = new Entry(fsFile, shareFile);
-        RespondedEntries[path] = entry;
-
-        return fsFile;
+        return await CreateFileSystemEntry(path, shareFile, ct);
     }
     public async IAsyncEnumerable<FileSystemEntry> ListDirectory(
         string path,
@@ -73,28 +62,19 @@ public class FileSystem(
 
         foreach (var shareFile in files)
         {
-            if (await removedEntities.IsRemoved(shareFile.Path, ct))
+            if (entryCollection.IsRemoved(shareFile.Path))
                 continue;
 
-            var fsFile = new FileSystemEntry(
-                shareFile.Name,
-                shareFile.Path,
-                shareFile.IsDirectory,
-                shareFile.Size,
-                shareFile.Created,
-                shareFile.LastModified);
-            var entry = new Entry(fsFile, shareFile);
-            RespondedEntries[path] = entry;
-            yield return fsFile;
+            yield return await CreateFileSystemEntry(path, shareFile, ct);
         }
     }
 
     public async Task<Stream?> OpenRead(string path, CancellationToken ct = default)
     {
-        if (await removedEntities.IsRemoved(path, ct))
+        if ( entryCollection.IsRemoved(path))
             return null;
 
-        if (!RespondedEntries.TryGetValue(path, out var respondedEntity))
+        if (!entryCollection.RespondedEntries.TryGetValue(path, out var respondedEntity))
             return null;
 
         var fileChunks = clientContext.HostHub
@@ -107,6 +87,20 @@ public class FileSystem(
     public async Task Write(string path, Stream stream, CancellationToken ct = default)
     {
         await LocalShare.Write(path, stream, ct);
-        await removedEntities.Write(path, ct);
+        await entryCollection.Write(path, ct);
+    }
+
+    private async Task<FileSystemEntry> CreateFileSystemEntry(string path, ShareEntryDto shareFile, CancellationToken ct)
+    {
+        var fsFile = new FileSystemEntry(
+            shareFile.Name,
+            shareFile.Path,
+            shareFile.IsDirectory,
+            shareFile.Size,
+            shareFile.Created,
+            shareFile.LastModified);
+        var entry = new Entry(fsFile, shareFile);
+        await entryCollection.Responded(path, entry, ct);
+        return fsFile;
     }
 }

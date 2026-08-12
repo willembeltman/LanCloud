@@ -1,27 +1,32 @@
-﻿namespace LanCloud.Api.Helpers;
+﻿using LanCloud.Api.Models;
 
-public class RemovedItemsCollection
+namespace LanCloud.Api.Helpers;
+
+public class EntryCollection
 {
-    private readonly HashSet<string> _removed = [];
-    private readonly Lock _lock = new();
-
-    internal Task CreateDirectory(
-        string path,
-        CancellationToken ct)
+    public EntryCollection()
     {
-        ct.ThrowIfCancellationRequested();
-
-        Remove(path);
-
-        return Task.CompletedTask;
+        LoadFromDisk();
     }
 
-    internal Task Delete(
-        string path,
-        CancellationToken ct)
+    private void LoadFromDisk()
     {
-        ct.ThrowIfCancellationRequested();
+        throw new NotImplementedException();
+    }
 
+    private Task SaveToDisk(CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    private readonly HashSet<string> _removed = [];
+    private readonly Lock _lock = new();
+    public Dictionary<string, Entry> RespondedEntries { get; } = [];
+
+    public Task CreateDirectory(string path, CancellationToken ct) => Remove(path, ct);
+
+    public Task Delete(string path, CancellationToken ct)
+    {
         lock (_lock)
         {
             _removed.Add(Normalize(path));
@@ -38,21 +43,18 @@ public class RemovedItemsCollection
 
         // ↑ Zie opmerking hieronder: dit verwijdert juist de children.
         // Voor tombstones wil je die waarschijnlijk OOK bewaren.
-        return Task.CompletedTask;
+
+        return SaveToDisk(ct);
     }
 
-    internal Task<bool> IsRemoved(
-        string path,
-        CancellationToken ct)
+    public bool IsRemoved(string path)
     {
-        ct.ThrowIfCancellationRequested();
-
         var normalized = Normalize(path);
 
         lock (_lock)
         {
             if (_removed.Contains(normalized))
-                return Task.FromResult(true);
+                return true;
 
             // Een parent-directory kan verwijderd zijn.
             var current = normalized;
@@ -67,31 +69,31 @@ public class RemovedItemsCollection
                 current = current[..slash];
 
                 if (_removed.Contains(current))
-                    return Task.FromResult(true);
+                    return true;
             }
         }
 
-        return Task.FromResult(false);
+        return false;
     }
 
-    internal Task Write(
-        string path,
-        CancellationToken ct)
+    public Task Write(string path, CancellationToken ct) => Remove(path, ct);
+
+    public Task Responded(string path, Entry entry, CancellationToken ct)
     {
-        ct.ThrowIfCancellationRequested();
+        RespondedEntries[path] = entry;
 
-        Remove(path);
-
-        return Task.CompletedTask;
+        return SaveToDisk(ct);
     }
 
-    private void Remove(string path)
+    private Task Remove(string path, CancellationToken ct)
     {
         var normalized = Normalize(path);
 
         lock (_lock)
         {
             _removed.Remove(normalized);
+
+            return SaveToDisk(ct);
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
+using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using LanCloud.Shared.Dtos;
 using System;
@@ -13,7 +14,7 @@ public static class ShareEntryDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x951C1F21;
-    public const uint SchemaHash = 0xF8E0553D;
+    public const uint SchemaHash = 0x1FEBD7C9;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, ShareEntryDto value)
@@ -28,6 +29,7 @@ public static class ShareEntryDtoSpanSerializer
         PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, value.Size);
         DateTimeSerializers.Write(ref ___span, ref ___offset, value.Created);
         DateTimeSerializers.Write(ref ___span, ref ___offset, value.LastModified);
+        SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId);
     }
 
     [IsSpanSerializerRead]
@@ -47,6 +49,7 @@ public static class ShareEntryDtoSpanSerializer
         value.Size = PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset);
         value.Created = DateTimeSerializers.ReadDateTime(___span, ref ___offset);
         value.LastModified = DateTimeSerializers.ReadDateTime(___span, ref ___offset);
+        value.SessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
         return value;
     }
 
@@ -60,6 +63,7 @@ public static class ShareEntryDtoSpanSerializer
         PrimitivesSpanSerializer.LengthInt64(ref ___offset, value.Size);
         DateTimeSerializers.Length(ref ___offset, value.Created);
         DateTimeSerializers.Length(ref ___offset, value.LastModified);
+        SessionIdSpanSerializer.Length(ref ___offset, value.SessionId);
         return ___offset;
     }
 }

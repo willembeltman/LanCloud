@@ -14,7 +14,9 @@ public class HostHub(
     , IHostHub
 {
     async Task IHostedService.StartAsync(CancellationToken ct)
-        => await clientConnection.SubscribeAsync(this, ct);
+    {
+        await clientConnection.SubscribeAsync(this, ct); // wordt nooit gecalled
+    }
 
     async Task IHostedService.StopAsync(CancellationToken ct)
         => await clientConnection.UnsubscribeAsync(this, ct);
@@ -54,11 +56,25 @@ public class HostHub(
                 yield break;
         }
     }
-
     async IAsyncEnumerable<FileChunkDto> IHostHub.ReadFile(
         string relativeFullName,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        throw new NotImplementedException();
+        foreach (var share in config.Shares)
+        {
+            var chunks = share.ReadFile(
+                relativeFullName,
+                ct);
+
+            await foreach (var chunk in chunks)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                yield return chunk;
+            }
+
+            if (ct.IsCancellationRequested)
+                yield break;
+        }
     }
 }
