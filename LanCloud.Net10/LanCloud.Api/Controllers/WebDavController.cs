@@ -1,4 +1,4 @@
-﻿using LanCloud.Api.Interfaces;
+using LanCloud.Api.Interfaces;
 using LanCloud.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
@@ -20,7 +20,7 @@ public class WebDavController(
         Response.Headers.Append("DAV", "1, 2");
         Response.Headers.Append(
             "Allow",
-            "OPTIONS, GET, HEAD, PROPFIND, PUT, DELETE, MKCOL");
+            "OPTIONS, GET, HEAD, PROPFIND, PUT, DELETE, MKCOL, MOVE");
 
         Response.Headers.Append("MS-Author-Via", "DAV");
 
@@ -28,6 +28,7 @@ public class WebDavController(
     }
 
     [AcceptVerbs("PROPFIND")]
+    [Route("")]
     [Route("{*path}")]
     public async Task<IActionResult> PropFind(string? path, CancellationToken ct)
     {
@@ -51,7 +52,7 @@ public class WebDavController(
 
         AddResponse(multistatus, entry);
 
-        if (entry.IsDirectory && depth == "1")
+        if (entry.IsDirectory && depth != "0")
         {
             await foreach (var child
                 in fileSystem.ListDirectory(path, ct))
@@ -64,14 +65,10 @@ public class WebDavController(
             new XDeclaration("1.0", "utf-8", null),
             multistatus);
 
-        await using var stream = new MemoryStream();
+        var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" + document.ToString();
 
-        document.Save(stream);
-        stream.Position = 0;
-
-        return File(
-            stream,
-            "application/xml; charset=utf-8");
+        Response.StatusCode = 207;
+        return Content(xml, "application/xml; charset=utf-8");
     }
 
     [HttpGet("{*path}")]
@@ -214,6 +211,53 @@ public class WebDavController(
         }
     }
 
+    [AcceptVerbs("MOVE")]
+    [Route("{*path}")]
+    public async Task<IActionResult> Move(string path, CancellationToken ct)
+    {
+        path = NormalizePath(path);
+
+        var destinationHeader = Request.Headers["Destination"].FirstOrDefault();
+        if (string.IsNullOrEmpty(destinationHeader))
+            return BadRequest("Missing Destination header.");
+
+        var destUri = new Uri(destinationHeader);
+        var destPath = NormalizePath(destUri.AbsolutePath);
+        if (destPath.StartsWith("dav/", StringComparison.OrdinalIgnoreCase))
+            destPath = destPath.Substring(4);
+        else if (destPath.StartsWith("/dav/", StringComparison.OrdinalIgnoreCase))
+            destPath = destPath.Substring(5);
+
+        logger.LogInformation(
+            "WebDAV MOVE: '{SourcePath}' -> '{DestPath}'",
+            path,
+            destPath);
+
+        try
+        {
+            await fileSystem.Move(path, destPath, ct);
+            return Created(GetDavUrl(destPath), null);
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "MOVE failed: '{SourcePath}' -> '{DestPath}'",
+                path,
+                destPath);
+
+            return StatusCode(500);
+        }
+    }
+
     private static readonly XNamespace Dav = "DAV:";
 
     private void AddResponse(XElement multistatus, FileSystemEntry entry)
@@ -285,7 +329,11 @@ public class WebDavController(
     {
         var segments = path
             .Split('/', StringSplitOptions.RemoveEmptyEntries)
-            .Select(Uri.EscapeDataString);
+            .Select(Uri.EscapeDataString)
+            .ToList();
+
+        if (segments.Count == 0)
+            return "/dav/";
 
         return "/dav/" + string.Join("/", segments);
     }

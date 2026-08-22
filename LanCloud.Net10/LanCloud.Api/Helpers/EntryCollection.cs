@@ -1,9 +1,12 @@
-﻿using LanCloud.Api.Models;
+using LanCloud.Api.Models;
+using System.Text.Json;
 
 namespace LanCloud.Api.Helpers;
 
 public class EntryCollection
 {
+    private static readonly string DiskFilePath = Path.Combine(Environment.CurrentDirectory, "entry_collection.json");
+
     public EntryCollection()
     {
         LoadFromDisk();
@@ -11,12 +14,44 @@ public class EntryCollection
 
     private void LoadFromDisk()
     {
-        throw new NotImplementedException();
+        try
+        {
+            if (File.Exists(DiskFilePath))
+            {
+                var json = File.ReadAllText(DiskFilePath);
+                var items = JsonSerializer.Deserialize<List<string>>(json);
+                if (items != null)
+                {
+                    lock (_lock)
+                    {
+                        foreach (var item in items)
+                            _removed.Add(item);
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Negeren bij eerste start of corruptie
+        }
     }
 
-    private Task SaveToDisk(CancellationToken ct)
+    private async Task SaveToDisk(CancellationToken ct)
     {
-        throw new NotImplementedException();
+        try
+        {
+            List<string> list;
+            lock (_lock)
+            {
+                list = _removed.ToList();
+            }
+            var json = JsonSerializer.Serialize(list);
+            await File.WriteAllTextAsync(DiskFilePath, json, ct);
+        }
+        catch
+        {
+            // Negeren bij file I/O fouten
+        }
     }
 
     private readonly HashSet<string> _removed = [];
@@ -30,19 +65,7 @@ public class EntryCollection
         lock (_lock)
         {
             _removed.Add(Normalize(path));
-
-            // Als een directory verwijderd wordt, moeten ook
-            // eventuele children verborgen blijven.
-            var prefix = Normalize(path) + "/";
-
-            _removed.RemoveWhere(x =>
-                x.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) == false
-                    ? false
-                    : true);
         }
-
-        // ↑ Zie opmerking hieronder: dit verwijdert juist de children.
-        // Voor tombstones wil je die waarschijnlijk OOK bewaren.
 
         return SaveToDisk(ct);
     }

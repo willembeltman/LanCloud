@@ -1,4 +1,4 @@
-﻿using LanCloud.Shared.Dtos;
+using LanCloud.Shared.Dtos;
 using System.Runtime.CompilerServices;
 
 namespace LanCloud.Shared.Models;
@@ -138,6 +138,34 @@ public class LocalShare
             throw new FileNotFoundException(
                 "File or directory not found.",
                 fullName);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task Move(
+        string sourcePath,
+        string destinationPath,
+        CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        var sourceFull = CreateLocalFullName(sourcePath);
+        var destFull = CreateLocalFullName(destinationPath);
+
+        var directory = Path.GetDirectoryName(destFull);
+        if (directory is not null)
+            Directory.CreateDirectory(directory);
+
+        if (File.Exists(sourceFull))
+        {
+            if (File.Exists(destFull)) File.Delete(destFull);
+            File.Move(sourceFull, destFull);
+        }
+        else if (Directory.Exists(sourceFull))
+        {
+            if (Directory.Exists(destFull)) Directory.Delete(destFull, recursive: true);
+            Directory.Move(sourceFull, destFull);
         }
 
         return Task.CompletedTask;

@@ -1,4 +1,4 @@
-﻿using gAPI.Generated;
+using gAPI.Generated;
 using LanCloud.Api.Helpers;
 using LanCloud.Api.Interfaces;
 using LanCloud.Api.Models;
@@ -30,12 +30,37 @@ public class FileSystem(
         await entryCollection.Delete(path, ct);
     }
 
+    public async Task Move(string sourcePath, string destinationPath, CancellationToken ct = default)
+    {
+        await LocalShare.Move(sourcePath, destinationPath, ct);
+        await entryCollection.Delete(sourcePath, ct);
+        await entryCollection.CreateDirectory(destinationPath, ct);
+    }
+
     public async Task<FileSystemEntry?> Get(string path, CancellationToken ct = default)
     {
         if (entryCollection.IsRemoved(path))
             return null;
 
-        var allShareFiles = await clientContext.HostHub.ToAll.Get(path, ct).ToListAsync();
+        if (string.IsNullOrEmpty(path))
+        {
+            var rootFsEntry = new FileSystemEntry("", "", true, 0, DateTime.UtcNow, DateTime.UtcNow);
+            var rootEntry = new Entry(rootFsEntry, new ShareEntryDto { Name = "", Path = "", IsDirectory = true });
+            await entryCollection.Responded("", rootEntry, ct);
+            return rootFsEntry;
+        }
+
+        var allShareFiles = new List<ShareEntryDto>();
+        try
+        {
+            var remoteFiles = await clientContext.HostHub.ToAll.Get(path, ct).ToListAsync(cancellationToken: ct);
+            allShareFiles.AddRange(remoteFiles);
+        }
+        catch
+        {
+            // Negeren als er geen host clients verbonden zijn
+        }
+
         var localShareFiles = LocalShare.Get(path, ct);
         await foreach (var localFile in localShareFiles)
             allShareFiles.Add(localFile);
@@ -51,7 +76,17 @@ public class FileSystem(
         string path,
         [EnumeratorCancellation] CancellationToken ct = default)
     {
-        var allShareFiles = await clientContext.HostHub.ToAll.ListDirectory(path, ct).ToListAsync();
+        var allShareFiles = new List<ShareEntryDto>();
+        try
+        {
+            var remoteFiles = await clientContext.HostHub.ToAll.ListDirectory(path, ct).ToListAsync(cancellationToken: ct);
+            allShareFiles.AddRange(remoteFiles);
+        }
+        catch
+        {
+            // Negeren als er geen host clients verbonden zijn
+        }
+
         var localShareFiles = LocalShare.ListDirectory(path, ct);
         await foreach (var localFile in localShareFiles)
             allShareFiles.Add(localFile);
@@ -71,15 +106,27 @@ public class FileSystem(
 
     public async Task<Stream?> OpenRead(string path, CancellationToken ct = default)
     {
-        if ( entryCollection.IsRemoved(path))
+        if (entryCollection.IsRemoved(path))
             return null;
 
         if (!entryCollection.RespondedEntries.TryGetValue(path, out var respondedEntity))
-            return null;
+        {
+            var fetched = await Get(path, ct);
+            if (fetched == null || !entryCollection.RespondedEntries.TryGetValue(path, out respondedEntity))
+                return null;
+        }
 
-        var fileChunks = clientContext.HostHub
-            .ToSession(respondedEntity.ShareEntryDto.SessionId)
-            .ReadFile(path, ct);
+        IAsyncEnumerable<FileChunkDto> fileChunks;
+        if (string.IsNullOrEmpty(respondedEntity.ShareEntryDto.SessionId.Value))
+        {
+            fileChunks = LocalShare.ReadFile(path, ct);
+        }
+        else
+        {
+            fileChunks = clientContext.HostHub
+                .ToSession(respondedEntity.ShareEntryDto.SessionId)
+                .ReadFile(path, ct);
+        }
 
         return new ChunkedStream(fileChunks, respondedEntity, ct);
     }

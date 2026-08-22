@@ -1,16 +1,19 @@
-using gAPI.Core.Dtos;
-using gAPI.Core.Interfaces;
-using gAPI.Core.Server;
-using gAPI.Core.Server.Authentication;
-using gAPI.Core.Server.Entities;
 using gAPI.Generated;
+using LanCloud.Api.Helpers;
+using LanCloud.Api.Interfaces;
+using LanCloud.Api.Models;
+using LanCloud.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoWss("LanCloudApp");
-builder.Services.AddScoped<IServerAuthenticationService, EmptyServerAuthenticationService>();
+
+builder.Services.AddControllers();
+builder.Services.AddScoped<IFileSystem, FileSystem>();
+builder.Services.AddSingleton<EntryCollection>();
+builder.Services.AddSingleton<ApiConfig>();
 
 var app = builder.Build();
 app.MapAutoWss();
-app.MapStateEndpoint_ForNoMiddleware<AuthUser, AuthStateDto>();
+app.MapControllers();
 app.UseHttpsRedirection();
 app.Run();

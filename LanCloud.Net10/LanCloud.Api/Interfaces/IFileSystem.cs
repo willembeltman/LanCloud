@@ -1,4 +1,4 @@
-﻿using LanCloud.Api.Models;
+using LanCloud.Api.Models;
 
 namespace LanCloud.Api.Interfaces;
 
@@ -27,5 +27,10 @@ public interface IFileSystem
 
     Task CreateDirectory(
         string path,
+        CancellationToken ct = default);
+
+    Task Move(
+        string sourcePath,
+        string destinationPath,
         CancellationToken ct = default);
 }

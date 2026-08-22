@@ -2,6 +2,7 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
+using gAPI.Core.Server;
 using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Collections;
 using gAPI.Core.Server.Fabric;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System.Collections.Generic;
@@ -32,6 +34,7 @@ public static class AutoWssExtension
     public static IServiceCollection AddAutoWss(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
     {
         services.AddHttpContextAccessor();
+        services.TryAddScoped<IServerAuthenticationService, EmptyServerAuthenticationService>();
         services.AddCors(options =>
         {
             options.AddPolicy("AllowSpecificOrigin", policy =>
@@ -81,6 +84,7 @@ public static class AutoWssExtension
         app.UseRouting();
 
         app.MapWss();
+        app.MapStateEndpoint();
 
 
         app.MapAccountServiceEndpoints();
@@ -100,12 +104,13 @@ public static class AutoWssExtension
             HttpContext httpContext,
             CancellationToken ct) =>
         {
-            if (!httpContext.WebSockets.IsWebSocketRequest || 
-                !sessionCache.TryGet(new SessionId(sessionId), out var cookieData))
+            if (!httpContext.WebSockets.IsWebSocketRequest)
             {
                 httpContext.Response.StatusCode = 400;
                 return;
             }
+
+            sessionCache.TryGet(new SessionId(sessionId), out var cookieData);
 
             try
             {
