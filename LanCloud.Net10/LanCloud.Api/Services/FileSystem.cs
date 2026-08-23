@@ -1,4 +1,3 @@
-using gAPI.Core.Ids;
 using gAPI.Generated;
 using LanCloud.Api.Helpers;
 using LanCloud.Api.Models;
@@ -60,7 +59,7 @@ public class FileSystem(
             // Negeren als er geen host clients verbonden zijn
         }
 
-        var localShareFiles = localShare.Get(path, localShare.LocalSessionId, ct);
+        var localShareFiles = localShare.Get(path, null, ct);
         await foreach (var localFile in localShareFiles)
             allShareFiles.Add(localFile);
 
@@ -89,7 +88,7 @@ public class FileSystem(
         }
 
         var localShareFiles = localShare
-            .ListDirectory(path, localShare.LocalSessionId, ct);
+            .ListDirectory(path, null, ct);
         await foreach (var localFile in localShareFiles)
             allShareFiles.Add(localFile);
 
@@ -119,14 +118,15 @@ public class FileSystem(
         }
 
         IAsyncEnumerable<FileChunkDto> fileChunks;
-        if (string.IsNullOrEmpty(respondedEntity.ShareEntryDto.SessionId.Value))
+        if (respondedEntity.ShareEntryDto.SessionId == null)
         {
-            fileChunks = localShare.ReadFile(path, ct);
+            fileChunks = localShare
+                .ReadFile(path, ct);
         }
         else
         {
             fileChunks = clientContext.HostHub
-                .ToSession(respondedEntity.ShareEntryDto.SessionId)
+                .ToSession(respondedEntity.ShareEntryDto.SessionId.Value)
                 .ReadFile(path, ct);
         }
 

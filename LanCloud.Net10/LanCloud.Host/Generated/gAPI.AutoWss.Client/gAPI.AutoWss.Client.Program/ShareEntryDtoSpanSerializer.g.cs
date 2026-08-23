@@ -14,7 +14,7 @@ public static class ShareEntryDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x951C1F21;
-    public const uint SchemaHash = 0x1FEBD7C9;
+    public const uint SchemaHash = 0x51EF1D5F;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, ShareEntryDto value)
@@ -29,7 +29,9 @@ public static class ShareEntryDtoSpanSerializer
         PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, value.Size);
         DateTimeSerializers.Write(ref ___span, ref ___offset, value.Created);
         DateTimeSerializers.Write(ref ___span, ref ___offset, value.LastModified);
-        SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.SessionId != null);
+        if (value.SessionId != null)
+            SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId.Value);
     }
 
     [IsSpanSerializerRead]
@@ -49,7 +51,7 @@ public static class ShareEntryDtoSpanSerializer
         value.Size = PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset);
         value.Created = DateTimeSerializers.ReadDateTime(___span, ref ___offset);
         value.LastModified = DateTimeSerializers.ReadDateTime(___span, ref ___offset);
-        value.SessionId = SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
+        value.SessionId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
         return value;
     }
 
@@ -63,7 +65,9 @@ public static class ShareEntryDtoSpanSerializer
         PrimitivesSpanSerializer.LengthInt64(ref ___offset, value.Size);
         DateTimeSerializers.Length(ref ___offset, value.Created);
         DateTimeSerializers.Length(ref ___offset, value.LastModified);
-        SessionIdSpanSerializer.Length(ref ___offset, value.SessionId);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.SessionId != null);
+        if (value.SessionId != null)
+            SessionIdSpanSerializer.Length(ref ___offset, value.SessionId.Value);
         return ___offset;
     }
 }
