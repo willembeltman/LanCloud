@@ -1,3 +1,4 @@
+using gAPI.Core.Ids;
 using LanCloud.Shared.Dtos;
 using System.Runtime.CompilerServices;
 
@@ -5,11 +6,6 @@ namespace LanCloud.Shared.Models;
 
 public class LocalShare
 {
-    public LocalShare()
-    {
-        LocalFullName = Path.Combine(Environment.CurrentDirectory, "LocalData");
-    }
-
     public LocalShare(string localFullName)
     {
         LocalFullName = Path.GetFullPath(localFullName);
@@ -19,6 +15,7 @@ public class LocalShare
 
     public async IAsyncEnumerable<ShareEntryDto> ListDirectory(
         string relativePath,
+        SessionId sessionId,
         [EnumeratorCancellation] CancellationToken ct)
     {
         var path = CreateLocalFullName(relativePath);
@@ -30,7 +27,7 @@ public class LocalShare
         {
             ct.ThrowIfCancellationRequested();
 
-            var entry = CreateEntry(fullName, relativePath);
+            var entry = CreateEntry(fullName, relativePath, sessionId);
 
             yield return entry;
 
@@ -43,6 +40,7 @@ public class LocalShare
 
     public async IAsyncEnumerable<ShareEntryDto> Get(
         string relativeFullName,
+        SessionId sessionId,
         [EnumeratorCancellation] CancellationToken ct)
     {
         var path = CreateLocalFullName(relativeFullName);
@@ -53,8 +51,8 @@ public class LocalShare
 
             yield return CreateEntry(
                 path,
-                Path.GetDirectoryName(relativeFullName)
-                    ?? string.Empty);
+                Path.GetDirectoryName(relativeFullName) ?? string.Empty,
+                sessionId);
         }
 
         await Task.CompletedTask;
@@ -230,7 +228,8 @@ public class LocalShare
 
     private static ShareEntryDto CreateEntry(
         string fullName,
-        string relativeParent)
+        string relativeParent,
+        SessionId sessionId)
     {
         var attributes =
             File.GetAttributes(fullName);
@@ -270,7 +269,8 @@ public class LocalShare
             IsDirectory = isDirectory,
             Size = size,
             Created = created,
-            LastModified = modified
+            LastModified = modified,
+            SessionId = sessionId
         };
     }
 }

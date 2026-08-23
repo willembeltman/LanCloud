@@ -1,4 +1,6 @@
-﻿using gAPI.Generated;
+﻿using gAPI.Core.Client;
+using gAPI.Core.Client.Interfaces;
+using gAPI.Generated;
 using LanCloud.Host.Models;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Interfaces;
@@ -24,7 +26,7 @@ public class HostHub(
     {
         foreach (var share in config.Shares)
         {
-            var entries = share.ListDirectory(relativeFullName, ct);
+            var entries = share.ListDirectory(relativeFullName, clientConnection.SessionId, ct);
             await foreach (var entry in entries)
             {
                 yield return entry;
@@ -42,7 +44,7 @@ public class HostHub(
     {
         foreach (var share in config.Shares)
         {
-            var entries = share.Get(relativeFullName, ct);
+            var entries = share.Get(relativeFullName, clientConnection.SessionId, ct);
             await foreach (var entry in entries)
             {
                 yield return entry;

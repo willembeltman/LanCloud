@@ -12,7 +12,7 @@ builder.Services.AddHostedService<HostHub>();
 builder.Services.AddAutoWss("https://localhost:7087", "wss://127.0.0.1:7087");
 builder.Services.AddScoped<IUriNavigationManager, StaticNavigationManager>();
 
-builder.Services.AddSingleton(new HostConfig([new LocalShare()]));
+builder.Services.AddSingleton(new HostConfig([new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalData"))]));
 
 var app = builder.Build();
 app.Run(); // Wordt gecalled
