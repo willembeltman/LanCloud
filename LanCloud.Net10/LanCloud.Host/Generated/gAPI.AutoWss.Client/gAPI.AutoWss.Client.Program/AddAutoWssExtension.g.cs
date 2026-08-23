@@ -1,7 +1,9 @@
 ﻿using gAPI.Core.Client;
 using gAPI.Core.Client.Interfaces;
+using gAPI.Core.Client.Navigation;
 using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -30,6 +32,19 @@ public static class AddAutoWssExtension
         services.AddScoped<ClientConnection>();
         services.AddScoped<IClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
         services.AddScoped<IWssLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());
+
+        services.AddScoped<IUriNavigationManager>(sp =>
+        {
+            var navigationManager = sp.GetService<NavigationManager>();
+            if (navigationManager != null )
+            {
+                return new DefaultNavigationManager(navigationManager);
+            }
+            else
+            {
+                return new StaticNavigationManager();
+            }
+        });
 
         // Api clients
         

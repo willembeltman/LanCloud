@@ -2,7 +2,5 @@
 
 namespace LanCloud.Api.Models;
 
-public class ApiConfig
-{
-    public LocalShare? LocalShare { get; set; }
-}
+public record ApiConfig(
+    LocalShare LocalShare);
