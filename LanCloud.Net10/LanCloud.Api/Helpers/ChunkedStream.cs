@@ -73,9 +73,8 @@ public sealed class ChunkedStream(
                     remaining,
                     buffer.Length);
 
-                _currentBuffer.AsMemory(
-                        _currentOffset,
-                        count)
+                _currentBuffer
+                    .AsMemory(_currentOffset, count)
                     .CopyTo(buffer);
 
                 _currentOffset += count;

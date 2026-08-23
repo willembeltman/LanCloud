@@ -13,7 +13,7 @@ public static class FileChunkDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x1E177DF5;
-    public const uint SchemaHash = 0x5FEF28C7;
+    public const uint SchemaHash = 0xA46DBE5B;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, FileChunkDto value)
@@ -23,6 +23,7 @@ public static class FileChunkDtoSpanSerializer
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
         PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value.Data);
+        PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, value.Offset);
     }
 
     [IsSpanSerializerRead]
@@ -37,6 +38,7 @@ public static class FileChunkDtoSpanSerializer
         
         var value = new FileChunkDto();
         value.Data = PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
+        value.Offset = PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset);
         return value;
     }
 
@@ -45,6 +47,7 @@ public static class FileChunkDtoSpanSerializer
     {
         ___offset += 10;
         PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.Data);
+        PrimitivesSpanSerializer.LengthInt64(ref ___offset, value.Offset);
         return ___offset;
     }
 }

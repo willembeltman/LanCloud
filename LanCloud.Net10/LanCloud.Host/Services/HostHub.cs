@@ -45,12 +45,9 @@ public class HostHub(
             var entries = share.Get(relativeFullName, clientConnection.SessionId, ct);
             await foreach (var entry in entries)
             {
+                ct.ThrowIfCancellationRequested();
                 yield return entry;
-                if (ct.IsCancellationRequested)
-                    yield break;
             }
-            if (ct.IsCancellationRequested)
-                yield break;
         }
     }
 
@@ -67,12 +64,8 @@ public class HostHub(
             await foreach (var chunk in chunks)
             {
                 ct.ThrowIfCancellationRequested();
-
                 yield return chunk;
             }
-
-            if (ct.IsCancellationRequested)
-                yield break;
         }
     }
 }
