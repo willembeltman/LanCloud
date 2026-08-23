@@ -67,7 +67,7 @@ public class LocalShare
         if (!File.Exists(path))
             yield break;
 
-        const int chunkSize = 1 * 1024 * 1024;
+        const int chunkSize = 8 * 1024 * 1024;
 
         await using var stream = new FileStream(
             path,
@@ -186,7 +186,7 @@ public class LocalShare
             FileMode.Create,
             FileAccess.Write,
             FileShare.None,
-            bufferSize: 1 * 1024 * 1024,
+            bufferSize: 8 * 1024 * 1024,
             options: FileOptions.Asynchronous);
 
         await incomingStream.CopyToAsync(diskStream, ct);
