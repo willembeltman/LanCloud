@@ -28,7 +28,7 @@ public static class AddAutoWssClientExtension
 
         // Connection stuff
         //services.TryAddScoped<IClientAuthenticatedHttpClient, EmptyClientAuthenticatedHttpClient>();
-        services.AddAuthenticationServices(apiAddress);
+        //services.AddAuthenticationServices(apiAddress);
         services.AddScoped<ClientConnection>();
         services.AddScoped<IClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
         services.AddScoped<IWssLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());
