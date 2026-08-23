@@ -192,10 +192,12 @@ public class ClientConnection
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var relativeFullName = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                var startOffset = PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.ReadFile(
                                         relativeFullName,
+                                        startOffset,
                                         ___ct);
                                     await foreach (var response in responses)
                                     {

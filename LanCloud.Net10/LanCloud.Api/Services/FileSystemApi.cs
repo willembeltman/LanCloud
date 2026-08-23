@@ -134,20 +134,20 @@ public class FileSystemApi(
                 return null;
         }
 
-        IAsyncEnumerable<FileChunkDto> fileChunks;
-        if (respondedEntity.ShareEntryDto.SessionId == null)
+        IAsyncEnumerable<FileChunkDto> OpenChunks(long startOffset, CancellationToken streamCt)
         {
-            fileChunks = localShare
-                .ReadFile(respondedEntity.ReadPath, ct);
-        }
-        else
-        {
-            fileChunks = clientContext.HostHub
+            if (respondedEntity.ShareEntryDto.SessionId == null)
+            {
+                return localShare
+                    .ReadFile(respondedEntity.ReadPath, startOffset, streamCt);
+            }
+
+            return clientContext.HostHub
                 .ToSession(respondedEntity.ShareEntryDto.SessionId.Value)
-                .ReadFile(respondedEntity.ReadPath, ct);
+                .ReadFile(respondedEntity.ReadPath, startOffset, streamCt);
         }
 
-        return new ChunkedStream(fileChunks, respondedEntity, ct);
+        return new ChunkedStream(OpenChunks, respondedEntity, ct);
     }
 
     public async Task Write(string path, Stream stream, CancellationToken ct = default)
@@ -245,38 +245,4 @@ public class FileSystemApi(
         return slash < 0 ? string.Empty : path[..slash];
     }
 
-    private static bool TryReadBasicCredentials(
-        HttpContext httpContext,
-        out string username,
-        out string password)
-    {
-        username = string.Empty;
-        password = string.Empty;
-
-        if (!httpContext.Request.Headers.TryGetValue("Authorization", out var authorizationHeader))
-            return false;
-
-        var authorization = authorizationHeader.ToString();
-        if (!authorization.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        try
-        {
-            var encoded = authorization["Basic ".Length..].Trim();
-            var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-            var separator = decoded.IndexOf(':');
-
-            if (separator < 0)
-                return false;
-
-            username = decoded[..separator];
-            password = decoded[(separator + 1)..];
-
-            return true;
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
-    }
 }

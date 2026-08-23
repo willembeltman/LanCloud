@@ -53,12 +53,14 @@ public class HostHub(
 
     async IAsyncEnumerable<FileChunkDto> IHostHub.ReadFile(
         string relativeFullName,
+        long startOffset,
         [EnumeratorCancellation] CancellationToken ct)
     {
         foreach (var share in config.Shares)
         {
             var chunks = share.ReadFile(
                 relativeFullName,
+                startOffset,
                 ct);
 
             await foreach (var chunk in chunks)

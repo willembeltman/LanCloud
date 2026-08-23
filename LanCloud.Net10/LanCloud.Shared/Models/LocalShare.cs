@@ -60,8 +60,12 @@ public class LocalShare
 
     public async IAsyncEnumerable<FileChunkDto> ReadFile(
         string relativeFullName,
+        long startOffset,
         [EnumeratorCancellation] CancellationToken ct)
     {
+        if (startOffset < 0)
+            throw new ArgumentOutOfRangeException(nameof(startOffset));
+
         var path = CreateLocalFullName(relativeFullName);
 
         if (!File.Exists(path))
@@ -78,9 +82,11 @@ public class LocalShare
             options: FileOptions.Asynchronous |
                      FileOptions.SequentialScan);
 
+        stream.Position = startOffset;
+
         var buffer = new byte[chunkSize];
 
-        long offset = 0;
+        long offset = startOffset;
 
         while (true)
         {

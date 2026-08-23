@@ -15,7 +15,8 @@ public class TestController(
         var file = files.FirstOrDefault();
         if (file == null || file.SessionId == null)
             throw new FileNotFoundException();
-        var chunks = clientContext.HostHub.ToSession(file.SessionId.Value).ReadFile(file.Name, ct);
+        var chunks = clientContext.HostHub.ToSession(file.SessionId.Value)
+            .ReadFile(file.Name, 0, ct);
 
         await foreach (var chunk in chunks)
         {

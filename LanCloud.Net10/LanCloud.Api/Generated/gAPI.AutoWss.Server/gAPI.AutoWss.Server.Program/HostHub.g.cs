@@ -73,14 +73,16 @@ public class HostHub(
     }
     public async IAsyncEnumerable<FileChunkDto> ReadFile(
         string relativeFullName,
+        long startOffset,
         [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " ReadFile({relativeFullName})", relativeFullName);
+            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " ReadFile({relativeFullName},{startOffset})", relativeFullName, startOffset);
 
         var serviceMethodId = new ServiceMethodId("ReadFile");
         var payload = IHostHub_ReadFile_Serializer(
-            relativeFullName);
+            relativeFullName,
+            startOffset);
 
         var responses = ___fabricClient.InvokeAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, ct);
         await foreach (var response in responses)
@@ -123,15 +125,18 @@ public class HostHub(
         return ___buffer;
     }
     public byte[] IHostHub_ReadFile_Serializer(
-        string relativeFullName)
+        string relativeFullName,
+        long startOffset)
     {
         var ___offset = 0;
         PrimitivesSpanSerializer.LengthString(ref ___offset, relativeFullName);
+        PrimitivesSpanSerializer.LengthInt64(ref ___offset, startOffset);
         var ___buffer = new byte[___offset];
         var ___span = new Span<byte>(___buffer);
         var ___length = ___offset;
         ___offset = 0;
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, relativeFullName);
+        PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, startOffset);
         if (___length != ___offset)
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;
