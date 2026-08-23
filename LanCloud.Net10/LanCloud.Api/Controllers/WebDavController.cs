@@ -1,5 +1,5 @@
-using LanCloud.Api.Interfaces;
 using LanCloud.Api.Models;
+using LanCloud.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using System.Xml.Linq;
@@ -9,7 +9,7 @@ namespace LanCloud.Api.Controllers;
 [ApiController]
 [Route("dav")]
 public class WebDavController(
-    IFileSystem fileSystem,
+    FileSystem fileSystem,
     ILogger<WebDavController> logger)
     : ControllerBase
 {

@@ -1,7 +1,6 @@
 using gAPI.Core.Ids;
 using gAPI.Generated;
 using LanCloud.Api.Helpers;
-using LanCloud.Api.Interfaces;
 using LanCloud.Api.Models;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Models;
@@ -9,65 +8,49 @@ using System.Runtime.CompilerServices;
 
 namespace LanCloud.Api.Services;
 
-public class FileSystem : IFileSystem
+// Edge cases:
+// 1. Als je een bestand verwijderd wat zowel op localshare als remote staat
+
+public class FileSystem(
+    IClientContext clientContext,
+    EntryCollection entryCollection,
+    LocalShare localShare)
 {
-    private readonly IClientContext ClientContext;
-    private readonly EntryCollection EntryCollection;
-    private readonly LocalShare LocalShare;
-    private readonly SessionId LocalSessionId;
-
-    public FileSystem(
-        IClientContext clientContext,
-        EntryCollection entryCollection,
-        ApiConfig apiConfig)
-    {
-        ClientContext = clientContext;
-        EntryCollection = entryCollection;
-
-        LocalShare = apiConfig.LocalShare
-            ?? new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalFiles"));
-        LocalSessionId = SessionId.New();
-    }
-
-
-    // Edge cases:
-    // 1. Als je een bestand verwijderd wat zowel op localshare als remote staat
-
     public async Task CreateDirectory(string path, CancellationToken ct = default)
     {
-        await LocalShare.CreateDirectory(path, ct);
-        await EntryCollection.CreateDirectory(path, ct);
+        await localShare.CreateDirectory(path, ct);
+        await entryCollection.CreateDirectory(path, ct);
     }
 
     public async Task Delete(string path, CancellationToken ct = default)
     {
-        await LocalShare.Delete(path, ct);
-        await EntryCollection.Delete(path, ct);
+        await localShare.Delete(path, ct);
+        await entryCollection.Delete(path, ct);
     }
 
     public async Task Move(string sourcePath, string destinationPath, CancellationToken ct = default)
     {
-        await LocalShare.Move(sourcePath, destinationPath, ct);
-        await EntryCollection.Move(sourcePath, destinationPath, ct);
+        await localShare.Move(sourcePath, destinationPath, ct);
+        await entryCollection.Move(sourcePath, destinationPath, ct);
     }
 
     public async Task<FileSystemEntry?> Get(string path, CancellationToken ct = default)
     {
-        if (EntryCollection.IsRemoved(path))
+        if (entryCollection.IsRemoved(path))
             return null;
 
         if (string.IsNullOrEmpty(path))
         {
             var rootFsEntry = new FileSystemEntry("", "", true, 0, DateTime.UtcNow, DateTime.UtcNow);
             var rootEntry = new Entry(rootFsEntry, new ShareEntryDto { Name = "", Path = "", IsDirectory = true });
-            await EntryCollection.Responded("", rootEntry, ct);
+            await entryCollection.Responded("", rootEntry, ct);
             return rootFsEntry;
         }
 
         var allShareFiles = new List<ShareEntryDto>();
         try
         {
-            var remoteFiles = await ClientContext.HostHub.ToAll
+            var remoteFiles = await clientContext.HostHub.ToAll
                 .Get(path, ct)
                 .ToListAsync(ct);
             allShareFiles.AddRange(remoteFiles);
@@ -77,7 +60,7 @@ public class FileSystem : IFileSystem
             // Negeren als er geen host clients verbonden zijn
         }
 
-        var localShareFiles = LocalShare.Get(path, LocalSessionId, ct);
+        var localShareFiles = localShare.Get(path, localShare.LocalSessionId, ct);
         await foreach (var localFile in localShareFiles)
             allShareFiles.Add(localFile);
 
@@ -95,7 +78,7 @@ public class FileSystem : IFileSystem
         var allShareFiles = new List<ShareEntryDto>();
         try
         {
-            var remoteFiles = await ClientContext.HostHub.ToAll
+            var remoteFiles = await clientContext.HostHub.ToAll
                 .ListDirectory(path,ct)
                 .ToListAsync(ct);
             allShareFiles.AddRange(remoteFiles);
@@ -105,8 +88,8 @@ public class FileSystem : IFileSystem
             // Negeren als er geen host clients verbonden zijn
         }
 
-        var localShareFiles = LocalShare
-            .ListDirectory(path, LocalSessionId, ct);
+        var localShareFiles = localShare
+            .ListDirectory(path, localShare.LocalSessionId, ct);
         await foreach (var localFile in localShareFiles)
             allShareFiles.Add(localFile);
 
@@ -116,7 +99,7 @@ public class FileSystem : IFileSystem
 
         foreach (var shareFile in files)
         {
-            if (EntryCollection.IsRemoved(shareFile.Path))
+            if (entryCollection.IsRemoved(shareFile.Path))
                 continue;
 
             yield return await CreateFileSystemEntry(path, shareFile, ct);
@@ -125,24 +108,24 @@ public class FileSystem : IFileSystem
 
     public async Task<Stream?> OpenRead(string path, CancellationToken ct = default)
     {
-        if (EntryCollection.IsRemoved(path))
+        if (entryCollection.IsRemoved(path))
             return null;
 
-        if (!EntryCollection.RespondedEntries.TryGetValue(path, out var respondedEntity))
+        if (!entryCollection.RespondedEntries.TryGetValue(path, out var respondedEntity))
         {
             var fetched = await Get(path, ct);
-            if (fetched == null || !EntryCollection.RespondedEntries.TryGetValue(path, out respondedEntity))
+            if (fetched == null || !entryCollection.RespondedEntries.TryGetValue(path, out respondedEntity))
                 return null;
         }
 
         IAsyncEnumerable<FileChunkDto> fileChunks;
         if (string.IsNullOrEmpty(respondedEntity.ShareEntryDto.SessionId.Value))
         {
-            fileChunks = LocalShare.ReadFile(path, ct);
+            fileChunks = localShare.ReadFile(path, ct);
         }
         else
         {
-            fileChunks = ClientContext.HostHub
+            fileChunks = clientContext.HostHub
                 .ToSession(respondedEntity.ShareEntryDto.SessionId)
                 .ReadFile(path, ct);
         }
@@ -152,8 +135,8 @@ public class FileSystem : IFileSystem
 
     public async Task Write(string path, Stream stream, CancellationToken ct = default)
     {
-        await LocalShare.Write(path, stream, ct);
-        await EntryCollection.Write(path, ct);
+        await localShare.Write(path, stream, ct);
+        await entryCollection.Write(path, ct);
     }
 
     private async Task<FileSystemEntry> CreateFileSystemEntry(string path, ShareEntryDto shareFile, CancellationToken ct)
@@ -166,7 +149,7 @@ public class FileSystem : IFileSystem
             shareFile.Created,
             shareFile.LastModified);
         var entry = new Entry(fsFile, shareFile);
-        await EntryCollection.Responded(path, entry, ct);
+        await entryCollection.Responded(path, entry, ct);
         return fsFile;
     }
 }

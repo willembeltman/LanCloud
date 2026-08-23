@@ -12,12 +12,14 @@ public class LocalShare
     }
 
     public string LocalFullName { get; set; } = string.Empty;
+    public SessionId LocalSessionId { get; set; } = SessionId.New();
 
     public async IAsyncEnumerable<ShareEntryDto> ListDirectory(
         string relativePath,
         SessionId sessionId,
         [EnumeratorCancellation] CancellationToken ct)
     {
+        LocalSessionId = sessionId;
         var path = CreateLocalFullName(relativePath);
 
         if (!Directory.Exists(path))
@@ -43,6 +45,7 @@ public class LocalShare
         SessionId sessionId,
         [EnumeratorCancellation] CancellationToken ct)
     {
+        LocalSessionId = sessionId;
         var path = CreateLocalFullName(relativeFullName);
 
         if (File.Exists(path) || Directory.Exists(path))
