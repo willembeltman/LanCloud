@@ -2,4 +2,4 @@
 
 namespace LanCloud.Api.Models;
 
-public record Entry(FileSystemEntry FileSystemEntry, ShareEntryDto ShareEntryDto);
+public record Entry(FileSystemEntry FileSystemEntry, ShareEntryDto ShareEntryDto, string ReadPath);

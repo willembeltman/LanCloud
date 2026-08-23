@@ -11,9 +11,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 #nullable enable
 namespace gAPI.Generated;
 
-public static class AddAutoWssExtension
+public static class AddAutoWssClientExtension
 {
-    public static IServiceCollection AddAutoWss(this IServiceCollection services, string apiAddress, string wssAddress)
+    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, string apiAddress, string wssAddress)
     {
         // Set up authorization core
         services.AddAuthorizationCore();

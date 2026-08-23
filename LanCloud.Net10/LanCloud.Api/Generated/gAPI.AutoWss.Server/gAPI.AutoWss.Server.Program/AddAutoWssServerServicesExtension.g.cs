@@ -1,5 +1,4 @@
-﻿using gAPI.Core.AttributesSource;
-using gAPI.Core.Dtos;
+﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Authentication;
@@ -18,10 +17,9 @@ using System.Threading;
 #nullable enable
 namespace gAPI.Generated;
 
-[AutoWssExtensionAttribute]
-public static class AutoWssServicesExtension
+public static class AddAutoWssServerServicesExtension
 {
-    public static IServiceCollection AddAutoWssServices(this IServiceCollection services)
+    public static IServiceCollection AddAutoWssServerServices(this IServiceCollection services)
     {
         // Hubs
         services.AddScoped<IClientContext, ClientContext>();

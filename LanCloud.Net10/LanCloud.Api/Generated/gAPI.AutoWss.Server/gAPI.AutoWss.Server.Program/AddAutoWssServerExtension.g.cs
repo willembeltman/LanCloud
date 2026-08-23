@@ -1,5 +1,4 @@
-﻿using gAPI.Core.AttributesSource;
-using gAPI.Core.Dtos;
+﻿using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server;
@@ -24,14 +23,13 @@ using System.Threading;
 #nullable enable
 namespace gAPI.Generated;
 
-[AutoWssExtensionAttribute]
-public static class AutoWssExtension
+public static class AddAutoWssServerExtension
 {
-    public static IServiceCollection AddAutoWss(this IServiceCollection services, ServerConfig serverConfig)
+    public static IServiceCollection AddAutoWssServer(this IServiceCollection services, ServerConfig serverConfig)
     {
-        return AddAutoWss(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
+        return AddAutoWssServer(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
     }
-    public static IServiceCollection AddAutoWss(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
+    public static IServiceCollection AddAutoWssServer(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
     {
         services.AddHttpContextAccessor();
         services.TryAddScoped<IServerAuthenticationService, EmptyServerAuthenticationService>();
@@ -68,7 +66,7 @@ public static class AutoWssExtension
             }
         });
 
-        services.AddAutoWssServices();
+        services.AddAutoWssServerServices();
 
         return services;
     }

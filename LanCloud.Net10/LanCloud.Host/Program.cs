@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 var config = new HostConfig([new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalData"))]);
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<HostHub>();
-builder.Services.AddAutoWss("https://localhost:7087", "wss://127.0.0.1:7087");
+builder.Services.AddAutoWssClient("https://localhost:7087", "wss://127.0.0.1:7087");
 builder.Services.AddSingleton(config);
 
 var app = builder.Build();

@@ -5,9 +5,9 @@ using LanCloud.Shared.Models;
 
 var localShare = new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalData"));
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddAutoWss("LanCloudApp");
+builder.Services.AddAutoWssServer("LanCloudApp");
 builder.Services.AddControllers();
-builder.Services.AddScoped<FileSystem>();
+builder.Services.AddScoped<FileSystemApi>();
 builder.Services.AddSingleton(localShare);
 builder.Services.AddSingleton<EntryCollection>();
 

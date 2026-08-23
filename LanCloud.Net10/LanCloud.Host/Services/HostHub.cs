@@ -1,6 +1,4 @@
-﻿using gAPI.Core.Client;
-using gAPI.Core.Client.Interfaces;
-using gAPI.Generated;
+﻿using gAPI.Generated;
 using LanCloud.Host.Models;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Interfaces;

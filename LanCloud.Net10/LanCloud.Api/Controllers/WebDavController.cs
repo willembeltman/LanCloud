@@ -1,7 +1,9 @@
-using LanCloud.Api.Models;
 using LanCloud.Api.Services;
+using LanCloud.Shared.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Options;
+using System.Text;
 using System.Xml.Linq;
 
 namespace LanCloud.Api.Controllers;
@@ -9,7 +11,7 @@ namespace LanCloud.Api.Controllers;
 [ApiController]
 [Route("dav")]
 public class WebDavController(
-    FileSystem fileSystem,
+    FileSystemApi fileSystem,
     ILogger<WebDavController> logger)
     : ControllerBase
 {
@@ -32,6 +34,10 @@ public class WebDavController(
     [Route("{*path}")]
     public async Task<IActionResult> PropFind(string? path, CancellationToken ct)
     {
+        var authorizationResult = await AuthorizeDav(ct);
+        if (authorizationResult is not null)
+            return authorizationResult;
+
         path = NormalizePath(path);
 
         var depth = Request.Headers["Depth"]
@@ -74,6 +80,10 @@ public class WebDavController(
     [HttpGet("{*path}")]
     public async Task<IActionResult> Get(string? path, CancellationToken ct)
     {
+        var authorizationResult = await AuthorizeDav(ct);
+        if (authorizationResult is not null)
+            return authorizationResult;
+
         path = NormalizePath(path);
 
         if (string.IsNullOrEmpty(path))
@@ -112,6 +122,10 @@ public class WebDavController(
     [DisableRequestSizeLimit]
     public async Task<IActionResult> Put(string path, CancellationToken ct)
     {
+        var authorizationResult = await AuthorizeDav(ct);
+        if (authorizationResult is not null)
+            return authorizationResult;
+
         path = NormalizePath(path);
 
         logger.LogInformation(
@@ -151,6 +165,10 @@ public class WebDavController(
     [HttpDelete("{*path}")]
     public async Task<IActionResult> Delete(string path, CancellationToken ct)
     {
+        var authorizationResult = await AuthorizeDav(ct);
+        if (authorizationResult is not null)
+            return authorizationResult;
+
         path = NormalizePath(path);
 
         logger.LogInformation(
@@ -182,6 +200,10 @@ public class WebDavController(
     [Route("{*path}")]
     public async Task<IActionResult> MakeCollection(string path, CancellationToken ct)
     {
+        var authorizationResult = await AuthorizeDav(ct);
+        if (authorizationResult is not null)
+            return authorizationResult;
+
         path = NormalizePath(path);
 
         logger.LogInformation(
@@ -215,6 +237,10 @@ public class WebDavController(
     [Route("{*path}")]
     public async Task<IActionResult> Move(string path, CancellationToken ct)
     {
+        var authorizationResult = await AuthorizeDav(ct);
+        if (authorizationResult is not null)
+            return authorizationResult;
+
         path = NormalizePath(path);
 
         var destinationHeader = Request.Headers["Destination"].FirstOrDefault();
@@ -259,6 +285,67 @@ public class WebDavController(
     }
 
     private static readonly XNamespace Dav = "DAV:";
+
+    private async Task<IActionResult?> AuthorizeDav(CancellationToken ct)
+    {
+        var auth = await fileSystem.GetAuthenticationInfo(ct);
+
+        if (!auth.Required)
+            return null;
+
+        if (!Request.Headers.TryGetValue(
+                "Authorization",
+                out var header))
+        {
+            return UnauthorizedDav(auth.Realm);
+        }
+
+        var value = header.FirstOrDefault();
+
+        if (string.IsNullOrWhiteSpace(value) ||
+            !value.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+        {
+            return UnauthorizedDav(auth.Realm);
+        }
+
+        string decoded;
+
+        try
+        {
+            decoded = Encoding.UTF8.GetString(
+                Convert.FromBase64String(value["Basic ".Length..].Trim()));
+        }
+        catch (FormatException)
+        {
+            return UnauthorizedDav(auth.Realm);
+        }
+
+        var separator = decoded.IndexOf(':');
+
+        if (separator < 0)
+            return UnauthorizedDav(auth.Realm);
+
+        var username = decoded[..separator];
+        var password = decoded[(separator + 1)..];
+
+        if (!await fileSystem.Authenticate(
+                username,
+                password,
+                ct))
+        {
+            return UnauthorizedDav(auth.Realm);
+        }
+
+        return null;
+    }
+
+    private IActionResult UnauthorizedDav(string realm)
+    {
+        Response.Headers.WWWAuthenticate =
+            $"Basic realm=\"{realm}\"";
+
+        return Unauthorized();
+    }
 
     private void AddResponse(XElement multistatus, FileSystemEntry entry)
     {
@@ -337,4 +424,11 @@ public class WebDavController(
 
         return "/dav/" + string.Join("/", segments);
     }
+    //private IActionResult UnauthorizedDav()
+    //{
+    //    Response.Headers.WWWAuthenticate =
+    //        $"Basic realm=\"{davOptions.Value.Realm}\"";
+
+    //    return Unauthorized();
+    //}
 }
