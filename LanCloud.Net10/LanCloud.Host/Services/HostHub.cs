@@ -13,11 +13,8 @@ public class HostHub(
     : IHostedService
     , IHostHub
 {
-    async Task IHostedService.StartAsync(CancellationToken ct)
-    {
-        await clientConnection.SubscribeAsync(this, ct); // wordt nooit gecalled
-    }
-
+    async Task IHostedService.StartAsync(CancellationToken ct) 
+        => await clientConnection.SubscribeAsync(this, ct);
     async Task IHostedService.StopAsync(CancellationToken ct)
         => await clientConnection.UnsubscribeAsync(this, ct);
 

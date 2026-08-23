@@ -124,4 +124,10 @@ public class EntryCollection
         => path
             .Replace('\\', '/')
             .Trim('/');
+
+    public async Task Move(string sourcePath, string destinationPath, CancellationToken ct)
+    {
+        await Delete(sourcePath, ct);
+        await CreateDirectory(destinationPath, ct);
+    }
 }

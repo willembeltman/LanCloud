@@ -18,6 +18,9 @@ public class FileSystem(
         apiConfig.LocalShare
         ?? new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalFiles"));
 
+    // Edge cases:
+    // 1. Als je een bestand verwijderd wat zowel op localshare als remote staat
+
     public async Task CreateDirectory(string path, CancellationToken ct = default)
     {
         await LocalShare.CreateDirectory(path, ct);
@@ -33,8 +36,7 @@ public class FileSystem(
     public async Task Move(string sourcePath, string destinationPath, CancellationToken ct = default)
     {
         await LocalShare.Move(sourcePath, destinationPath, ct);
-        await entryCollection.Delete(sourcePath, ct);
-        await entryCollection.CreateDirectory(destinationPath, ct);
+        await entryCollection.Move(sourcePath, destinationPath, ct);
     }
 
     public async Task<FileSystemEntry?> Get(string path, CancellationToken ct = default)
@@ -53,10 +55,12 @@ public class FileSystem(
         var allShareFiles = new List<ShareEntryDto>();
         try
         {
-            var remoteFiles = await clientContext.HostHub.ToAll.Get(path, ct).ToListAsync(cancellationToken: ct);
+            var remoteFiles = await clientContext.HostHub.ToAll
+                .Get(path, ct)
+                .ToListAsync(cancellationToken: ct);
             allShareFiles.AddRange(remoteFiles);
         }
-        catch
+        catch (Exception ex)
         {
             // Negeren als er geen host clients verbonden zijn
         }
