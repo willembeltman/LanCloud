@@ -48,7 +48,7 @@ public static class AddAutoWssServerExtension
         services.AddScoped<WssHub>();
         services.AddSingleton(sp => new FabricClient(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
 
-        var connectionCollection = new WssConnectionCollection();
+        var connectionCollection = new WssServerConnectionCollection();
         services.AddSingleton(connectionCollection);
 
         var sseHostCollection = new SseHostCollection();

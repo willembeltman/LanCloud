@@ -18,7 +18,7 @@ using System.Text;
 namespace gAPI.Generated;
 
 [WssHubAttribute]
-public class WssHub : WssConnection
+public class WssHub : WssServerConnection
 {
     readonly ILogger ___logger;
     readonly IServerAuthenticationService ___authenticationService;
@@ -27,7 +27,7 @@ public class WssHub : WssConnection
     public WssHub(
         IServerAuthenticationService authenticationService,
         SseHostCollection sseHostCollection,
-        WssConnectionCollection connections,
+        WssServerConnectionCollection connections,
         FabricClient fabricClient,
         ILoggerFactory loggerFactory) 
         : base(authenticationService, sseHostCollection, connections, fabricClient, loggerFactory)
