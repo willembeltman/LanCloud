@@ -1,3 +1,4 @@
+using gAPI.Core.Interfaces;
 using gAPI.Generated;
 using LanCloud.Api.Helpers;
 using LanCloud.Api.Models;
@@ -9,6 +10,7 @@ namespace LanCloud.Api.Services;
 
 public class FileSystem(
     IClientContext clientContext,
+    IServerAuthenticationService authenticationService,
     EntryCollection entryCollection,
     LocalShare localShare)
 {

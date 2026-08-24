@@ -1,4 +1,4 @@
-﻿using gAPI.Core.Client;
+﻿using gAPI.Core.Client.Authentication;
 using gAPI.Generated;
 using LanCloud.Host.Models;
 using LanCloud.Host.Services;
