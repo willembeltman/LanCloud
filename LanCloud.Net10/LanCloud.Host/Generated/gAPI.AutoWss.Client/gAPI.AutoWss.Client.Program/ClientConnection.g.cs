@@ -83,7 +83,7 @@ public class ClientConnection
         if (implementation is IHostHub hostHub)
         {
             if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " UnsubscribeAsync({serviceId})", "IHostHub");
+                ___Logger.LogTrace("UnsubscribeAsync({serviceId})", "IHostHub");
 
             await HostHubsLock.WaitAsync(___ct);
             try
@@ -107,14 +107,14 @@ public class ClientConnection
     protected override async Task Received_SendRequest_FromServerAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Received_SendRequest_FromServerAsync({___sendRequest})", ___sendRequest);
+            ___Logger.LogTrace("Received_SendRequest_FromServerAsync({___sendRequest})", ___sendRequest);
 
         throw new Exception($"Service \"{___sendRequest.ServiceId.Value}\" / Method \"{___sendRequest.MethodId.Value}\" not found");
     }
     protected override async Task Received_InvokeRequest_FromServerAsync(InvokeRequestDto ___invokeRequest, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Received_InvokeRequest_FromServerAsync({___invokeRequest})", ___invokeRequest);
+            ___Logger.LogTrace("Received_InvokeRequest_FromServerAsync({___invokeRequest})", ___invokeRequest);
 
         switch (___invokeRequest.ServiceId.Value)
         {
@@ -230,14 +230,14 @@ public class ClientConnection
     protected override Task Received_InvokeResponse_FromServerAsync(ApiInvokeResponseDto ___invokeResponse, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Received_InvokeResponse_FromServerAsync({___invokeResponse})", ___invokeResponse);
+            ___Logger.LogTrace("Received_InvokeResponse_FromServerAsync({___invokeResponse})", ___invokeResponse);
 
         throw new Exception($"Service \"{___invokeResponse.ServiceId.Value}\" / Method \"{___invokeResponse.MethodId.Value}\" not found");
     }
     protected override Task Received_InvokeResponseDone_FromServerAsync(ApiInvokeResponseDoneDto ___invokeResponseDone, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " Received_InvokeResponseDone_FromServerAsync({___invokeResponseDone})", ___invokeResponseDone);
+            ___Logger.LogTrace("Received_InvokeResponseDone_FromServerAsync({___invokeResponseDone})", ___invokeResponseDone);
 
         throw new Exception($"Service \"{___invokeResponseDone.ServiceId.Value}\" / Method \"{___invokeResponseDone.MethodId.Value}\" not found");
     }

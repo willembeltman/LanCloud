@@ -7,7 +7,7 @@ var localShare = new LocalShare(Path.Combine(Environment.CurrentDirectory, "Loca
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoWssServer("LanCloudApp");
 builder.Services.AddControllers();
-builder.Services.AddScoped<FileSystemApi>();
+builder.Services.AddScoped<FileSystem>();
 builder.Services.AddSingleton(localShare);
 builder.Services.AddSingleton<EntryCollection>();
 

@@ -1,8 +1,7 @@
+using LanCloud.Api.Models;
 using LanCloud.Api.Services;
-using LanCloud.Shared.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.Options;
 using System.Text;
 using System.Xml.Linq;
 
@@ -11,7 +10,7 @@ namespace LanCloud.Api.Controllers;
 [ApiController]
 [Route("dav")]
 public class WebDavController(
-    FileSystemApi fileSystem,
+    FileSystem fileSystem,
     ILogger<WebDavController> logger)
     : ControllerBase
 {
@@ -19,12 +18,44 @@ public class WebDavController(
     [HttpOptions("{*path}")]
     public IActionResult Options()
     {
-        Response.Headers.Append("DAV", "1, 2");
+        Response.Headers.Append("DAV", "1");
         Response.Headers.Append(
             "Allow",
             "OPTIONS, GET, HEAD, PROPFIND, PUT, DELETE, MKCOL, MOVE");
 
         Response.Headers.Append("MS-Author-Via", "DAV");
+
+        return Ok();
+    }
+
+    [HttpHead("{*path}")]
+    public async Task<IActionResult> Head(string? path, CancellationToken ct)
+    {
+        var authorizationResult = await AuthorizeDav(ct);
+        if (authorizationResult is not null)
+            return authorizationResult;
+
+        path = NormalizePath(path);
+
+        var entry = await fileSystem.Get(path, ct);
+
+        if (entry is null)
+            return NotFound();
+
+        if (entry.IsDirectory)
+            return BadRequest();
+
+        var provider = new FileExtensionContentTypeProvider();
+
+        if (!provider.TryGetContentType(
+                entry.Name,
+                out var contentType))
+        {
+            contentType = "application/octet-stream";
+        }
+
+        Response.ContentType = contentType;
+        Response.ContentLength = entry.Size;
 
         return Ok();
     }
@@ -41,12 +72,13 @@ public class WebDavController(
         path = NormalizePath(path);
 
         var depth = Request.Headers["Depth"]
-            .FirstOrDefault() ?? "1";
+            .FirstOrDefault() ?? "0";
 
-        logger.LogInformation(
-            "PROPFIND '{Path}' (Depth: {Depth})",
+        logger.LogTrace(
+            "PROPFIND '{Path}' (Depth: {Depth} Headers: {Headers})",
             path,
-            depth);
+            depth,
+            string.Join(", ", Request.Headers.Select(x => $"{x.Key}={x.Value}")));
 
         var entry = await fileSystem.Get(path, ct);
 
@@ -60,8 +92,7 @@ public class WebDavController(
 
         if (entry.IsDirectory && depth != "0")
         {
-            await foreach (var child
-                in fileSystem.ListDirectory(path, ct))
+            await foreach (var child in fileSystem.ListDirectory(path, ct))
             {
                 AddResponse(multistatus, child);
             }
@@ -71,10 +102,16 @@ public class WebDavController(
             new XDeclaration("1.0", "utf-8", null),
             multistatus);
 
-        var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" + document.ToString();
+        //logger.LogTrace(
+        //    "PROPFIND response for '{Path}': {Xml}",
+        //    path,
+        //    document.ToString(SaveOptions.DisableFormatting));
 
-        Response.StatusCode = 207;
-        return Content(xml, "application/xml; charset=utf-8");
+        Response.StatusCode = StatusCodes.Status207MultiStatus;
+
+        return Content(
+            document.ToString(),
+            "application/xml; charset=utf-8");
     }
 
     [HttpGet("{*path}")]
@@ -128,7 +165,7 @@ public class WebDavController(
 
         path = NormalizePath(path);
 
-        logger.LogInformation(
+        logger.LogTrace(
             "WebDAV PUT: {Path}",
             path);
 
@@ -171,7 +208,7 @@ public class WebDavController(
 
         path = NormalizePath(path);
 
-        logger.LogInformation(
+        logger.LogTrace(
             "WebDAV DELETE: {Path}",
             path);
 
@@ -206,7 +243,7 @@ public class WebDavController(
 
         path = NormalizePath(path);
 
-        logger.LogInformation(
+        logger.LogTrace(
             "WebDAV MKCOL: {Path}",
             path);
 
@@ -254,7 +291,7 @@ public class WebDavController(
         else if (destPath.StartsWith("/dav/", StringComparison.OrdinalIgnoreCase))
             destPath = destPath.Substring(5);
 
-        logger.LogInformation(
+        logger.LogTrace(
             "WebDAV MOVE: '{SourcePath}' -> '{DestPath}'",
             path,
             destPath);
@@ -286,6 +323,88 @@ public class WebDavController(
 
     private static readonly XNamespace Dav = "DAV:";
 
+    private void AddResponse(XElement multistatus, FileSystemEntry entry)
+    {
+        var href = GetDavUrl(entry.Path);
+
+        if (entry.IsDirectory &&
+            !href.EndsWith('/'))
+        {
+            href += "/";
+        }
+
+        var prop = new XElement(
+            Dav + "prop",
+
+            new XElement(
+                Dav + "displayname",
+                entry.Name),
+
+            new XElement(
+                Dav + "creationdate",
+                entry.Created
+                    .ToUniversalTime()
+                    .ToString("yyyy-MM-ddTHH:mm:ssZ")),
+
+            new XElement(
+                Dav + "getlastmodified",
+                entry.LastModified
+                    .ToUniversalTime()
+                    .ToString("R")),
+
+            new XElement(
+                Dav + "getetag",
+                CreateETag(entry)),
+
+            new XElement(
+                Dav + "resourcetype",
+                entry.IsDirectory
+                    ? new XElement(Dav + "collection")
+                    : null));
+
+        if (!entry.IsDirectory)
+        {
+            prop.Add(
+                new XElement(
+                    Dav + "getcontentlength",
+                    entry.Size));
+
+            prop.Add(
+                new XElement(
+                    Dav + "getcontenttype",
+                    GetContentType(entry.Name)));
+        }
+
+        multistatus.Add(
+            new XElement(
+                Dav + "response",
+
+                new XElement(
+                    Dav + "href",
+                    href),
+
+                new XElement(
+                    Dav + "propstat",
+                    prop,
+
+                    new XElement(
+                        Dav + "status",
+                        "HTTP/1.1 200 OK"))));
+    }
+    private static string CreateETag(FileSystemEntry entry)
+    {
+        return $"W/\"{entry.Size}-{entry.LastModified.Ticks}\"";
+    }
+    private static string GetContentType(string fileName)
+    {
+        var provider = new FileExtensionContentTypeProvider();
+
+        return provider.TryGetContentType(
+            fileName,
+            out var contentType)
+                ? contentType
+                : "application/octet-stream";
+    }
     private async Task<IActionResult?> AuthorizeDav(CancellationToken ct)
     {
         var auth = await fileSystem.GetAuthenticationInfo(ct);
@@ -338,7 +457,6 @@ public class WebDavController(
 
         return null;
     }
-
     private IActionResult UnauthorizedDav(string realm)
     {
         Response.Headers.WWWAuthenticate =
@@ -346,84 +464,149 @@ public class WebDavController(
 
         return Unauthorized();
     }
-
-    private void AddResponse(XElement multistatus, FileSystemEntry entry)
-    {
-        var href = GetDavUrl(entry.Path);
-
-        if (entry.IsDirectory &&
-            !href.EndsWith('/'))
-        {
-            href += "/";
-        }
-
-        var prop = new XElement(
-            Dav + "prop",
-            new XElement(
-                Dav + "displayname",
-                entry.Name));
-
-        if (entry.IsDirectory)
-        {
-            prop.Add(
-                new XElement(
-                    Dav + "resourcetype",
-                    new XElement(
-                        Dav + "collection")));
-        }
-        else
-        {
-            prop.Add(
-                new XElement(
-                    Dav + "resourcetype"));
-
-            prop.Add(
-                new XElement(
-                    Dav + "getcontentlength",
-                    entry.Size));
-
-            prop.Add(
-                new XElement(
-                    Dav + "getlastmodified",
-                    entry.LastModified.ToUniversalTime()
-                        .ToString("R")));
-
-            prop.Add(
-                new XElement(
-                    Dav + "creationdate",
-                    entry.Created.ToUniversalTime()
-                        .ToString("yyyy-MM-ddTHH:mm:ssZ")));
-        }
-
-        multistatus.Add(
-            new XElement(
-                Dav + "response",
-                new XElement(Dav + "href", href),
-                new XElement(
-                    Dav + "propstat",
-                    prop,
-                    new XElement(
-                        Dav + "status",
-                        "HTTP/1.1 200 OK"))));
-    }
     private static string NormalizePath(string? path)
     {
         return (path ?? "")
             .Replace('\\', '/')
             .Trim('/');
     }
-    private static string GetDavUrl(string path)
+    private string GetDavUrl(string path)
     {
         var segments = path
             .Split('/', StringSplitOptions.RemoveEmptyEntries)
-            .Select(Uri.EscapeDataString)
-            .ToList();
+            .Select(Uri.EscapeDataString);
 
-        if (segments.Count == 0)
-            return "/dav/";
+        var relativePath = "/dav/" + string.Join("/", segments);
 
-        return "/dav/" + string.Join("/", segments);
+        return $"{Request.Scheme}://{Request.Host}{relativePath}";
     }
+
+
+    //private static string CreateETag(FileSystemEntry entry)
+    //{
+    //    return $"\"{entry.Size:x}-{entry.LastModified.Ticks:x}\"";
+    //}
+
+    //[AcceptVerbs("PROPFIND")]
+    //[Route("")]
+    //[Route("{*path}")]
+    //public async Task<IActionResult> PropFind(string? path, CancellationToken ct)
+    //{
+    //    var authorizationResult = await AuthorizeDav(ct);
+    //    if (authorizationResult is not null)
+    //        return authorizationResult;
+
+    //    path = NormalizePath(path);
+
+    //    var depth = Request.Headers["Depth"]
+    //        .FirstOrDefault() ?? "1";
+
+    //    logger.LogTrace(
+    //        "PROPFIND '{Path}' (Depth: {Depth})",
+    //        path,
+    //        depth);
+
+    //    var entry = await fileSystem.Get(path, ct);
+
+    //    if (entry is null)
+    //        return NotFound();
+
+    //    var multistatus = new XElement(
+    //        Dav + "multistatus");
+
+    //    AddResponse(multistatus, entry);
+
+    //    if (entry.IsDirectory && depth != "0")
+    //    {
+    //        await foreach (var child
+    //            in fileSystem.ListDirectory(path, ct))
+    //        {
+    //            AddResponse(multistatus, child);
+    //        }
+    //    }
+
+    //    var document = new XDocument(
+    //        new XDeclaration("1.0", "utf-8", null),
+    //        multistatus);
+
+    //    var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" + document.ToString();
+
+    //    Response.StatusCode = 207;
+    //    return Content(xml, "application/xml; charset=utf-8");
+    //}
+
+    //private void AddResponse(XElement multistatus, FileSystemEntry entry)
+    //{
+    //    var href = GetDavUrl(entry.Path);
+
+    //    if (entry.IsDirectory &&
+    //        !href.EndsWith('/'))
+    //    {
+    //        href += "/";
+    //    }
+
+    //    var prop = new XElement(
+    //        Dav + "prop",
+    //        new XElement(
+    //            Dav + "displayname",
+    //            entry.Name));
+
+    //    if (entry.IsDirectory)
+    //    {
+    //        prop.Add(
+    //            new XElement(
+    //                Dav + "resourcetype",
+    //                new XElement(
+    //                    Dav + "collection")));
+    //    }
+    //    else
+    //    {
+    //        prop.Add(
+    //            new XElement(
+    //                Dav + "resourcetype"));
+
+    //        prop.Add(
+    //            new XElement(
+    //                Dav + "getcontentlength",
+    //                entry.Size));
+
+    //        prop.Add(
+    //            new XElement(
+    //                Dav + "getlastmodified",
+    //                entry.LastModified.ToUniversalTime()
+    //                    .ToString("R")));
+
+    //        prop.Add(
+    //            new XElement(
+    //                Dav + "creationdate",
+    //                entry.Created.ToUniversalTime()
+    //                    .ToString("yyyy-MM-ddTHH:mm:ssZ")));
+    //    }
+
+    //    multistatus.Add(
+    //        new XElement(
+    //            Dav + "response",
+    //            new XElement(Dav + "href", href),
+    //            new XElement(
+    //                Dav + "propstat",
+    //                prop,
+    //                new XElement(
+    //                    Dav + "status",
+    //                    "HTTP/1.1 200 OK"))));
+    //}
+
+    //private static string GetDavUrl(string path)
+    //{
+    //    var segments = path
+    //        .Split('/', StringSplitOptions.RemoveEmptyEntries)
+    //        .Select(Uri.EscapeDataString)
+    //        .ToList();
+
+    //    if (segments.Count == 0)
+    //        return "/dav/";
+
+    //    return "/dav/" + string.Join("/", segments);
+    //}
     //private IActionResult UnauthorizedDav()
     //{
     //    Response.Headers.WWWAuthenticate =

@@ -1,4 +1,4 @@
-﻿namespace LanCloud.Shared.Dtos;
+﻿namespace LanCloud.Api.Models;
 
 public record AuthenticationInfo(
     bool Required,
