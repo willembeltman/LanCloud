@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Attributes;
-using gAPI.Core.AttributesSource;
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
@@ -17,7 +16,6 @@ using System.Text;
 
 namespace gAPI.Generated;
 
-[WssHubAttribute]
 public class WssHub : WssServerConnection
 {
     readonly ILogger ___logger;
