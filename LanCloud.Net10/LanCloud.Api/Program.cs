@@ -12,7 +12,7 @@ builder.Services.AddSingleton(localShare);
 builder.Services.AddSingleton<EntryCollection>();
 
 var app = builder.Build();
-app.MapAutoWss();
+app.MapAutoWssServer();
 app.MapControllers();
 app.UseHttpsRedirection();
 app.Run();

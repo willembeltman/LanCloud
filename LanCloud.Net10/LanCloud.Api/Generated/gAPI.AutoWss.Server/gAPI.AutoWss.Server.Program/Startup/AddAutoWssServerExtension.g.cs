@@ -57,6 +57,7 @@ public static class AddAutoWssServerExtension
         var sessionCache = new WssSessionCache();
         services.AddSingleton(sessionCache);
 
+        // Session cleaner
         _ = Task.Run(async () =>
         {
             while (true)
@@ -66,77 +67,14 @@ public static class AddAutoWssServerExtension
             }
         });
 
-        services.AddAutoWssServerServices();
+        // Hubs
+        services.AddScoped<IClientContext, ClientContext>();
+        services.AddScoped<IHostHubContext, HostHubContext>();
+
+        // Apis
+
+        // Minimal Apis
 
         return services;
-    }
-
-    public static WebApplication MapAutoWss(this WebApplication app)
-    {
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
-        {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-        });
-
-        app.UseCors("AllowSpecificOrigin");
-        app.UseRouting();
-
-        app.MapWss();
-        app.MapStateEndpoint();
-
-
-        app.MapAccountServiceEndpoints();
-
-        app.UseWebSockets();
-        return app;
-    }
-
-    public static WebApplication MapWss(this WebApplication app)
-    {
-        app.UseWebSockets();
-        app.MapGet("/fabricr", async (
-            [FromQuery] string sessionId,
-            [FromServices] WssSessionCache sessionCache,
-            [FromServices] WssHub hub,
-            [FromServices] ILoggerFactory loggerFactory,
-            HttpContext httpContext,
-            CancellationToken ct) =>
-        {
-            if (!httpContext.WebSockets.IsWebSocketRequest)
-            {
-                httpContext.Response.StatusCode = 400;
-                return;
-            }
-
-            sessionCache.TryGet(new SessionId(sessionId), out var cookieData);
-
-            try
-            {
-                var forwardedIpHeader = httpContext.Request.Headers["X-Forwarded-For"];
-                IPAddress? forwardedIp = null;
-                if (forwardedIpHeader.Any())
-                {
-                    var forwardedIpString = forwardedIpHeader.First();
-                    if (forwardedIpString != null)
-                        forwardedIp = IPAddress.Parse(forwardedIpString);
-                }
-
-                using var socket = await httpContext.WebSockets.AcceptWebSocketAsync();
-                await hub.RunAsync(
-                    socket,
-                    httpContext.Request.Path,
-                    httpContext.Request.QueryString,
-                    forwardedIp ?? httpContext.Connection.RemoteIpAddress,
-                    sessionId,
-                    cookieData,
-                    ct);
-            }
-            catch (Exception ex)
-            {
-                var logger = loggerFactory.CreateLogger("gAPI.Generated.WssEndpoint");
-                logger.LogError("Exception occured: {ex}", ex);
-            }
-        });
-        return app;
     }
 }
