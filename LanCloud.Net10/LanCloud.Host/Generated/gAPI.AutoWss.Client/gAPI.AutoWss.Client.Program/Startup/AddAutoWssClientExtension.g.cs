@@ -4,6 +4,8 @@ using gAPI.Core.Client.Navigation;
 using gAPI.Core.Client.Razor;
 using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
+using gAPI.Core.Serializers;
+using LanCloud.Host;
 using LanCloud.Shared.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -54,10 +56,6 @@ public static class AddAutoWssClientExtension
         // Minimal api clients
         services.AddScoped<IAccountService, AccountService>();
 
-        
-
-        // Todo: StateParser?
-
         // Register the cookie handler
         services.AddScoped<WithCookiesHandler>();
 
@@ -66,16 +64,13 @@ public static class AddAutoWssClientExtension
             .AddHttpClient("WithCookies", opt => opt.BaseAddress = new Uri(apiAddress))
             .AddHttpMessageHandler<WithCookiesHandler>();
 
+
         // Register global client authentication service
-        services.AddScoped<AuthenticatedHttpClient>();
-        services.AddScoped<IAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
-        services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
-        services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
+        services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<OwnAuthenticatedHttpClient>());
+        services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<OwnAuthenticatedHttpClient>());
 
         // Set up authorization core
         services.AddAuthorizationCore();
-
-
 
         return services;
     }
