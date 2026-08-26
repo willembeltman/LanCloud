@@ -4,6 +4,7 @@ using gAPI.Core.Client.Navigation;
 using gAPI.Core.Client.Razor;
 using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
+using LanCloud.Shared.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,6 +49,7 @@ public static class AddAutoWssClientExtension
         });
 
         // Api clients
+        services.AddScoped<IHostApi>(sp => sp.GetRequiredService<ClientConnection>().HostApi);
         
         // Minimal api clients
         services.AddScoped<IAccountService, AccountService>();

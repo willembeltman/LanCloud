@@ -1,13 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\gAPI\gAPI.Core\gAPI.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI\gAPI.AutoSerializer\gAPI.AutoSerializer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+
+		<ProjectReference Include="..\gAPI\gAPI.Core\gAPI.Core.csproj" />
+	</ItemGroup>
 
 </Project>
