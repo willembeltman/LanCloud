@@ -1,10 +1,10 @@
-﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
+﻿using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Collections;
-using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
+using LanCloud.Api.Authentication;
+using LanCloud.Shared.Dtos;
 using Microsoft.Extensions.Primitives;
 using System.Security.Claims;
 
@@ -13,14 +13,14 @@ using System.Security.Claims;
 namespace gAPI.Generated;
 
 public class AuthenticationService(
-    IAuthenticationStateFactory<AuthUser> authenticationStateFactory,
-    IUserTokenFactory<AuthUser> userTokenFactory,
-    IStateMapping<AuthUser, AuthStateDto> stateMapping,
-    IStateParser<AuthStateDto> stateSerializer,
+    IAuthenticationStateFactory<User> authenticationStateFactory,
+    IUserTokenFactory<User> userTokenFactory,
+    IStateMapping<User, State> stateMapping,
+    IStateParser<State> stateSerializer,
     IHostEnvironment hostEnvironment,
-    IEnumerable<IAuthenticationCheck<AuthUser, AuthStateDto>> authenticationChecks,
+    IEnumerable<IAuthenticationCheck<User, State>> authenticationChecks,
     IEnumerable<WssSessionCache> sessionCaches) 
-    : AuthenticationService<AuthUser, AuthStateDto>(
+    : AuthenticationService<User, State>(
         authenticationStateFactory,
         userTokenFactory,
         stateMapping,
