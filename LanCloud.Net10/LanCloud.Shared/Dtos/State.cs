@@ -1,8 +1,8 @@
-﻿using gAPI.Core.Dtos;
+﻿//using gAPI.Core.Dtos;
 
-namespace LanCloud.Shared.Dtos;
+//namespace LanCloud.Shared.Dtos;
 
-public class State : AuthStateDto
-{
-    public string? ProfilePictureUrl { get; set; }
-}
+//public class State : AuthStateDto
+//{
+//    public string? ProfilePictureUrl { get; set; }
+//}

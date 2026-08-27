@@ -1,9 +1,9 @@
-﻿using gAPI.Core.Server.Entities;
-using gAPI.Core.Server.Storage;
+﻿//using gAPI.Core.Server.Entities;
+//using gAPI.Core.Server.Storage;
 
-namespace LanCloud.Api;
+//namespace LanCloud.Api;
 
-public class User : AuthUser, IStorageFile
-{
-    string IStorageFile.Id => Id.ToString();
-}
+//public class User : AuthUser, IStorageFile
+//{
+//    string IStorageFile.Id => Id.ToString();
+//}

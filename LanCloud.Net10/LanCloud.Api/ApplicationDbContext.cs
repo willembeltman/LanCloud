@@ -1,11 +1,11 @@
-﻿using gAPI.Core.Server.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿//using gAPI.Core.Server.Entities;
+//using Microsoft.EntityFrameworkCore;
 
-namespace LanCloud.Api;
+//namespace LanCloud.Api;
 
-public class ApplicationDbContext : AuthenticationDbContext<User>
-{
-    public ApplicationDbContext(DbContextOptions options) : base(options)
-    {
-    }
-}
+//public class ApplicationDbContext : AuthenticationDbContext<User>
+//{
+//    public ApplicationDbContext(DbContextOptions options) : base(options)
+//    {
+//    }
+//}

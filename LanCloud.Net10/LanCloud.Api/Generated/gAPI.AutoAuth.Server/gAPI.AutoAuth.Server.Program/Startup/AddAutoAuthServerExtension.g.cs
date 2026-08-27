@@ -13,9 +13,6 @@ public static class AddAutoAuthServerExtension
 {
     public static IServiceCollection AddAutoAuthServer(this IServiceCollection services)
     {
-        
-        services.AddScoped<IServerAuthenticationService, EmptyServerAuthenticationService>();
-
         services.AddScoped<ServerAuthenticationAccessor>();
         services.AddScoped<AuthenticationService>();
         services.AddScoped<IAuthenticationService>(sp =>
