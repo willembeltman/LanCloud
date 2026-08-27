@@ -13,7 +13,7 @@ public static class FileChunkDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x1E177DF5;
-    public const uint SchemaHash = 0xA46DBE5B;
+    public const uint SchemaHash = 0xBFB6C178;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, FileChunkDto value)

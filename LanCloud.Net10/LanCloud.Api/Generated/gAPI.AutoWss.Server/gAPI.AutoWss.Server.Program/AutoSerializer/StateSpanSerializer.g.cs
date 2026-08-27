@@ -1,5 +1,6 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
+using gAPI.Core.Dtos;
 using gAPI.Core.Serializers;
 using LanCloud.Shared.Dtos;
 using System;
@@ -9,25 +10,27 @@ using System.Text;
 #nullable enable
 namespace gAPI.Generated;
 
-public static class FileChunkDtoSpanSerializer
+public static class StateSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0x1E177DF5;
-    public const uint SchemaHash = 0xA46DBE5B;
+    public const uint TypeId = 0x1DECA496;
+    public const uint SchemaHash = 0x2F36FFA4;
 
     [IsSpanSerializerWrite]
-    public static void Write(this ref Span<byte> ___span, ref int ___offset, FileChunkDto value)
+    public static void Write(this ref Span<byte> ___span, ref int ___offset, State value)
     {
         PrimitivesSpanSerializer.WriteUShort(ref ___span, ref ___offset, Magic); // Magic string `GA` => it's a gAPI stream
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, SchemaHash); // Schema identifier
         
-        PrimitivesSpanSerializer.WriteByteArray(ref ___span, ref ___offset, value.Data);
-        PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, value.Offset);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.User != null);
+        if (value.User != null)
+            AuthStateUserDtoSpanSerializer.Write(ref ___span, ref ___offset, value.User);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ForceReconnect);
     }
 
     [IsSpanSerializerRead]
-    public static FileChunkDto ReadFileChunkDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static State ReadState(this ReadOnlySpan<byte> ___span, ref int ___offset)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -36,18 +39,20 @@ public static class FileChunkDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new FileChunkDto();
-        value.Data = PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
-        value.Offset = PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset);
+        var value = new State();
+        value.User = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : AuthStateUserDtoSpanSerializer.ReadAuthStateUserDto(___span, ref ___offset);
+        value.ForceReconnect = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset);
         return value;
     }
 
     [IsSpanSerializerLength]
-    public static int Length(ref int ___offset, FileChunkDto value)
+    public static int Length(ref int ___offset, State value)
     {
         ___offset += 10;
-        PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.Data);
-        PrimitivesSpanSerializer.LengthInt64(ref ___offset, value.Offset);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.User != null);
+        if (value.User != null)
+            AuthStateUserDtoSpanSerializer.Length(ref ___offset, value.User);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ForceReconnect);
         return ___offset;
     }
 }

@@ -14,7 +14,7 @@ public static class StateSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x1DECA496;
-    public const uint SchemaHash = 0x3CB30EC5;
+    public const uint SchemaHash = 0x2F36FFA4;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, State value)

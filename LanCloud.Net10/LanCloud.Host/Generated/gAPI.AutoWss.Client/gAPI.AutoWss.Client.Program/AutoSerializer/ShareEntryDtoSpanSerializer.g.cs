@@ -14,7 +14,7 @@ public static class ShareEntryDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x951C1F21;
-    public const uint SchemaHash = 0x51EF1D5F;
+    public const uint SchemaHash = 0x1C31B869;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, ShareEntryDto value)
