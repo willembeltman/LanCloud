@@ -1,7 +1,5 @@
 ﻿using gAPI.Core.Client;
 using gAPI.Core.Client.Interfaces;
-using gAPI.Core.Client.Navigation;
-using gAPI.Core.Client.Razor;
 using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
 using LanCloud.Shared.Interfaces;
@@ -18,15 +16,16 @@ public static class AddAutoWssClientExtension
 {
     public static IServiceCollection AddAutoWssClient(this IServiceCollection services, string apiAddress, string wssAddress)
     {
-        // Set up authorization core
-        services.AddAuthorizationCore();
-
         // Set up configuration
         var config = new FrontendConfig()
         {
             ApiBackendUrl = apiAddress,
             WssBackendUrl = wssAddress
         };
+        return AddAutoWssClient(services, config);
+    }
+    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, FrontendConfig config)
+    {
         services.AddSingleton(config);
 
         // Connection stuff
@@ -34,42 +33,11 @@ public static class AddAutoWssClientExtension
         services.AddScoped<IClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
         services.AddScoped<IWssLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());
         
-        // Het kan helaas niet anders
-        services.AddScoped<IUriNavigationManager>(sp =>
-        {
-            var navigationManager = sp.GetService<NavigationManager>();
-            if (navigationManager != null)
-            {
-                return new DefaultNavigationManager(navigationManager);
-            }
-            else
-            {
-                return new StaticNavigationManager();
-            }
-        });
-
         // Api clients
         services.AddScoped<IHostApi>(sp => sp.GetRequiredService<ClientConnection>().HostApi);
         
         // Minimal api clients
         services.AddScoped<IAccountService, AccountService>();
-
-        // Register the cookie handler
-        services.AddScoped<WithCookiesHandler>();
-
-        // Configure named client for WebAssembly with cookies
-        services
-            .AddHttpClient("WithCookies", opt => opt.BaseAddress = new Uri(apiAddress))
-            .AddHttpMessageHandler<WithCookiesHandler>();
-
-        // Register global client authentication service
-        services.AddScoped<AuthenticatedHttpClient>();
-        services.AddScoped<IAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
-        services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
-        services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
-
-        // Set up authorization core
-        services.AddAuthorizationCore();
 
         return services;
     }

@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Delegates;
+using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
-using LanCloud.Shared.Dtos;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 
@@ -20,10 +20,10 @@ public class AuthenticatedHttpClient(
 
     private readonly SemaphoreSlim StateLock = new(1, 1);
 
-    private State? OldState { get; set; }
-    private State? State;
+    private AuthStateDto? OldState { get; set; }
+    private AuthStateDto? State;
     private DateTime StateLastUpdate;
-    private Task<State>? StateFetchTask;
+    private Task<AuthStateDto>? StateFetchTask;
     private StateParser stateSerializer = new();
 
     public event StateChangedHandler? OnStateHasChanged;
@@ -51,7 +51,7 @@ public class AuthenticatedHttpClient(
         }
     }
 
-    public async Task<State> GetStateAsync(bool force = false, CancellationToken ct = default)
+    public async Task<AuthStateDto> GetStateAsync(bool force = false, CancellationToken ct = default)
     {
         await StateLock.WaitAsync(ct);
         try
@@ -87,7 +87,7 @@ public class AuthenticatedHttpClient(
         var state = await GetStateAsync(force, ct);
         return stateSerializer.ToStringValuesBase64(state).ToString();
     }
-    private async Task<State> FetchStateAsync(CancellationToken ct)
+    private async Task<AuthStateDto> FetchStateAsync(CancellationToken ct)
     {
         try
         {
@@ -99,7 +99,7 @@ public class AuthenticatedHttpClient(
 
             if (State == null)
             {
-                State = new State();
+                State = new AuthStateDto();
                 OldState = stateSerializer.CreateCopy(State);
             }
 
@@ -164,7 +164,7 @@ public class AuthenticatedHttpClient(
             StateLock.Release();
         }
     }
-    private async Task UpdateStateDataInternal(State value)
+    private async Task UpdateStateDataInternal(AuthStateDto value)
     {
         bool isDifferent = stateSerializer.IsDifferent(value, State);
 
@@ -264,7 +264,7 @@ public class AuthenticatedHttpClient(
             return CreateAnonymousAuthenticationState();
         }
     }
-    private static AuthenticationState GetAuthenticationState(State state)
+    private static AuthenticationState GetAuthenticationState(AuthStateDto state)
     {
         return state.User != null
             ? CreateAuthenticationStateFromState(state)
@@ -275,7 +275,7 @@ public class AuthenticatedHttpClient(
         var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
         return new AuthenticationState(anonymous);
     }
-    private static AuthenticationState CreateAuthenticationStateFromState(State state)
+    private static AuthenticationState CreateAuthenticationStateFromState(AuthStateDto state)
     {
         var claims = new[]
         {

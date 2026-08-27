@@ -24,6 +24,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI\gAPI.AutoWss.Client\gAPI.AutoWss.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\gAPI\gAPI.AutoAuth.Client\gAPI.AutoAuth.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<ItemGroup>
