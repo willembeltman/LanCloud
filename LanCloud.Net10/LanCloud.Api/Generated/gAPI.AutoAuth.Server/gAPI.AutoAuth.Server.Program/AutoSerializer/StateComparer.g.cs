@@ -22,6 +22,7 @@ public static class StateComparer
         }
 
         if (value.ForceReconnect != otherValue.ForceReconnect) return true;
+        if (value.ProfilePictureUrl != otherValue.ProfilePictureUrl) return true;
         return false;
     }
 }

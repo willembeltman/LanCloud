@@ -14,6 +14,7 @@ public static class StateCreateCopy
         var copy = new State();
         copy.User = value.User == null ? null : value.User.CreateCopy();
         copy.ForceReconnect = value.ForceReconnect;
+        copy.ProfilePictureUrl = value.ProfilePictureUrl;
         return copy;
     }
 }

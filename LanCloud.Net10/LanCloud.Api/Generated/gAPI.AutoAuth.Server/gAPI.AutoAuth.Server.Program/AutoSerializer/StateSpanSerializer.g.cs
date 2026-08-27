@@ -14,7 +14,7 @@ public static class StateSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
     public const uint TypeId = 0x1DECA496;
-    public const uint SchemaHash = 0x2F36FFA4;
+    public const uint SchemaHash = 0x5FE2946C;
 
     [IsSpanSerializerWrite]
     public static void Write(this ref Span<byte> ___span, ref int ___offset, State value)
@@ -27,6 +27,9 @@ public static class StateSpanSerializer
         if (value.User != null)
             AuthStateUserDtoSpanSerializer.Write(ref ___span, ref ___offset, value.User);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ForceReconnect);
+        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ProfilePictureUrl != null);
+        if (value.ProfilePictureUrl != null)
+            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.ProfilePictureUrl);
     }
 
     [IsSpanSerializerRead]
@@ -42,6 +45,7 @@ public static class StateSpanSerializer
         var value = new State();
         value.User = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : AuthStateUserDtoSpanSerializer.ReadAuthStateUserDto(___span, ref ___offset);
         value.ForceReconnect = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset);
+        value.ProfilePictureUrl = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
         return value;
     }
 
@@ -53,6 +57,9 @@ public static class StateSpanSerializer
         if (value.User != null)
             AuthStateUserDtoSpanSerializer.Length(ref ___offset, value.User);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ForceReconnect);
+        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ProfilePictureUrl != null);
+        if (value.ProfilePictureUrl != null)
+            PrimitivesSpanSerializer.LengthString(ref ___offset, value.ProfilePictureUrl);
         return ___offset;
     }
 }

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Primitives;
 #nullable enable
 namespace gAPI.Generated;
 
-public class StateParser
+public class StateParser : IStateParser
 {
     public bool TryParse(string? value, out State state)
     {
