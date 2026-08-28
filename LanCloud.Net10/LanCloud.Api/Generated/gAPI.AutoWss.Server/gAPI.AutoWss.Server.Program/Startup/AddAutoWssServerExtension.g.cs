@@ -55,8 +55,8 @@ public static class AddAutoWssServerExtension
 
     public static IServiceCollection AddAutoWssServer(
         this IServiceCollection services,
-        string? frontendUrl = null,
         string? fabricConnectionString = null,
+        string? frontendUrl = null,
         TimeProvider? dateTime = null)
     {
         services.AddSingleton(dateTime ?? TimeProvider.System);

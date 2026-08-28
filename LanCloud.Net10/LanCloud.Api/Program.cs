@@ -5,7 +5,7 @@ using LanCloud.Shared.Models;
 
 var localShare = new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalData"));
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddAutoWssServer();
+builder.Services.AddAutoWssServer("Server=localhost;Port=9494;");
 builder.Services.AddAutoAuthServer();
 
 builder.Services.AddControllers();
