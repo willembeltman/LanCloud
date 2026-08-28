@@ -29,16 +29,32 @@ public static class AddAutoAuthServerExtension
     {
         return AddAutoAuthServer(
             services, 
-            serverConfig.DefaultConnectionString, 
             serverConfig.UseMemoryDatabase, 
-            serverConfig.StorageConnectionString);
+            serverConfig.DefaultConnectionString, 
+            serverConfig.LoginMaxAttempt, 
+            serverConfig.LoginMaxAttemptTimeout, 
+            serverConfig.RegisterMaxAttempt, 
+            serverConfig.RegisterMaxAttemptTimeout, 
+            serverConfig.ForgetPasswordMaxAttempt, 
+            serverConfig.ForgetPasswordMaxAttemptTimeout, 
+            serverConfig.ChangePasswordMaxAttempt, 
+            serverConfig.ChangePasswordMaxAttemptTimeout);
     }
 
     public static IServiceCollection AddAutoAuthServer(
         this IServiceCollection services,
-        string? dbConnectionString = null,
         bool useMemoryDatabase = false,
-        string? storageConnectionString = null)
+        string? dbConnectionString = null,
+        int loginMaxAttempt = 5,
+        long loginMaxAttemptTimeout = 15,
+        int registerMaxAttempt = 5,
+        long registerMaxAttemptTimeout = 24 * 7 * 52, // 8736
+        int forgetPasswordMaxAttempt = 5,
+        long forgetPasswordMaxAttemptTimeout = 24,
+        int changePasswordMaxAttempt = 5,
+        long changePasswordMaxAttemptTimeout = 24,
+        double shortHoursAgo = -1,
+        double longHoursAgo = -72)
     {
         if (dbConnectionString == null)
         {
@@ -90,8 +106,28 @@ public static class AddAutoAuthServerExtension
             services.AddAuthentication("gAPI")
                     .AddScheme<AuthenticationSchemeOptions, AuthenticationHandler>("gAPI", _ => { });
 
-            services.AddScoped<IAuthenticationSecurity, AuthenticationSecurity<AuthUser, StateDto>>();
-            services.AddScoped<IAuthenticationStateFactory<AuthUser>, AuthenticationStateFactory<AuthUser>>();
+            services.AddScoped<IAuthenticationSecurity>(sp => 
+                new AuthenticationSecurity<AuthUser, StateDto>(
+                    sp.GetRequiredService<IAuthenticationService<AuthUser, StateDto>>(),
+                    sp.GetRequiredService<IDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>>(),
+                    sp.GetRequiredService<TimeProvider>(),
+                    loginMaxAttempt, 
+                    loginMaxAttemptTimeout,
+                    registerMaxAttempt,
+                    registerMaxAttemptTimeout,
+                    forgetPasswordMaxAttempt,
+                    forgetPasswordMaxAttemptTimeout,
+                    changePasswordMaxAttempt,
+                    changePasswordMaxAttemptTimeout));
+
+            services.AddScoped<IAuthenticationStateFactory<AuthUser>>(sp => 
+                new AuthenticationStateFactory<AuthUser>(
+                    sp.GetRequiredService<IDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>>(),
+                    sp.GetRequiredService<TimeProvider>(),
+                    shortHoursAgo,
+                    longHoursAgo,
+                    useMemoryDatabase));
+
             services.AddScoped<IUserTokenFactory<AuthUser>, UserTokenFactory<AuthUser>>();
             services.AddScoped<IAccountService, AccountService<AuthUser, StateDto>>();
 

@@ -53,12 +53,13 @@ public static class AddAutoWssServerExtension
     }
 
     public static IServiceCollection AddAutoWssServer(
-        this IServiceCollection services, 
-        string frontendUrl = null, 
+        this IServiceCollection services,
+        string? frontendUrl = null,
         string? fabricConnectionString = null,
         TimeProvider? dateTime = null)
     {
         services.AddSingleton(dateTime ?? TimeProvider.System);
+
         services.AddHttpContextAccessor();
         if (frontendUrl != null)
         {
@@ -76,7 +77,9 @@ public static class AddAutoWssServerExtension
             });
         }
         services.AddScoped<WssHub>();
-        services.AddSingleton(sp => new FabricClient(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
+        services.AddSingleton(sp => new FabricClient(
+            sp.GetRequiredService<ILoggerFactory>(), 
+            fabricConnectionString));
 
         var connectionCollection = new WssServerConnectionCollection();
         services.AddSingleton(connectionCollection);

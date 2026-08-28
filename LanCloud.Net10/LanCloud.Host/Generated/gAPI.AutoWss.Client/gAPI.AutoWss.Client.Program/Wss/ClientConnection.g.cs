@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Attributes;
-using gAPI.Core.Client.Config;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Client.Wss;
 using gAPI.Core.Dtos;
@@ -24,9 +23,9 @@ public class ClientConnection
     : WssClientConnection, IClientConnection
 {
     public ClientConnection(
-        IClientAuthenticatedHttpClient httpClient, 
-        ClientConfig frontendConfig)
-        : base(httpClient, frontendConfig)
+        IClientAuthenticatedHttpClient httpClient,
+        string wssBackendUrl)
+        : base(httpClient, wssBackendUrl)
     {
         ___Logger = ((IWssLoggerFactory)this).CreateLogger<ClientConnection>();
         HostApi = new HostApi(this, this, httpClient);

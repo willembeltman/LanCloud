@@ -24,11 +24,15 @@ public static class AddAutoAuthClientExtension
         var clientConfig = configuration.CreateClientConfig();
         return AddAutoAuthClient(services, clientConfig);
     }
-    public static IServiceCollection AddAutoAuthClient(this IServiceCollection services, ClientConfig config)
+    public static IServiceCollection AddAutoAuthClient(
+        this IServiceCollection services, 
+        ClientConfig config)
     {
         return AddAutoAuthClient(services, config.ApiBackendUrl);
     }
-    public static IServiceCollection AddAutoAuthClient(this IServiceCollection services, string apiAddress)
+    public static IServiceCollection AddAutoAuthClient(
+        this IServiceCollection services, 
+        string apiAddress)
     {
         // Het kan helaas niet anders
         services.AddScoped<IUriNavigationManager>(sp =>
