@@ -9,8 +9,8 @@ var config = new HostConfig([new LocalShare(
     "E:\\Films")]);
     //Path.Combine(Environment.CurrentDirectory, "LocalData"))]);
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddAutoAuthClient("https://localhost:7087");
 builder.Services.AddAutoWssClient("wss://127.0.0.1:7087");
+builder.Services.AddAutoAuthClient("https://localhost:7087");
 
 builder.Services.AddHostedService<HostHub>();
 builder.Services.AddSingleton(config);

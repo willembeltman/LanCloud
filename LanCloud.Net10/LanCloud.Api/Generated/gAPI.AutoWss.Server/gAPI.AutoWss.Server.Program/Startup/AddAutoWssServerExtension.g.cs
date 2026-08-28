@@ -78,6 +78,7 @@ public static class AddAutoWssServerExtension
         }
         services.AddScoped<WssHub>();
         services.AddSingleton(sp => new FabricClient(
+            sp.GetRequiredService<WssSessionCache>(),
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
@@ -87,18 +88,21 @@ public static class AddAutoWssServerExtension
         var sseHostCollection = new SseHostCollection();
         services.AddSingleton(sseHostCollection);
 
-        var sessionCache = new WssSessionCache();
-        services.AddSingleton(sessionCache);
-
-        // Session cleaner
-        _ = Task.Run(async () =>
+        if (fabricConnectionString == null)
         {
-            while (true)
+            var sessionCache = new WssSessionCache();
+            services.AddSingleton(sessionCache);
+
+            // Session cleaner
+            _ = Task.Run(async () =>
             {
-                sessionCache.Cleanup();
-                await Task.Delay(TimeSpan.FromMinutes(5));
-            }
-        });
+                while (true)
+                {
+                    sessionCache.Cleanup();
+                    await Task.Delay(TimeSpan.FromMinutes(5));
+                }
+            });
+        }
 
         // Hubs
         services.AddScoped<IClientContext, ClientContext>();
