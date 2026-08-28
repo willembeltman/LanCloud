@@ -1,9 +1,9 @@
-﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
+﻿using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server;
 using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Extensions;
 using gAPI.Core.Server.Fabric;
 using LanCloud.Api.Services;
@@ -30,27 +30,35 @@ public static class AddAutoWssServerExtension
 {
     public static IServiceCollection AddAutoWssServer(
         this IServiceCollection services,
-        IConfigurationManager configuration)
+        IConfigurationManager configuration,
+        TimeProvider? dateTime = null)
     {
-        var serverConfig = configuration.CreateServerConfig();
-        return AddAutoWssServer(services, serverConfig);
+        var config = configuration.CreateServerConfig();
+        return AddAutoWssServer(
+            services, 
+            config,
+            dateTime);
     }
 
     public static IServiceCollection AddAutoWssServer(
         this IServiceCollection services, 
-        ServerConfig serverConfig)
+        ServerConfig config,
+        TimeProvider? dateTime = null)
     {
         return AddAutoWssServer(
             services, 
-            serverConfig.FrontendUrl,
-            serverConfig.FabricConnectionString);
+            config.FrontendUrl,
+            config.FabricConnectionString,
+            dateTime);
     }
 
     public static IServiceCollection AddAutoWssServer(
         this IServiceCollection services, 
         string frontendUrl = null, 
-        string? fabricConnectionString = null)
+        string? fabricConnectionString = null,
+        TimeProvider? dateTime = null)
     {
+        services.AddSingleton(dateTime ?? TimeProvider.System);
         services.AddHttpContextAccessor();
         if (frontendUrl != null)
         {

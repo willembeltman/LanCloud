@@ -1,6 +1,6 @@
-﻿using gAPI.Core.Dtos;
-using gAPI.Core.Interfaces;
+﻿using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Authentication;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Extensions;
 using gAPI.Core.Server.Interfaces;

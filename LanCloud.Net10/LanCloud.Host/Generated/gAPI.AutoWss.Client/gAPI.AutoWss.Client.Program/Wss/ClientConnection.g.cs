@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Attributes;
+using gAPI.Core.Client.Config;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Client.Wss;
 using gAPI.Core.Dtos;

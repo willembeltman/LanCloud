@@ -1,9 +1,9 @@
 ﻿using gAPI.Core.Client;
+using gAPI.Core.Client.Config;
 using gAPI.Core.Client.Extensions;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Client.Navigation;
 using gAPI.Core.Client.Razor;
-using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;

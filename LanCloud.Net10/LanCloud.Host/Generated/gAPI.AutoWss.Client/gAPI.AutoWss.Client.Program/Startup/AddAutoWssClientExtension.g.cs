@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Client;
+using gAPI.Core.Client.Config;
 using gAPI.Core.Client.Extensions;
 using gAPI.Core.Client.Interfaces;
-using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
 using LanCloud.Shared.Interfaces;
 using Microsoft.AspNetCore.Components;
@@ -18,25 +18,29 @@ public static class AddAutoWssClientExtension
 {
     public static IServiceCollection AddAutoWssClient(
         this IServiceCollection services,
-        IConfigurationManager configuration)
+        IConfigurationManager configuration,
+        TimeProvider? dateTime = null)
     {
-        var clientConfig = configuration.CreateClientConfig();
-        return AddAutoWssClient(services, clientConfig);
+        var config = configuration.CreateClientConfig();
+        return AddAutoWssClient(services, config, dateTime);
     }
 
     public static IServiceCollection AddAutoWssClient(
         this IServiceCollection services, 
         string apiAddress, 
-        string wssAddress)
+        string wssAddress,
+        TimeProvider? dateTime = null)
     {
         var config = new ClientConfig(apiAddress, wssAddress);
-        return AddAutoWssClient(services, config);
+        return AddAutoWssClient(services, config, dateTime);
     }
 
     public static IServiceCollection AddAutoWssClient(
         this IServiceCollection services, 
-        ClientConfig config)
+        ClientConfig config,
+        TimeProvider? dateTime = null)
     {
+        services.AddSingleton(dateTime ?? TimeProvider.System);
         services.AddSingleton(config);
 
         // Connection stuff
