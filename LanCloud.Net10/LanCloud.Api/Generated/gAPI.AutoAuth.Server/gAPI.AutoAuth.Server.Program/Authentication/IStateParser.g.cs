@@ -6,11 +6,11 @@ using Microsoft.Extensions.Primitives;
 #nullable enable
 namespace gAPI.Generated;
 
-public interface IStateParser : IStateParser<State>
+public interface IStateParser : IStateParser<StateDto>
 {
-    bool TryParse(string? value, out State state);
-    StringValues ToStringValuesBase64(State value);
-    string? ToStringBase64(State? value);
-    bool IsDifferent(State? value1, State? value2);
-    State? CreateCopy(State? value);
+    bool TryParse(string? value, out StateDto state);
+    StringValues ToStringValuesBase64(StateDto value);
+    string? ToStringBase64(StateDto? value);
+    bool IsDifferent(StateDto? value1, StateDto? value2);
+    StateDto? CreateCopy(StateDto? value);
 }

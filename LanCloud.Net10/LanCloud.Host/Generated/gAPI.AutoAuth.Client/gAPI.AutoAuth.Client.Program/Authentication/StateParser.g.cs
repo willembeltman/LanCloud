@@ -7,7 +7,7 @@ namespace gAPI.Generated;
 
 public class StateParser : IStateParser
 {
-    public bool TryParse(string? value, out State state)
+    public bool TryParse(string? value, out StateDto state)
     {
         state = default!;
 
@@ -20,7 +20,7 @@ public class StateParser : IStateParser
             var offset = 0;
             try
             {
-                state = data.ReadState(ref offset);
+                state = data.ReadStateDto(ref offset);
             }
             catch (Exception ex)
             {
@@ -33,15 +33,15 @@ public class StateParser : IStateParser
             return false;
         }
     }
-    public StringValues ToStringValuesBase64(State value)
+    public StringValues ToStringValuesBase64(StateDto value)
     {
-        string? base64State = ToStringBase64(value);
-        return new StringValues(base64State);
+        string? base64StateDto = ToStringBase64(value);
+        return new StringValues(base64StateDto);
     }
-    public string? ToStringBase64(State? value)
+    public string? ToStringBase64(StateDto? value)
     {
         if (value == null)
-            value = new State();
+            value = new StateDto();
 
         byte[] Buffer = new byte[64 * 1024];
         var span = new Span<byte>(Buffer, 0, Buffer.Length);
@@ -50,13 +50,13 @@ public class StateParser : IStateParser
         var base64value = Convert.ToBase64String(Buffer, 0, offset);
         return base64value;
     }
-    public bool IsDifferent(State? value1, State? value2)
+    public bool IsDifferent(StateDto? value1, StateDto? value2)
     {
         if (value1 == null && value2 == null) return true;
         if (value1 == null || value2 == null) return false;
         return value1.IsDifferent(value2);
     }
-    public State? CreateCopy(State? value)
+    public StateDto? CreateCopy(StateDto? value)
     {
         return value?.CreateCopy();
     }

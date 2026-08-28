@@ -10,18 +10,21 @@
 		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
 	</PropertyGroup>
 
-	<!-- VOEG DIT TOE OM DE 426 ERRORS TE FIXEN: -->
+	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<FolderToClean Include="$(ProjectDir)Generated\" />
+		</ItemGroup>
+		<RemoveDir Directories="@(FolderToClean)" />
+		<MakeDir Directories="@(FolderToClean)" />
+	</Target>
+	
 	<ItemGroup>
 		<!-- Zorgt ervoor dat de compiler de fysieke bestanden niet dubbel meeneemt -->
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Compile Remove="Dtos\StateUser.cs" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\gAPI\gAPI.AutoSerializer\gAPI.AutoSerializer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-
 		<ProjectReference Include="..\gAPI\gAPI.Core\gAPI.Core.csproj" />
 	</ItemGroup>
 

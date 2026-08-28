@@ -10,14 +10,14 @@ using System.Text;
 #nullable enable
 namespace gAPI.Generated;
 
-public static class StateSpanSerializer
+public static class StateDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0x1DECA496;
-    public const uint SchemaHash = 0x5FE2946C;
+    public const uint TypeId = 0x57FB490B;
+    public const uint SchemaHash = 0x2F36FFA4;
 
     [IsSpanSerializerWrite]
-    public static void Write(this ref Span<byte> ___span, ref int ___offset, State value)
+    public static void Write(this ref Span<byte> ___span, ref int ___offset, StateDto value)
     {
         PrimitivesSpanSerializer.WriteUShort(ref ___span, ref ___offset, Magic); // Magic string `GA` => it's a gAPI stream
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
@@ -27,13 +27,10 @@ public static class StateSpanSerializer
         if (value.User != null)
             AuthStateUserDtoSpanSerializer.Write(ref ___span, ref ___offset, value.User);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ForceReconnect);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.ProfilePictureUrl != null);
-        if (value.ProfilePictureUrl != null)
-            PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value.ProfilePictureUrl);
     }
 
     [IsSpanSerializerRead]
-    public static State ReadState(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static StateDto ReadStateDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -42,24 +39,20 @@ public static class StateSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new State();
+        var value = new StateDto();
         value.User = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : AuthStateUserDtoSpanSerializer.ReadAuthStateUserDto(___span, ref ___offset);
         value.ForceReconnect = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset);
-        value.ProfilePictureUrl = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
         return value;
     }
 
     [IsSpanSerializerLength]
-    public static int Length(ref int ___offset, State value)
+    public static int Length(ref int ___offset, StateDto value)
     {
         ___offset += 10;
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.User != null);
         if (value.User != null)
             AuthStateUserDtoSpanSerializer.Length(ref ___offset, value.User);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ForceReconnect);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.ProfilePictureUrl != null);
-        if (value.ProfilePictureUrl != null)
-            PrimitivesSpanSerializer.LengthString(ref ___offset, value.ProfilePictureUrl);
         return ___offset;
     }
 }

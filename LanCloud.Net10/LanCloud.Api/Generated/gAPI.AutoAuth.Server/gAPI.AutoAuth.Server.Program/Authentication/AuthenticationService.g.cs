@@ -15,12 +15,12 @@ namespace gAPI.Generated;
 public class AuthenticationService(
     IAuthenticationStateFactory<User> authenticationStateFactory,
     IUserTokenFactory<User> userTokenFactory,
-    IStateMapping<User, State> stateMapping,
-    IStateParser<State> stateSerializer,
+    IStateMapping<User, StateDto> stateMapping,
+    IStateParser<StateDto> stateSerializer,
     IHostEnvironment hostEnvironment,
-    IEnumerable<IAuthenticationCheck<User, State>> authenticationChecks,
+    IEnumerable<IAuthenticationCheck<User, StateDto>> authenticationChecks,
     IEnumerable<WssSessionCache> sessionCaches) 
-    : AuthenticationService<User, State>(
+    : AuthenticationService<User, StateDto>(
         authenticationStateFactory,
         userTokenFactory,
         stateMapping,

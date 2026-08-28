@@ -10,7 +10,7 @@ using Microsoft.Extensions.Primitives;
 namespace gAPI.Generated;
 
 public interface IAuthenticationService
-    : IAuthenticationService<User, State>
+    : IAuthenticationService<User, StateDto>
     , IServerAuthenticationService
 {
 }

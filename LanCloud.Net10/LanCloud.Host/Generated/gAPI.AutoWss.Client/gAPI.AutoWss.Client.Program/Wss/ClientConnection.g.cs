@@ -24,7 +24,7 @@ public class ClientConnection
 {
     public ClientConnection(
         IClientAuthenticatedHttpClient httpClient, 
-        FrontendConfig frontendConfig)
+        ClientConfig frontendConfig)
         : base(httpClient, frontendConfig)
     {
         ___Logger = ((IWssLoggerFactory)this).CreateLogger<ClientConnection>();

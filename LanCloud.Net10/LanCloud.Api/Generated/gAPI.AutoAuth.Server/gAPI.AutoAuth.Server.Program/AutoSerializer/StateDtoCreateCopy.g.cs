@@ -6,15 +6,14 @@ using gAPI.Core.Attributes;
 
 namespace gAPI.Generated;
 
-public static class StateCreateCopy
+public static class StateDtoCreateCopy
 {
     [IsCreateCopy]
-    public static State CreateCopy(this State value)
+    public static StateDto CreateCopy(this StateDto value)
     {
-        var copy = new State();
+        var copy = new StateDto();
         copy.User = value.User == null ? null : value.User.CreateCopy();
         copy.ForceReconnect = value.ForceReconnect;
-        copy.ProfilePictureUrl = value.ProfilePictureUrl;
         return copy;
     }
 }

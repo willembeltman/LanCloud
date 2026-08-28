@@ -1,10 +1,12 @@
 ﻿using gAPI.Core.Client;
+using gAPI.Core.Client.Extensions;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
 using LanCloud.Shared.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -14,17 +16,26 @@ namespace gAPI.Generated;
 
 public static class AddAutoWssClientExtension
 {
-    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, string apiAddress, string wssAddress)
+    public static IServiceCollection AddAutoWssClient(
+        this IServiceCollection services,
+        IConfigurationManager configuration)
     {
-        // Set up configuration
-        var config = new FrontendConfig()
-        {
-            ApiBackendUrl = apiAddress,
-            WssBackendUrl = wssAddress
-        };
+        var clientConfig = configuration.CreateClientConfig();
+        return AddAutoWssClient(services, clientConfig);
+    }
+
+    public static IServiceCollection AddAutoWssClient(
+        this IServiceCollection services, 
+        string apiAddress, 
+        string wssAddress)
+    {
+        var config = new ClientConfig(apiAddress, wssAddress);
         return AddAutoWssClient(services, config);
     }
-    public static IServiceCollection AddAutoWssClient(this IServiceCollection services, FrontendConfig config)
+
+    public static IServiceCollection AddAutoWssClient(
+        this IServiceCollection services, 
+        ClientConfig config)
     {
         services.AddSingleton(config);
 

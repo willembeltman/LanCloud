@@ -6,10 +6,10 @@ using gAPI.Core.Attributes;
 
 namespace gAPI.Generated;
 
-public static class StateComparer
+public static class StateDtoComparer
 {
     [IsComparer]
-    public static bool IsDifferent(this State value, State otherValue)
+    public static bool IsDifferent(this StateDto value, StateDto otherValue)
     {
         if (value.User is null)
         {
@@ -22,7 +22,6 @@ public static class StateComparer
         }
 
         if (value.ForceReconnect != otherValue.ForceReconnect) return true;
-        if (value.ProfilePictureUrl != otherValue.ProfilePictureUrl) return true;
         return false;
     }
 }

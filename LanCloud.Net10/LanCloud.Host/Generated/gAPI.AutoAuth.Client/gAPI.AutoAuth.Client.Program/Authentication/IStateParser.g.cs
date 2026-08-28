@@ -6,6 +6,6 @@ using Microsoft.Extensions.Primitives;
 #nullable enable
 namespace gAPI.Generated;
 
-public interface IStateParser : IStateParser<State>
+public interface IStateParser : IStateParser<StateDto>
 {
 }

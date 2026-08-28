@@ -4,6 +4,7 @@ using gAPI.Core.Interfaces;
 using gAPI.Core.Server;
 using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Extensions;
 using gAPI.Core.Server.Fabric;
 using LanCloud.Api.Services;
 using LanCloud.Shared.Dtos;
@@ -27,26 +28,45 @@ namespace gAPI.Generated;
 
 public static class AddAutoWssServerExtension
 {
-    public static IServiceCollection AddAutoWssServer(this IServiceCollection services, ServerConfig serverConfig)
+    public static IServiceCollection AddAutoWssServer(
+        this IServiceCollection services,
+        IConfigurationManager configuration)
     {
-        return AddAutoWssServer(services, serverConfig.FrontendUrl, serverConfig.FabricConnectionString);
+        var serverConfig = configuration.CreateServerConfig();
+        return AddAutoWssServer(services, serverConfig);
     }
-    public static IServiceCollection AddAutoWssServer(this IServiceCollection services, string frontendUrl, string? fabricConnectionString = null)
+
+    public static IServiceCollection AddAutoWssServer(
+        this IServiceCollection services, 
+        ServerConfig serverConfig)
+    {
+        return AddAutoWssServer(
+            services, 
+            serverConfig.FrontendUrl,
+            serverConfig.FabricConnectionString);
+    }
+
+    public static IServiceCollection AddAutoWssServer(
+        this IServiceCollection services, 
+        string frontendUrl = null, 
+        string? fabricConnectionString = null)
     {
         services.AddHttpContextAccessor();
-        services.TryAddScoped<IServerAuthenticationService, EmptyServerAuthenticationService>();
-        services.AddCors(options =>
+        if (frontendUrl != null)
         {
-            options.AddPolicy("AllowSpecificOrigin", policy =>
+            services.AddCors(options =>
             {
-                policy
-                    .WithOrigins(frontendUrl)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials()
-                    .WithExposedHeaders("X-SessionId", "X-StateData");
+                options.AddPolicy("AllowSpecificOrigin", policy =>
+                {
+                    policy
+                        .WithOrigins(frontendUrl)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials()
+                        .WithExposedHeaders("X-SessionId", "X-StateData");
+                });
             });
-        });
+        }
         services.AddScoped<WssHub>();
         services.AddSingleton(sp => new FabricClient(sp.GetRequiredService<ILoggerFactory>(), fabricConnectionString));
 

@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Client;
+using gAPI.Core.Client.Extensions;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Client.Navigation;
 using gAPI.Core.Client.Razor;
@@ -6,6 +7,7 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -15,7 +17,14 @@ namespace gAPI.Generated;
 
 public static class AddAutoAuthClientExtension
 {
-    public static IServiceCollection AddAutoAuthClient(this IServiceCollection services, FrontendConfig config)
+    public static IServiceCollection AddAutoAuthClient(
+        this IServiceCollection services,
+        IConfigurationManager configuration)
+    {
+        var clientConfig = configuration.CreateClientConfig();
+        return AddAutoAuthClient(services, clientConfig);
+    }
+    public static IServiceCollection AddAutoAuthClient(this IServiceCollection services, ClientConfig config)
     {
         return AddAutoAuthClient(services, config.ApiBackendUrl);
     }

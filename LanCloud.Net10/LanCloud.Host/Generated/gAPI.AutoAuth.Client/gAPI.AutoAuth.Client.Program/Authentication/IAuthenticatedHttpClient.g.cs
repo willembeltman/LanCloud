@@ -7,5 +7,5 @@ namespace gAPI.Generated;
 
 public interface IAuthenticatedHttpClient : IClientAuthenticatedHttpClient
 {
-    Task<State> GetStateAsync(bool force = false, CancellationToken ct = default);
+    Task<StateDto> GetStateAsync(bool force = false, CancellationToken ct = default);
 }
