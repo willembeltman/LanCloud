@@ -1,3 +1,4 @@
+using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using LanCloud.Shared.Dtos;
 using System.Runtime.CompilerServices;
@@ -72,7 +73,7 @@ public class LocalShare
         await Task.CompletedTask;
     }
 
-    public async IAsyncEnumerable<FileChunkDto> ReadFile(
+    public async IAsyncEnumerable<DataChunkDto> ReadFile(
         string relativeFullName,
         long startOffset,
         [EnumeratorCancellation] CancellationToken ct)
@@ -111,7 +112,7 @@ public class LocalShare
             if (read == 0)
                 yield break;
 
-            yield return new FileChunkDto
+            yield return new DataChunkDto
             {
                 Offset = offset,
                 Data = buffer[..read]

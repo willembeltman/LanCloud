@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Attributes;
+using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Fabric;
@@ -73,7 +74,7 @@ public class HostHub(
             yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
         }
     }
-    public async IAsyncEnumerable<FileChunkDto> ReadFile(
+    public async IAsyncEnumerable<DataChunkDto> ReadFile(
         string relativeFullName,
         long startOffset,
         [EnumeratorCancellation] CancellationToken ct)
@@ -94,7 +95,7 @@ public class HostHub(
 
             var ___offset = 0;
             var ___span = new Span<byte>(response.BinaryData);
-            yield return FileChunkDtoSpanSerializer.ReadFileChunkDto(___span, ref ___offset);
+            yield return DataChunkDtoSpanSerializer.ReadDataChunkDto(___span, ref ___offset);
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Ids;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server;
 using gAPI.Core.Server.Authentication;

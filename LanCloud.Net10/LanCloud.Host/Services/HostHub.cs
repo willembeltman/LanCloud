@@ -1,4 +1,5 @@
-﻿using gAPI.Generated;
+﻿using gAPI.Core.Dtos;
+using gAPI.Generated;
 using LanCloud.Host.Models;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Interfaces;
@@ -51,7 +52,7 @@ public class HostHub(
         }
     }
 
-    async IAsyncEnumerable<FileChunkDto> IHostHub.ReadFile(
+    async IAsyncEnumerable<DataChunkDto> IHostHub.ReadFile(
         string relativeFullName,
         long startOffset,
         [EnumeratorCancellation] CancellationToken ct)

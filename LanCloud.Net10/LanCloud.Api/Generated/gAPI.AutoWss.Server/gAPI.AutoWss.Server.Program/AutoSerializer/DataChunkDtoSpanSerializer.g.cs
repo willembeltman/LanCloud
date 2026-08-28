@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
+using gAPI.Core.Dtos;
 using gAPI.Core.Serializers;
-using LanCloud.Shared.Dtos;
 using System;
 using System.Buffers.Binary;
 using System.Text;
@@ -9,14 +9,14 @@ using System.Text;
 #nullable enable
 namespace gAPI.Generated;
 
-public static class FileChunkDtoSpanSerializer
+public static class DataChunkDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0x1E177DF5;
+    public const uint TypeId = 0x85FCD607;
     public const uint SchemaHash = 0xBFB6C178;
 
     [IsSpanSerializerWrite]
-    public static void Write(this ref Span<byte> ___span, ref int ___offset, FileChunkDto value)
+    public static void Write(this ref Span<byte> ___span, ref int ___offset, DataChunkDto value)
     {
         PrimitivesSpanSerializer.WriteUShort(ref ___span, ref ___offset, Magic); // Magic string `GA` => it's a gAPI stream
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
@@ -27,7 +27,7 @@ public static class FileChunkDtoSpanSerializer
     }
 
     [IsSpanSerializerRead]
-    public static FileChunkDto ReadFileChunkDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static DataChunkDto ReadDataChunkDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -36,14 +36,14 @@ public static class FileChunkDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new FileChunkDto();
+        var value = new DataChunkDto();
         value.Data = PrimitivesSpanSerializer.ReadByteArray(___span, ref ___offset);
         value.Offset = PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset);
         return value;
     }
 
     [IsSpanSerializerLength]
-    public static int Length(ref int ___offset, FileChunkDto value)
+    public static int Length(ref int ___offset, DataChunkDto value)
     {
         ___offset += 10;
         PrimitivesSpanSerializer.LengthByteArray(ref ___offset, value.Data);

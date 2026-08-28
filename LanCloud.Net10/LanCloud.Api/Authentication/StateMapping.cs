@@ -10,7 +10,7 @@ public class StateMapping
     public override async Task<StateDto> ToDtoAsync(
         AuthUser? dbUser,
         UserToken<AuthUser>? dbToken,
-        Ip<AuthUser> dbIp,
+        Ip<AuthUser>? dbIp,
         StateDto? receivedClientState,
         CancellationToken ct)
     {

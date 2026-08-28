@@ -274,11 +274,11 @@ public class ClientConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public byte[] IHostHub_ReadFile_Serializer(FileChunkDto value)
+    public byte[] IHostHub_ReadFile_Serializer(DataChunkDto value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
-        FileChunkDtoSpanSerializer.Write(ref ___span, ref ___offset, value);
+        DataChunkDtoSpanSerializer.Write(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
 }

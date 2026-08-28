@@ -58,7 +58,7 @@ public static class AddAutoAuthServerExtension
     {
         if (dbConnectionString == null)
         {
-            services.AddScoped<IServerAuthenticationService, EmptyServerAuthenticationService<StateDto>>();
+            services.AddScoped<IServerAuthenticationService, NoDbServerAuthenticationService<AuthUser, StateDto>>();
 
             // Todo State ellende
         }
@@ -153,6 +153,13 @@ public static class AddAutoAuthServerExtension
                 sp.GetRequiredService<IDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>>()
                   .CreateDbContext());
         }
+
+        // Register StateParser
+        services.AddScoped<StateParser>();
+        services.AddScoped<IStateParser>(sp => sp.GetRequiredService<StateParser>());
+        services.AddScoped<IStateParser<StateDto>>(sp => sp.GetRequiredService<StateParser>());
+
+        // Register StateMapper
         services.AddScoped<IStateMapping<AuthUser, StateDto>, StateMapping>();
         return services;
     }

@@ -5,6 +5,7 @@ using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Client.Navigation;
 using gAPI.Core.Client.Razor;
 using gAPI.Core.Interfaces;
+using LanCloud.Shared.Dtos;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Configuration;
@@ -61,6 +62,11 @@ public static class AddAutoAuthClientExtension
         services.AddScoped<IAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
         services.AddScoped<gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
         services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthenticatedHttpClient>());
+
+        // Register StateParser
+        services.AddScoped<StateParser>();
+        services.AddScoped<IStateParser>(sp => sp.GetRequiredService<StateParser>());
+        services.AddScoped<IStateParser<StateDto>>(sp => sp.GetRequiredService<StateParser>());
 
         // Set up authorization core
         services.AddAuthorizationCore();

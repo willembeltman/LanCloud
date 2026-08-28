@@ -1,3 +1,5 @@
+using gAPI.Core.Dtos;
+using gAPI.Core.Helpers;
 using gAPI.Core.Interfaces;
 using gAPI.Generated;
 using LanCloud.Api.Helpers;
@@ -163,7 +165,7 @@ public class FileSystem(
             }
         }
 
-        IAsyncEnumerable<FileChunkDto> OpenChunks(
+        IAsyncEnumerable<DataChunkDto> OpenChunks(
             long startOffset,
             CancellationToken streamCt)
         {
@@ -183,9 +185,9 @@ public class FileSystem(
                     streamCt);
         }
 
-        return new FileChunkStream(
+        return new DataChunkStreamSeekableReader(
             OpenChunks,
-            entry,
+            entry.FileSystemEntry.Size,
             ct);
     }
 

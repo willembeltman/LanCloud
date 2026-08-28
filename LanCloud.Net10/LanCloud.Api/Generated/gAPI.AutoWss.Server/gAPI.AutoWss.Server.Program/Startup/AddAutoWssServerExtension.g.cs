@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Ids;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server;
 using gAPI.Core.Server.Authentication;
@@ -88,12 +89,12 @@ public static class AddAutoWssServerExtension
         var sseHostCollection = new SseHostCollection();
         services.AddSingleton(sseHostCollection);
 
+        var sessionCache = new WssSessionCache();
+        services.AddSingleton(sessionCache);
+
         if (fabricConnectionString == null)
         {
-            var sessionCache = new WssSessionCache();
-            services.AddSingleton(sessionCache);
-
-            // Session cleaner
+            // Session cleaner, niet nodig als de fabric wordt gebruikt.
             _ = Task.Run(async () =>
             {
                 while (true)
