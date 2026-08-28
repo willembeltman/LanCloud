@@ -3,30 +3,30 @@ using LanCloud.Shared.Dtos;
 
 namespace LanCloud.Api.Helpers;
 
-public sealed class ChunkedStream : Stream
+public sealed class FileChunkStream : Stream
 {
-    private readonly Func<long, CancellationToken, IAsyncEnumerable<FileChunkDto>> _openFileChunks;
-    private readonly Entry _entity;
-    private readonly CancellationToken _ct;
+    private readonly Func<long, CancellationToken, IAsyncEnumerable<FileChunkDto>> OpenFileChunksFunc;
+    private readonly Entry Entity;
+    private readonly CancellationToken Ct;
 
-    private IAsyncEnumerator<FileChunkDto> _enumerator;
-    private CancellationTokenSource? _enumeratorCts;
-    private byte[]? _currentBuffer;
-    private int _currentOffset;
+    private IAsyncEnumerator<FileChunkDto> Enumerator;
+    private CancellationTokenSource? EnumeratorCts;
+    private byte[]? CurrentBuffer;
+    private int CurrentOffset;
 
-    private long _position;
-    private bool _completed;
-    private bool _disposed;
+    private long CurrentPosition;
+    private bool Completed;
+    private bool Disposed;
 
-    public ChunkedStream(
+    public FileChunkStream(
         Func<long, CancellationToken, IAsyncEnumerable<FileChunkDto>> openFileChunks,
         Entry entity,
         CancellationToken ct)
     {
-        _openFileChunks = openFileChunks;
-        _entity = entity;
-        _ct = ct;
-        _enumerator = CreateEnumerator(0);
+        OpenFileChunksFunc = openFileChunks;
+        Entity = entity;
+        Ct = ct;
+        Enumerator = CreateEnumerator(0);
     }
 
     public override bool CanRead => true;
@@ -34,11 +34,11 @@ public sealed class ChunkedStream : Stream
     public override bool CanWrite => false;
 
     public override long Length =>
-        _entity.FileSystemEntry.Size;
+        Entity.FileSystemEntry.Size;
 
     public override long Position
     {
-        get => _position;
+        get => CurrentPosition;
         set => Seek(value, SeekOrigin.Begin);
     }
 
@@ -66,64 +66,64 @@ public sealed class ChunkedStream : Stream
         Memory<byte> buffer,
         CancellationToken cancellationToken)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        ObjectDisposedException.ThrowIf(Disposed, this);
 
         if (buffer.Length == 0)
             return 0;
 
         while (true)
         {
-            if (_currentBuffer is not null &&
-                _currentOffset < _currentBuffer.Length)
+            if (CurrentBuffer is not null &&
+                CurrentOffset < CurrentBuffer.Length)
             {
                 var remaining =
-                    _currentBuffer.Length - _currentOffset;
+                    CurrentBuffer.Length - CurrentOffset;
 
                 var count = Math.Min(
                     remaining,
                     buffer.Length);
 
-                _currentBuffer
-                    .AsMemory(_currentOffset, count)
+                CurrentBuffer
+                    .AsMemory(CurrentOffset, count)
                     .CopyTo(buffer);
 
-                _currentOffset += count;
-                _position += count;
+                CurrentOffset += count;
+                CurrentPosition += count;
 
                 return count;
             }
 
-            if (_completed)
+            if (Completed)
                 return 0;
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!await _enumerator.MoveNextAsync())
+            if (!await Enumerator.MoveNextAsync())
             {
-                _completed = true;
+                Completed = true;
                 return 0;
             }
 
-            var chunk = _enumerator.Current;
+            var chunk = Enumerator.Current;
 
-            if (chunk.Offset > _position)
+            if (chunk.Offset > CurrentPosition)
             {
                 throw new IOException(
-                    $"The chunked stream skipped from position {_position} to {chunk.Offset}.");
+                    $"The chunked stream skipped from position {CurrentPosition} to {chunk.Offset}.");
             }
 
             var offsetInChunk = 0;
-            if (chunk.Offset < _position)
+            if (chunk.Offset < CurrentPosition)
             {
-                var alreadyRead = _position - chunk.Offset;
+                var alreadyRead = CurrentPosition - chunk.Offset;
                 if (alreadyRead >= chunk.Data.Length)
                     continue;
 
                 offsetInChunk = checked((int)alreadyRead);
             }
 
-            _currentBuffer = chunk.Data;
-            _currentOffset = offsetInChunk;
+            CurrentBuffer = chunk.Data;
+            CurrentOffset = offsetInChunk;
         }
     }
 
@@ -145,12 +145,12 @@ public sealed class ChunkedStream : Stream
         long offset,
         SeekOrigin origin)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        ObjectDisposedException.ThrowIf(Disposed, this);
 
         var position = origin switch
         {
             SeekOrigin.Begin => offset,
-            SeekOrigin.Current => _position + offset,
+            SeekOrigin.Current => CurrentPosition + offset,
             SeekOrigin.End => Length + offset,
             _ => throw new ArgumentOutOfRangeException(nameof(origin))
         };
@@ -158,12 +158,12 @@ public sealed class ChunkedStream : Stream
         if (position < 0)
             throw new IOException("An attempt was made to move the position before the beginning of the stream.");
 
-        if (position == _position)
-            return _position;
+        if (position == CurrentPosition)
+            return CurrentPosition;
 
         ResetEnumerator(position);
 
-        return _position;
+        return CurrentPosition;
     }
 
     public override void SetLength(long value)
@@ -171,18 +171,18 @@ public sealed class ChunkedStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (!Disposed)
         {
-            _disposed = true;
+            Disposed = true;
 
             if (disposing)
             {
-                _enumeratorCts?.Cancel();
-                _enumerator.DisposeAsync()
+                EnumeratorCts?.Cancel();
+                Enumerator.DisposeAsync()
                     .AsTask()
                     .GetAwaiter()
                     .GetResult();
-                _enumeratorCts?.Dispose();
+                EnumeratorCts?.Dispose();
             }
         }
 
@@ -191,17 +191,17 @@ public sealed class ChunkedStream : Stream
 
     public override async ValueTask DisposeAsync()
     {
-        if (!_disposed)
+        if (!Disposed)
         {
-            _disposed = true;
+            Disposed = true;
 
-            if (_enumeratorCts is not null)
+            if (EnumeratorCts is not null)
             {
-                await _enumeratorCts.CancelAsync();
-                _enumeratorCts.Dispose();
+                await EnumeratorCts.CancelAsync();
+                EnumeratorCts.Dispose();
             }
 
-            await _enumerator.DisposeAsync();
+            await Enumerator.DisposeAsync();
         }
 
         GC.SuppressFinalize(this);
@@ -210,24 +210,24 @@ public sealed class ChunkedStream : Stream
 
     private void ResetEnumerator(long position)
     {
-        _enumeratorCts?.Cancel();
-        _enumerator.DisposeAsync()
+        EnumeratorCts?.Cancel();
+        Enumerator.DisposeAsync()
             .AsTask()
             .GetAwaiter()
             .GetResult();
-        _enumeratorCts?.Dispose();
+        EnumeratorCts?.Dispose();
 
-        _enumerator = CreateEnumerator(position);
-        _currentBuffer = null;
-        _currentOffset = 0;
-        _position = position;
-        _completed = false;
+        Enumerator = CreateEnumerator(position);
+        CurrentBuffer = null;
+        CurrentOffset = 0;
+        CurrentPosition = position;
+        Completed = false;
     }
 
     private IAsyncEnumerator<FileChunkDto> CreateEnumerator(long position)
     {
-        _enumeratorCts = CancellationTokenSource.CreateLinkedTokenSource(_ct);
-        return _openFileChunks(position, _enumeratorCts.Token)
-            .GetAsyncEnumerator(_enumeratorCts.Token);
+        EnumeratorCts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        return OpenFileChunksFunc(position, EnumeratorCts.Token)
+            .GetAsyncEnumerator(EnumeratorCts.Token);
     }
 }

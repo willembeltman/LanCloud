@@ -59,23 +59,23 @@ public static class AddAutoAuthServerExtension
 
                 return (accessor.Current as IAuthenticationService)!;
             });
-            services.AddScoped<IAuthenticationService<User, StateDto>>(sp =>
+            services.AddScoped<IAuthenticationService<AuthUser, StateDto>>(sp =>
             {
                 var accessor = sp.GetRequiredService<ServerAuthenticationAccessor>();
 
                 if (accessor.Current is null)
                     return sp.GetRequiredService<AuthenticationService>();
 
-                return (accessor.Current as IAuthenticationService<User, StateDto>)!;
+                return (accessor.Current as IAuthenticationService<AuthUser, StateDto>)!;
             });
-            services.AddScoped<AuthenticationService<User, StateDto>>(sp =>
+            services.AddScoped<AuthenticationService<AuthUser, StateDto>>(sp =>
             {
                 var accessor = sp.GetRequiredService<ServerAuthenticationAccessor>();
 
                 if (accessor.Current is null)
                     return sp.GetRequiredService<AuthenticationService>();
 
-                return (accessor.Current as AuthenticationService<User, StateDto>)!;
+                return (accessor.Current as AuthenticationService<AuthUser, StateDto>)!;
             });
             services.AddScoped<IServerAuthenticationService>(sp =>
             {
@@ -90,15 +90,15 @@ public static class AddAutoAuthServerExtension
             services.AddAuthentication("gAPI")
                     .AddScheme<AuthenticationSchemeOptions, AuthenticationHandler>("gAPI", _ => { });
 
-            services.AddScoped<IAuthenticationSecurity, AuthenticationSecurity<User, StateDto>>();
-            services.AddScoped<IAuthenticationStateFactory<User>, AuthenticationStateFactory<User>>();
-            services.AddScoped<IUserTokenFactory<User>, UserTokenFactory<User>>();
-            services.AddScoped<IAccountService, AccountService<User, StateDto>>();
+            services.AddScoped<IAuthenticationSecurity, AuthenticationSecurity<AuthUser, StateDto>>();
+            services.AddScoped<IAuthenticationStateFactory<AuthUser>, AuthenticationStateFactory<AuthUser>>();
+            services.AddScoped<IUserTokenFactory<AuthUser>, UserTokenFactory<AuthUser>>();
+            services.AddScoped<IAccountService, AccountService<AuthUser, StateDto>>();
 
             // DATABASE SECTION
 
-            // ✅ Factory voor LanCloud.Api.Authentication.ApplicationDbContext
-            services.AddDbContextFactory<LanCloud.Api.Authentication.ApplicationDbContext>(options =>
+            // ✅ Factory voor gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>
+            services.AddDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>(options =>
             {
                 if (useMemoryDatabase)
                 {
@@ -112,25 +112,12 @@ public static class AddAutoAuthServerExtension
                 }
             });
 
-            // ✅ Normale LanCloud.Api.Authentication.ApplicationDbContext
-            services.AddScoped<LanCloud.Api.Authentication.ApplicationDbContext>(sp =>
-                sp.GetRequiredService<IDbContextFactory<LanCloud.Api.Authentication.ApplicationDbContext>>()
+            // ✅ Normale gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>
+            services.AddScoped<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>(sp =>
+                sp.GetRequiredService<IDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>>()
                   .CreateDbContext());
-
-            // ✅ Normale AuthenticationDbContext<User>
-            services.AddScoped<AuthenticationDbContext<User>>(sp =>
-                sp.GetRequiredService<LanCloud.Api.Authentication.ApplicationDbContext>());
-
-            // ✅ Factory voor AuthenticationDbContext<User>
-            services.AddScoped<IDbContextFactory<AuthenticationDbContext<User>>>(sp =>
-            {
-                var factory = sp.GetRequiredService<IDbContextFactory<LanCloud.Api.Authentication.ApplicationDbContext>>();
-
-                return new AuthenticationDbContextFactory<AuthenticationDbContext<User>>(
-                    () => factory.CreateDbContext());
-            });
         }
-        services.AddScoped<IStateMapping<User, StateDto>, StateMapping>();
+        services.AddScoped<IStateMapping<AuthUser, StateDto>, StateMapping>();
         return services;
     }
 }

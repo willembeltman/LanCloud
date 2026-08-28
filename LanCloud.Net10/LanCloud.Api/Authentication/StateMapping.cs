@@ -5,12 +5,12 @@ using LanCloud.Shared.Dtos;
 namespace LanCloud.Api.Authentication;
 
 public class StateMapping
-    : AuthenticationStateMapping<User, StateDto>
+    : AuthenticationStateMapping<AuthUser, StateDto>
 {
     public override async Task<StateDto> ToDtoAsync(
-        User? dbUser,
-        UserToken<User>? dbToken,
-        Ip<User> dbIp,
+        AuthUser? dbUser,
+        UserToken<AuthUser>? dbToken,
+        Ip<AuthUser> dbIp,
         StateDto? receivedClientState,
         CancellationToken ct)
     {

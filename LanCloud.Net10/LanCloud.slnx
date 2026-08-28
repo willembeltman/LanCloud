@@ -8,6 +8,7 @@
     <Project Path="gAPI/gAPI.Core.Client/gAPI.Core.Client.csproj" />
     <Project Path="gAPI/gAPI.Core.Server/gAPI.Core.Server.csproj" />
     <Project Path="gAPI/gAPI.Core/gAPI.Core.csproj" />
+    <Project Path="gAPI/gAPI.Fabric.Server/gAPI.Fabric.Server.csproj" />
   </Folder>
   <Project Path="LanCloud.Api/LanCloud.Api.csproj" />
   <Project Path="LanCloud.Host/LanCloud.Host.csproj" />

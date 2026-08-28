@@ -183,7 +183,7 @@ public class FileSystem(
                     streamCt);
         }
 
-        return new ChunkedStream(
+        return new FileChunkStream(
             OpenChunks,
             entry,
             ct);

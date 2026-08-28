@@ -1,7 +1,7 @@
 ﻿using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Authentication;
+using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Interfaces;
-using LanCloud.Api.Authentication;
 using LanCloud.Shared.Dtos;
 using Microsoft.Extensions.Primitives;
 
@@ -10,7 +10,7 @@ using Microsoft.Extensions.Primitives;
 namespace gAPI.Generated;
 
 public interface IAuthenticationService
-    : IAuthenticationService<User, StateDto>
+    : IAuthenticationService<AuthUser, StateDto>
     , IServerAuthenticationService
 {
 }

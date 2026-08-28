@@ -1,7 +1,7 @@
-﻿using gAPI.Core.Server.Entities;
+﻿//using gAPI.Core.Server.Entities;
 
-namespace LanCloud.Api.Authentication;
+//namespace LanCloud.Api.Authentication;
 
-public class User : AuthUser
-{
-}
+//public class User : AuthUser
+//{
+//}
