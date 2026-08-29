@@ -143,6 +143,8 @@ public class ClientConnection
         }
         throw new Exception($"Service \"{___sendRequest.ServiceId.Value}\" / Method \"{___sendRequest.MethodId.Value}\" not found");
     }
+    protected override Task Received_SendArgumentedRequest_FromServerAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
+        => Received_SendRequest_FromServerAsync(___sendRequest, ___ct);
     protected override async Task Received_InvokeRequest_FromServerAsync(InvokeRequestDto ___invokeRequest, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))

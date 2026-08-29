@@ -52,7 +52,7 @@ public sealed class HostApi(
 
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
-        await ___clientConnection.Send_SendRequest_ToServerAsync(new ApiSendRequestDto()
+        await ___clientConnection.Send_SendArgumentedRequest_ToServerAsync(new ApiSendRequestDto()
         {
             RequestId = ___requestId,
             ServiceId = ___ServiceId,

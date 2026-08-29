@@ -19,17 +19,17 @@ public class HostHub(
     {
         await clientConnection.SubscribeAsync(this, ct);
 
-        //async IAsyncEnumerable<string> test()
-        //{
-        //    yield return "1";
-        //    await Task.Yield();
-        //    yield return "2";
-        //    await Task.Yield();
-        //    yield return "3";
-        //    await Task.Yield();
-        //}
+        async IAsyncEnumerable<string> test()
+        {
+            yield return "1";
+            await Task.Yield();
+            yield return "2";
+            await Task.Yield();
+            yield return "3";
+            await Task.Yield();
+        }
 
-        //await hostApi.Test("test", test(), test());
+        await hostApi.Test("test", test(), test());
     }
 
     async Task IHostedService.StopAsync(CancellationToken ct)
