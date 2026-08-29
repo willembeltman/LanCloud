@@ -46,9 +46,9 @@ public sealed class HostApi(
 
         var ___activityCts = ___Cts;
 
-    var ___requestId = RequestId.New();
-    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostApi_Test_1_Serializer, ___activityCts.Token);
-    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostApi_Test_2_Serializer, ___activityCts.Token);
+        var ___requestId = RequestId.New();
+        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostApi_Test_1_Serializer, ___activityCts.Token);
+        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostApi_Test_2_Serializer, ___activityCts.Token);
 
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
@@ -62,8 +62,129 @@ public sealed class HostApi(
             BinaryData = IHostApi_Test_Serializer(name)
         }, ___activityCts.Token);
     }
+    public async Task Test4()
+    {
+        //if (___clientConnection.Initialized == false)
+        //    throw new Exception("Not initialized, please wait or contact tech support if you already waited.");
 
+        if (___Logger.IsEnabled(LogLevel.Trace))
+        {
+            ___Logger.LogTrace("Test4()");
+        }
 
+        var ___activityCts = ___Cts;
+
+        var ___requestId = RequestId.New();
+
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+
+        await ___clientConnection.Send_SendRequest_ToServerAsync(new ApiSendRequestDto()
+        {
+            RequestId = ___requestId,
+            ServiceId = ___ServiceId,
+            MethodId = new("Test4"),
+            SessionId = ___httpClient.SessionId,
+            StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+            BinaryData = IHostApi_Test4_Serializer()
+        }, ___activityCts.Token);
+    }
+
+    public async Task<string> Test2()
+    {
+        //if (___clientConnection.Initialized == false)
+        //    throw new Exception("Not initialized, please wait or contact tech support if you already waited.");
+
+        if (___Logger.IsEnabled(LogLevel.Trace))
+        {
+            ___Logger.LogTrace("Test2()");
+        }
+
+        var ___requestId = RequestId.New();
+
+        var ___channel = Channel.CreateUnbounded<ApiInvokeResponseDto>();
+        ___clientConnection.RegisterInvokeRequest(___requestId, ___channel);
+
+        var ___activityCts = ___Cts;
+
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        await ___clientConnection.Send_InvokeRequest_ToServerAsync(new ApiInvokeRequestDto()
+        {
+            RequestId = ___requestId,
+            ServiceId = ___ServiceId,
+            MethodId = new("Test2"),
+            SessionId = ___httpClient.SessionId,
+            StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+            BinaryData = IHostApi_Test2_Serializer()
+        }, ___activityCts.Token);
+
+        string ___result = default!;
+        await foreach (var item in ___channel.Reader.ReadAllAsync())
+        {
+            var ___offset = 0;
+            var ___span = new Span<byte>(item.BinaryData);
+            ___result = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+        }
+
+        ___activityCts.Cancel();
+
+        if (___PendingRequests.TryRemove(___requestId, out var pending))
+            pending.Writer.TryComplete();
+        ___clientConnection.UnregisterInvokeRequest(___requestId);
+
+        return ___result;
+    }
+
+    public async IAsyncEnumerable<string> Test3(
+        string name,
+        IAsyncEnumerable<string> test,
+        IAsyncEnumerable<string> test2)
+    {
+        //if (___clientConnection.Initialized == false)
+        //    throw new Exception("Not initialized, please wait or contact tech support if you already waited.");
+
+        if (___Logger.IsEnabled(LogLevel.Trace))
+        {
+            ___Logger.LogTrace("Test3({name}, {test}, {test2})", name, test, test2);
+        }
+
+        var ___requestId = RequestId.New();
+
+        var ___channel = Channel.CreateUnbounded<ApiInvokeResponseDto>();
+        ___clientConnection.RegisterInvokeRequest(___requestId, ___channel);
+
+        var ___activityCts = ___Cts;
+
+        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostApi_Test3_1_Serializer, ___activityCts.Token);
+        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostApi_Test3_2_Serializer, ___activityCts.Token);
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        await ___clientConnection.Send_InvokeRequest_ToServerAsync(new ApiInvokeRequestDto()
+        {
+            RequestId = ___requestId,
+            ServiceId = ___ServiceId,
+            MethodId = new("Test3"),
+            SessionId = ___httpClient.SessionId,
+            StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+            BinaryData = IHostApi_Test3_Serializer(name)
+        }, ___activityCts.Token);
+
+        try
+        {
+            await foreach (var item in ___channel.Reader.ReadAllAsync())
+            {
+                var ___offset = 0;
+                var ___span = new Span<byte>(item.BinaryData);
+                yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+            }
+        }
+        finally
+        {
+            ___activityCts.Cancel();
+
+            if (___PendingRequests.TryRemove(___requestId, out var pending))
+                pending.Writer.TryComplete();
+            ___clientConnection.UnregisterInvokeRequest(___requestId);
+        }
+    }
 
     public async Task ReceiveResponseAsync(ApiInvokeResponseDto invokeResponse)
     {
@@ -73,7 +194,10 @@ public sealed class HostApi(
         }
 
         if (___PendingRequests.TryGetValue(invokeResponse.RequestId, out var ___channel))
+        {
+            ___clientConnection.NotifyInvokeResponse(invokeResponse.RequestId);
             ___channel.Writer.TryWrite(invokeResponse);
+        }
     }
     public async Task ReceiveResponseDoneAsync(ApiInvokeResponseDoneDto invokeResponseDone)
     {
@@ -83,7 +207,10 @@ public sealed class HostApi(
         }
 
         if (___PendingRequests.TryRemove(invokeResponseDone.RequestId, out var ___channel))
+        {
+            ___clientConnection.NotifyInvokeResponseDone(invokeResponseDone.RequestId);
             ___channel.Writer.TryComplete();
+        }
     }
 
     public byte[] IHostApi_Test_Serializer(
@@ -100,6 +227,28 @@ public sealed class HostApi(
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;
     }
+    public byte[] IHostApi_Test2_Serializer()
+    {
+        return [];
+    }
+    public byte[] IHostApi_Test3_Serializer(
+        string name)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    public byte[] IHostApi_Test4_Serializer()
+    {
+        return [];
+    }
     public byte[] IHostApi_Test_1_Serializer(string value)
     {
         var ___offset = 0;
@@ -113,6 +262,30 @@ public sealed class HostApi(
         return ___span.Slice(0, ___offset).ToArray();
     }
     public byte[] IHostApi_Test_2_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+    public byte[] IHostApi_Test3_1_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+    public byte[] IHostApi_Test3_2_Serializer(string value)
     {
         var ___offset = 0;
         

@@ -30,6 +30,7 @@ public class HostHub(
         //}
 
         //await hostApi.Test("test", test(), test());
+        var text = await hostApi.Test2();
     }
 
     async Task IHostedService.StopAsync(CancellationToken ct)

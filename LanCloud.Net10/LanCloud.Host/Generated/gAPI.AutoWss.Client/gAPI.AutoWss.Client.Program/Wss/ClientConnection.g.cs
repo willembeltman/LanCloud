@@ -268,7 +268,7 @@ public class ClientConnection
 
         switch (___invokeResponse.ServiceId.Value)
         {
-            case "HostApi":
+            case "IHostApi":
                 return HostApi.ReceiveResponseAsync(___invokeResponse);
         }
         throw new Exception($"Service \"{___invokeResponse.ServiceId.Value}\" / Method \"{___invokeResponse.MethodId.Value}\" not found");
@@ -280,7 +280,7 @@ public class ClientConnection
 
         switch (___invokeResponseDone.ServiceId.Value)
         {
-            case "HostApi":
+            case "IHostApi":
                 return HostApi.ReceiveResponseDoneAsync(___invokeResponseDone);
         }
         throw new Exception($"Service \"{___invokeResponseDone.ServiceId.Value}\" / Method \"{___invokeResponseDone.MethodId.Value}\" not found");

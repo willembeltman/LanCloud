@@ -56,6 +56,10 @@ public class WssHub : WssServerConnection
                             RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.RequestId, 1, IHostApi_Test_1_Deserializer),
                             RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.RequestId, 2, IHostApi_Test_2_Deserializer),
                             ___ct);
+                    case "Test4":
+                        return IHostApi_Test4(
+                            ___sendRequest,
+                            ___ct);
                 }
                 break;
         }
@@ -69,6 +73,22 @@ public class WssHub : WssServerConnection
         var ___span = new Span<byte>(___invokeRequest.BinaryData);
         switch (___invokeRequest.ServiceId.Value)
         {
+            case "IHostApi":
+                switch (___invokeRequest.MethodId.Value)
+                {
+                    case "Test2":
+                        return IHostApi_Test2(
+                            ___invokeRequest,
+                            ___ct);
+                    case "Test3":
+                        return IHostApi_Test3(
+                            ___invokeRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.RequestId, 1, IHostApi_Test3_1_Deserializer),
+                            RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.RequestId, 2, IHostApi_Test3_2_Deserializer),
+                            ___ct);
+                }
+                break;
         }
         throw new Exception($"Invoke {___invokeRequest.ServiceId.Value}.{___invokeRequest.MethodId.Value} not implemented");
     }
@@ -88,10 +108,100 @@ public class WssHub : WssServerConnection
             test,
             test2);
     }
+    public async Task IHostApi_Test4(
+        ApiSendRequestDto ___sendRequest, 
+        CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("IHostApi_Test4({___sendRequest})", ___sendRequest);
+
+        await HostApi.Test4();
+    }
+
+    public async Task IHostApi_Test2(
+        ApiInvokeRequestDto ___invokeRequest, 
+        CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("IHostApi_Test2({___invokeRequest})", ___invokeRequest);
+
+        var response = await HostApi.Test2();
+
+        await Send_InvokeResponse_ToClientAsync(new ApiInvokeResponseDto()
+            {
+                RequestId = ___invokeRequest.RequestId,
+                ServiceId = ___invokeRequest.ServiceId,
+                MethodId = ___invokeRequest.MethodId,
+                SessionData = ___authenticationService.SessionId.ToStringValues(),
+                StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null,
+                BinaryData = IHostApi_Test2_Serializer(response)
+            }, ___ct);
+
+        await Send_InvokeResponseDone_ToClientAsync(new ApiInvokeResponseDoneDto()
+            {
+                RequestId = ___invokeRequest.RequestId,
+                ServiceId = ___invokeRequest.ServiceId,
+                MethodId = ___invokeRequest.MethodId,
+                SessionData = ___authenticationService.SessionId.ToStringValues(),
+                StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null
+            }, ___ct);
+    }
+
+    public async Task IHostApi_Test3(
+        ApiInvokeRequestDto ___invokeRequest,
+        string name,
+        IAsyncEnumerable<string> test,
+        IAsyncEnumerable<string> test2,
+        CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("IHostApi_Test3({___invokeRequest})", ___invokeRequest);
+
+        var responses = HostApi.Test3(
+            name,
+            test,
+            test2);
+
+        await foreach (var response in responses)
+        {
+            await Send_InvokeResponse_ToClientAsync(new ApiInvokeResponseDto()
+                {
+                    RequestId = ___invokeRequest.RequestId,
+                    ServiceId = ___invokeRequest.ServiceId,
+                    MethodId = ___invokeRequest.MethodId,
+                    SessionData = ___authenticationService.SessionId.ToStringValues(),
+                    StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null,
+                    BinaryData = IHostApi_Test3_Serializer(response)
+                }, ___ct);
+        }
+
+        await Send_InvokeResponseDone_ToClientAsync(new ApiInvokeResponseDoneDto()
+            {
+                RequestId = ___invokeRequest.RequestId,
+                ServiceId = ___invokeRequest.ServiceId,
+                MethodId = ___invokeRequest.MethodId,
+                SessionData = ___authenticationService.SessionId.ToStringValues(),
+                StateData = ___authenticationService.IsStateDataChanged() ? ___authenticationService.GetStateData() : null
+            }, ___ct);
+    }
 
 
 
+    public byte[] IHostApi_Test2_Serializer(string value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
+        return ___span.Slice(0, ___offset).ToArray();
+    }
 
+    public byte[] IHostApi_Test3_Serializer(string value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
+        return ___span.Slice(0, ___offset).ToArray();
+    }
 
     public string IHostApi_Test_1_Deserializer(byte[] value)
     {
@@ -101,6 +211,20 @@ public class WssHub : WssServerConnection
     }
 
     public string IHostApi_Test_2_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+    public string IHostApi_Test3_1_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+    public string IHostApi_Test3_2_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
