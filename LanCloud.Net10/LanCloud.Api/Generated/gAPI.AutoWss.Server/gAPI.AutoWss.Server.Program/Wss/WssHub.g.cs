@@ -10,6 +10,7 @@ using LanCloud.Shared.Interfaces;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -51,6 +52,9 @@ public class WssHub : WssServerConnection
                     case "Test":
                         return IHostApi_Test(
                             ___sendRequest,
+                            PrimitivesSpanSerializer.ReadString(___span, ref ___offset),
+                            RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.RequestId, 1, IHostApi_Test_1_Deserializer),
+                            RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.RequestId, 2, IHostApi_Test_2_Deserializer),
                             ___ct);
                 }
                 break;
@@ -69,15 +73,35 @@ public class WssHub : WssServerConnection
 
     public async Task IHostApi_Test(
         ApiSendRequestDto ___sendRequest, 
+        string name,
+        IAsyncEnumerable<string> test,
+        IAsyncEnumerable<string> test2,
         CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
             ___logger.LogTrace("IHostApi_Test({___sendRequest})", ___sendRequest);
 
-        await HostApi.Test();
+        await HostApi.Test(
+            name,
+            test,
+            test2);
     }
 
 
 
 
+
+    public string IHostApi_Test_1_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+    public string IHostApi_Test_2_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
 }

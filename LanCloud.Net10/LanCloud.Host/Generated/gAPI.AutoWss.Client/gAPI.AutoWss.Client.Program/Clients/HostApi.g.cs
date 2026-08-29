@@ -9,6 +9,7 @@ using LanCloud.Shared.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
@@ -30,27 +31,35 @@ public sealed class HostApi(
     readonly ConcurrentDictionary<RequestId, Channel<ApiInvokeResponseDto>> ___PendingRequests = new();
     readonly ServiceId ___ServiceId = new("IHostApi");
 
-    public async Task Test()
+    public async Task Test(
+        string name,
+        IAsyncEnumerable<string> test,
+        IAsyncEnumerable<string> test2)
     {
         //if (___clientConnection.Initialized == false)
         //    throw new Exception("Not initialized, please wait or contact tech support if you already waited.");
 
         if (___Logger.IsEnabled(LogLevel.Trace))
         {
-            ___Logger.LogTrace("Test()");
+            ___Logger.LogTrace("Test({name}, {test}, {test2})", name, test, test2);
         }
 
         var ___activityCts = ___Cts;
+
+    var ___requestId = RequestId.New();
+    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostApi_Test_1_Serializer, ___activityCts.Token);
+    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostApi_Test_2_Serializer, ___activityCts.Token);
 
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
         await ___clientConnection.Send_SendRequest_ToServerAsync(new ApiSendRequestDto()
         {
+            RequestId = ___requestId,
             ServiceId = ___ServiceId,
             MethodId = new("Test"),
             SessionId = ___httpClient.SessionId,
             StateData = ___httpClient.IsStateDataChanged() ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = IHostApi_Test_Serializer()
+            BinaryData = IHostApi_Test_Serializer(name)
         }, ___activityCts.Token);
     }
 
@@ -77,9 +86,43 @@ public sealed class HostApi(
             ___channel.Writer.TryComplete();
     }
 
-    public byte[] IHostApi_Test_Serializer()
+    public byte[] IHostApi_Test_Serializer(
+        string name)
     {
-        return [];
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    public byte[] IHostApi_Test_1_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+    public byte[] IHostApi_Test_2_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
     }
 
     public void Dispose()

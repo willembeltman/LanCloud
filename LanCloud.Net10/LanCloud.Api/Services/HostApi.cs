@@ -4,8 +4,13 @@ namespace LanCloud.Api.Services;
 
 public class HostApi : IHostApi
 {
-    public Task Test()
+    public async Task Test(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
     {
-        throw new NotImplementedException();
+        await foreach (var testItem in test)
+        {
+        }
+        await foreach (var testItem in test2)
+        {
+        }
     }
 }

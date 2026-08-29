@@ -29,6 +29,24 @@ public class HostHub(
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<HostHub>();
     readonly ServiceId ___serviceId = new("IHostHub");
 
+    public async Task Test(
+        string name,
+        IAsyncEnumerable<string> test,
+        IAsyncEnumerable<string> test2)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test({name},{test},{test2})", name, test, test2);
+
+        var serviceMethodId = new ServiceMethodId("Test");
+        var requestId = RequestId.New();
+        var payload = IHostHub_Test_Serializer(
+            name);
+        await ___fabricClient.SendAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, request =>
+        {
+            ___fabricClient.RegisterAsyncEnumerableArgument(request, 1, test, IHostHub_Test_1_Serializer, ___cts.Token);
+            ___fabricClient.RegisterAsyncEnumerableArgument(request, 2, test2, IHostHub_Test_2_Serializer, ___cts.Token);
+        }, ___cts.Token);
+    }
 
     public async IAsyncEnumerable<ShareEntryDto> ListDirectory(
         string relativePath,
@@ -99,6 +117,20 @@ public class HostHub(
         }
     }
 
+    public byte[] IHostHub_Test_Serializer(
+        string name)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
     public byte[] IHostHub_ListDirectory_Serializer(
         string relativePath)
     {
@@ -149,5 +181,32 @@ public class HostHub(
     {
         ___cts.Cancel();
         ___cts.Dispose();
+    }
+
+
+    public byte[] IHostHub_Test_1_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public byte[] IHostHub_Test_2_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
     }
 }

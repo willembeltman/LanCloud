@@ -114,6 +114,33 @@ public class ClientConnection
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Received_SendRequest_FromServerAsync({___sendRequest})", ___sendRequest);
 
+        switch (___sendRequest.ServiceId.Value)
+        {
+            case "IHostHub":
+                {
+                    var clients = await GetHostHubsSnapshotAsync();
+                    switch (___sendRequest.MethodId.Value)
+                    {
+                        case "Test":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.RequestId, 1, IHostHub_Test_1_Deserializer);
+                                var test2 = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.RequestId, 2, IHostHub_Test_2_Deserializer);
+                                foreach (var client in clients)
+                                {
+                                    await client.Test(
+                                        name,
+                                        test,
+                                        test2);
+                                }
+                                return;
+                            }
+                    }
+                    break;
+                }
+        }
         throw new Exception($"Service \"{___sendRequest.ServiceId.Value}\" / Method \"{___sendRequest.MethodId.Value}\" not found");
     }
     protected override async Task Received_InvokeRequest_FromServerAsync(InvokeRequestDto ___invokeRequest, CancellationToken ___ct)
@@ -280,5 +307,20 @@ public class ClientConnection
         var ___span = new Span<byte>(___Buffer);
         DataChunkDtoSpanSerializer.Write(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
+    }
+
+
+    public string IHostHub_Test_1_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+    public string IHostHub_Test_2_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 }

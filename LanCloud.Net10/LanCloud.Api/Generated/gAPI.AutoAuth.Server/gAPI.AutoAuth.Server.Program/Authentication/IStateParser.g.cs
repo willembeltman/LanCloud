@@ -8,9 +8,4 @@ namespace gAPI.Generated;
 
 public interface IStateParser : IStateParser<StateDto>
 {
-    bool TryParse(string? value, out StateDto state);
-    StringValues ToStringValuesBase64(StateDto value);
-    string? ToStringBase64(StateDto? value);
-    bool IsDifferent(StateDto? value1, StateDto? value2);
-    StateDto? CreateCopy(StateDto? value);
 }

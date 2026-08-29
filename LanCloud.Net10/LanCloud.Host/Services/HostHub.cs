@@ -10,12 +10,28 @@ namespace LanCloud.Host.Services;
 
 public class HostHub(
     IClientConnection clientConnection,
+    IHostApi hostApi,
     HostConfig config)
     : IHostedService
     , IHostHub
 {
-    async Task IHostedService.StartAsync(CancellationToken ct) 
-        => await clientConnection.SubscribeAsync(this, ct);
+    async Task IHostedService.StartAsync(CancellationToken ct)
+    {
+        await clientConnection.SubscribeAsync(this, ct);
+
+        //async IAsyncEnumerable<string> test()
+        //{
+        //    yield return "1";
+        //    await Task.Yield();
+        //    yield return "2";
+        //    await Task.Yield();
+        //    yield return "3";
+        //    await Task.Yield();
+        //}
+
+        //await hostApi.Test("test", test(), test());
+    }
+
     async Task IHostedService.StopAsync(CancellationToken ct)
         => await clientConnection.UnsubscribeAsync(this, ct);
 
@@ -69,6 +85,16 @@ public class HostHub(
                 ct.ThrowIfCancellationRequested();
                 yield return chunk;
             }
+        }
+    }
+
+    public async Task Test(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
+    {
+        await foreach (var testItem in test)
+        {
+        }
+        await foreach (var testItem in test2)
+        {
         }
     }
 }
