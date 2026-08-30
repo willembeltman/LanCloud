@@ -20,7 +20,11 @@ public class TestController(
             await Task.Yield();
         }
 
-        await clientContext.HostHub.ToAll.Test("test", test(), test());
+        var list = clientContext.HostHub.ToAll.Test6("test", test(), test(), ct);
+
+        await foreach (var item in list)
+        {
+        }
 
         //var list = await clientContext.HostHub.ToAll.ListDirectory("", ct).ToArrayAsync(ct);
         //var files = list.Where(a => a.IsDirectory == false).ToArray();

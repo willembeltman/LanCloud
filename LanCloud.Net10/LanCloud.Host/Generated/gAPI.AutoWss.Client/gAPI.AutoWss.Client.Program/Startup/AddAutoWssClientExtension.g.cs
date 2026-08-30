@@ -47,7 +47,7 @@ public static class AddAutoWssClientExtension
         services.AddScoped<IWssLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());
         
         // Api clients
-        services.AddScoped<IHostApi>(sp => sp.GetRequiredService<ClientConnection>().HostApi);
+        services.AddScoped<ITestApi>(sp => sp.GetRequiredService<ClientConnection>().TestApi);
         
         // Minimal api clients
         services.AddScoped<IAccountService, AccountService>();

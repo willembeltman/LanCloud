@@ -7,7 +7,7 @@ namespace gAPI.Generated;
 
 public interface IClientConnection : IWssClientConnection
 {
-    IHostApi HostApi { get; }
+    ITestApi TestApi { get; }
 
     Task SubscribeAsync(object implementation, CancellationToken ___ct = default);
     Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default);

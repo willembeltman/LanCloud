@@ -77,19 +77,19 @@ public static class AddAutoWssServerExtension
                 });
             });
         }
-        services.AddScoped<WssHub>();
+        services.AddScoped<ServerConnection>();
         services.AddSingleton(sp => new FabricClient(
-            sp.GetRequiredService<WssSessionCache>(),
+            sp.GetRequiredService<SessionCache>(),
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
         var connectionCollection = new WssServerConnectionCollection();
         services.AddSingleton(connectionCollection);
 
-        var sseHostCollection = new SseHostCollection();
-        services.AddSingleton(sseHostCollection);
+        var SseServiceSubscriptionCollection = new SseServiceSubscriptionCollection();
+        services.AddSingleton(SseServiceSubscriptionCollection);
 
-        var sessionCache = new WssSessionCache();
+        var sessionCache = new SessionCache();
         services.AddSingleton(sessionCache);
 
         if (fabricConnectionString == null)
@@ -110,7 +110,7 @@ public static class AddAutoWssServerExtension
         services.AddScoped<IHostHubContext, HostHubContext>();
 
         // Apis
-        services.AddScoped<IHostApi, HostApi>();
+        services.AddScoped<ITestApi, TestApi>();
 
         // Minimal Apis
 

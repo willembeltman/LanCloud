@@ -29,25 +29,48 @@ public class HostHub(
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<HostHub>();
     readonly ServiceId ___serviceId = new("IHostHub");
 
-    public async Task Test(
+    public async Task Test1()
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test1()");
+
+        var ___serviceMethodId = new ServiceMethodId("Test1");
+        var ___requestId = RequestId.New();
+        var ___payload = IHostHub_Test1_Serializer();
+
+        await ___fabricClient.SendAsync(
+            ___requestId,
+            ___serviceId, 
+            ___serviceMethodId, 
+            ___userId,
+            ___sessionId,
+            ___payload, 
+            ___cts.Token);
+    }
+    public async Task Test4(
         string name,
         IAsyncEnumerable<string> test,
         IAsyncEnumerable<string> test2)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Test({name},{test},{test2})", name, test, test2);
+            ___Logger.LogTrace("Test4({name},{test},{test2})", name, test, test2);
 
-        var serviceMethodId = new ServiceMethodId("Test");
-        var requestId = RequestId.New();
-        var payload = IHostHub_Test_Serializer(
+        var ___serviceMethodId = new ServiceMethodId("Test4");
+        var ___requestId = RequestId.New();
+        var ___payload = IHostHub_Test4_Serializer(
             name);
-        await ___fabricClient.SendArgumentedAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, request =>
-        {
-            ___fabricClient.RegisterAsyncEnumerableArgument(request, 1, test, IHostHub_Test_1_Serializer, ___cts.Token);
-            ___fabricClient.RegisterAsyncEnumerableArgument(request, 2, test2, IHostHub_Test_2_Serializer, ___cts.Token);
-        }, ___cts.Token);
-    }
 
+        ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostHub_Test4_1_Serializer, ___cts.Token);
+        ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostHub_Test4_2_Serializer, ___cts.Token);
+        await ___fabricClient.SendAsync(
+            ___requestId,
+            ___serviceId, 
+            ___serviceMethodId, 
+            ___userId,
+            ___sessionId,
+            ___payload, 
+            ___cts.Token);
+    }
     public async IAsyncEnumerable<ShareEntryDto> ListDirectory(
         string relativePath,
         [EnumeratorCancellation] CancellationToken ct)
@@ -55,11 +78,19 @@ public class HostHub(
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("ListDirectory({relativePath})", relativePath);
 
-        var serviceMethodId = new ServiceMethodId("ListDirectory");
-        var payload = IHostHub_ListDirectory_Serializer(
+        var ___requestId = RequestId.New();
+        var ___serviceMethodId = new ServiceMethodId("ListDirectory");
+        var ___payload = IHostHub_ListDirectory_Serializer(
             relativePath);
 
-        var responses = ___fabricClient.InvokeAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, ct);
+        var responses = ___fabricClient.InvokeAsync(
+            ___requestId,
+            ___serviceId, 
+            ___serviceMethodId, 
+            ___userId, 
+            ___sessionId, 
+            ___payload, 
+            ct);
         await foreach (var response in responses)
         {
             if (ct.IsCancellationRequested)
@@ -77,11 +108,19 @@ public class HostHub(
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Get({relativeFullName})", relativeFullName);
 
-        var serviceMethodId = new ServiceMethodId("Get");
-        var payload = IHostHub_Get_Serializer(
+        var ___requestId = RequestId.New();
+        var ___serviceMethodId = new ServiceMethodId("Get");
+        var ___payload = IHostHub_Get_Serializer(
             relativeFullName);
 
-        var responses = ___fabricClient.InvokeAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, ct);
+        var responses = ___fabricClient.InvokeAsync(
+            ___requestId,
+            ___serviceId, 
+            ___serviceMethodId, 
+            ___userId, 
+            ___sessionId, 
+            ___payload, 
+            ct);
         await foreach (var response in responses)
         {
             if (ct.IsCancellationRequested)
@@ -100,12 +139,20 @@ public class HostHub(
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("ReadFile({relativeFullName},{startOffset})", relativeFullName, startOffset);
 
-        var serviceMethodId = new ServiceMethodId("ReadFile");
-        var payload = IHostHub_ReadFile_Serializer(
+        var ___requestId = RequestId.New();
+        var ___serviceMethodId = new ServiceMethodId("ReadFile");
+        var ___payload = IHostHub_ReadFile_Serializer(
             relativeFullName,
             startOffset);
 
-        var responses = ___fabricClient.InvokeAsync(___serviceId, serviceMethodId, ___userId, ___sessionId, payload, ct);
+        var responses = ___fabricClient.InvokeAsync(
+            ___requestId,
+            ___serviceId, 
+            ___serviceMethodId, 
+            ___userId, 
+            ___sessionId, 
+            ___payload, 
+            ct);
         await foreach (var response in responses)
         {
             if (ct.IsCancellationRequested)
@@ -116,20 +163,65 @@ public class HostHub(
             yield return DataChunkDtoSpanSerializer.ReadDataChunkDto(___span, ref ___offset);
         }
     }
-
-    public byte[] IHostHub_Test_Serializer(
-        string name)
+    public async IAsyncEnumerable<string> Test3(
+        [EnumeratorCancellation] CancellationToken ct)
     {
-        var ___offset = 0;
-        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        var ___length = ___offset;
-        ___offset = 0;
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
-        if (___length != ___offset)
-            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
-        return ___buffer;
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test3()");
+
+        var ___requestId = RequestId.New();
+        var ___serviceMethodId = new ServiceMethodId("Test3");
+        var ___payload = IHostHub_Test3_Serializer();
+
+        var responses = ___fabricClient.InvokeAsync(
+            ___requestId,
+            ___serviceId, 
+            ___serviceMethodId, 
+            ___userId, 
+            ___sessionId, 
+            ___payload, 
+            ct);
+        await foreach (var response in responses)
+        {
+            if (ct.IsCancellationRequested)
+                yield break;
+
+            var ___offset = 0;
+            var ___span = new Span<byte>(response.BinaryData);
+            yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+        }
+    }
+    public async IAsyncEnumerable<string> Test6(
+        string name,
+        IAsyncEnumerable<string> test,
+        IAsyncEnumerable<string> test2,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test6({name},{test},{test2})", name, test, test2);
+
+        var ___requestId = RequestId.New();
+        var ___serviceMethodId = new ServiceMethodId("Test6");
+        var ___payload = IHostHub_Test6_Serializer(
+            name);
+
+        var responses = ___fabricClient.InvokeAsync(
+            ___requestId,
+            ___serviceId, 
+            ___serviceMethodId, 
+            ___userId, 
+            ___sessionId, 
+            ___payload, 
+            ct);
+        await foreach (var response in responses)
+        {
+            if (ct.IsCancellationRequested)
+                yield break;
+
+            var ___offset = 0;
+            var ___span = new Span<byte>(response.BinaryData);
+            yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+        }
     }
     public byte[] IHostHub_ListDirectory_Serializer(
         string relativePath)
@@ -176,6 +268,42 @@ public class HostHub(
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;
     }
+    public byte[] IHostHub_Test1_Serializer()
+    {
+        return [];
+    }
+    public byte[] IHostHub_Test3_Serializer()
+    {
+        return [];
+    }
+    public byte[] IHostHub_Test4_Serializer(
+        string name)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    public byte[] IHostHub_Test6_Serializer(
+        string name)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
 
     public void Dispose()
     {
@@ -184,7 +312,8 @@ public class HostHub(
     }
 
 
-    public byte[] IHostHub_Test_1_Serializer(string value)
+
+    public byte[] IHostHub_Test4_1_Serializer(string value)
     {
         var ___offset = 0;
         
@@ -197,7 +326,33 @@ public class HostHub(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public byte[] IHostHub_Test_2_Serializer(string value)
+    public byte[] IHostHub_Test4_2_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public byte[] IHostHub_Test6_1_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public byte[] IHostHub_Test6_2_Serializer(string value)
     {
         var ___offset = 0;
         

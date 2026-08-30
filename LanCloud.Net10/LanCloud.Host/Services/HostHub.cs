@@ -10,7 +10,7 @@ namespace LanCloud.Host.Services;
 
 public class HostHub(
     IClientConnection clientConnection,
-    IHostApi hostApi,
+    ITestApi hostApi,
     HostConfig config)
     : IHostedService
     , IHostHub
@@ -30,7 +30,8 @@ public class HostHub(
         //}
 
         //await hostApi.Test("test", test(), test());
-        var text = await hostApi.Test2();
+
+        //var text = await hostApi.Test2();
     }
 
     async Task IHostedService.StopAsync(CancellationToken ct)
@@ -89,13 +90,44 @@ public class HostHub(
         }
     }
 
-    public async Task Test(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
+    public async Task Test1()
+    {
+    }
+    public async IAsyncEnumerable<string> Test3([EnumeratorCancellation]CancellationToken ct)
+    {
+        yield return "1";
+        await Task.Yield();
+        yield return "2";
+        await Task.Yield();
+        yield return "3";
+        await Task.Yield();
+    }
+
+    public async Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
     {
         await foreach (var testItem in test)
         {
+            //await Task.Delay(40000);
         }
         await foreach (var testItem in test2)
         {
         }
+    }
+    public async IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct)
+    {
+        await foreach (var testItem in test)
+        {
+            //await Task.Delay(40000);
+        }
+        await foreach (var testItem in test2)
+        {
+        }
+
+        yield return "1";
+        await Task.Yield();
+        yield return "2";
+        await Task.Yield();
+        yield return "3";
+        await Task.Yield();
     }
 }
