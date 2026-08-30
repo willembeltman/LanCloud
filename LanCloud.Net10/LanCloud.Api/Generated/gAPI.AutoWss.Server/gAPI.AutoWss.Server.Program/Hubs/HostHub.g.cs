@@ -38,6 +38,8 @@ public class HostHub(
         var ___requestId = RequestId.New();
         var ___payload = IHostHub_Test1_Serializer();
 
+
+        
         await ___fabricClient.SendAsync(
             ___requestId,
             ___serviceId, 
@@ -60,8 +62,10 @@ public class HostHub(
         var ___payload = IHostHub_Test4_Serializer(
             name);
 
+
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostHub_Test4_1_Serializer, ___cts.Token);
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostHub_Test4_2_Serializer, ___cts.Token);
+        
         await ___fabricClient.SendAsync(
             ___requestId,
             ___serviceId, 
@@ -82,6 +86,7 @@ public class HostHub(
         var ___serviceMethodId = new ServiceMethodId("ListDirectory");
         var ___payload = IHostHub_ListDirectory_Serializer(
             relativePath);
+
 
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
@@ -112,6 +117,7 @@ public class HostHub(
         var ___serviceMethodId = new ServiceMethodId("Get");
         var ___payload = IHostHub_Get_Serializer(
             relativeFullName);
+
 
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
@@ -145,6 +151,7 @@ public class HostHub(
             relativeFullName,
             startOffset);
 
+
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
             ___serviceId, 
@@ -172,6 +179,7 @@ public class HostHub(
         var ___requestId = RequestId.New();
         var ___serviceMethodId = new ServiceMethodId("Test3");
         var ___payload = IHostHub_Test3_Serializer();
+
 
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
@@ -204,6 +212,9 @@ public class HostHub(
         var ___serviceMethodId = new ServiceMethodId("Test6");
         var ___payload = IHostHub_Test6_Serializer(
             name);
+
+        ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostHub_Test6_1_Serializer, ct);
+        ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostHub_Test6_2_Serializer, ct);
 
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,

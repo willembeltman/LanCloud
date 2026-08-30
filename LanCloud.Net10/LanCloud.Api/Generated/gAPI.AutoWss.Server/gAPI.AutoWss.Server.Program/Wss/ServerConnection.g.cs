@@ -26,6 +26,7 @@ public class ServerConnection : WssServerConnection
     readonly IServerAuthenticationService ___authenticationService;
     readonly ITestApi TestApi;
     readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
+    readonly FabricClient ___fabricClient;
 
     public ServerConnection(
         IServerAuthenticationService authenticationService,
@@ -36,6 +37,7 @@ public class ServerConnection : WssServerConnection
         ILoggerFactory loggerFactory) 
         : base(authenticationService, SseServiceSubscriptionCollection, connections, fabricClient, loggerFactory)
     {
+        this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;
         this.TestApi = testApi;
         this.___logger = loggerFactory.CreateLogger<ServerConnection>();
