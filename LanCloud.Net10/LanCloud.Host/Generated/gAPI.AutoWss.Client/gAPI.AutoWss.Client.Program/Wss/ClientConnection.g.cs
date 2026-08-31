@@ -183,6 +183,8 @@ public class ClientConnection
                                                 RequestId = ___invokeRequest.RequestId,
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
+                                                SessionId = ___invokeRequest.SessionId,
+                                                //StateData = ___invokeRequest.StateData,
                                                 BinaryData = IHostHub_ListDirectory_Serializer(response)
                                             }, ___ct);
                                     }
@@ -207,6 +209,8 @@ public class ClientConnection
                                                 RequestId = ___invokeRequest.RequestId,
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
+                                                SessionId = ___invokeRequest.SessionId,
+                                                //StateData = ___invokeRequest.StateData,
                                                 BinaryData = IHostHub_Get_Serializer(response)
                                             }, ___ct);
                                     }
@@ -233,6 +237,8 @@ public class ClientConnection
                                                 RequestId = ___invokeRequest.RequestId,
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
+                                                SessionId = ___invokeRequest.SessionId,
+                                                //StateData = ___invokeRequest.StateData,
                                                 BinaryData = IHostHub_ReadFile_Serializer(response)
                                             }, ___ct);
                                     }
@@ -255,6 +261,8 @@ public class ClientConnection
                                                 RequestId = ___invokeRequest.RequestId,
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
+                                                SessionId = ___invokeRequest.SessionId,
+                                                //StateData = ___invokeRequest.StateData,
                                                 BinaryData = IHostHub_Test3_Serializer(response)
                                             }, ___ct);
                                     }
@@ -283,6 +291,8 @@ public class ClientConnection
                                                 RequestId = ___invokeRequest.RequestId,
                                                 ServiceId = ___invokeRequest.ServiceId,
                                                 MethodId = ___invokeRequest.MethodId,
+                                                SessionId = ___invokeRequest.SessionId,
+                                                //StateData = ___invokeRequest.StateData,
                                                 BinaryData = IHostHub_Test6_Serializer(response)
                                             }, ___ct);
                                     }

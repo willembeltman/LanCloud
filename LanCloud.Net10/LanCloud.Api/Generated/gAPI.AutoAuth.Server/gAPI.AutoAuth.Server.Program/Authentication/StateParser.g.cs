@@ -52,8 +52,8 @@ public class StateParser : IStateParser
     }
     public bool IsDifferent(StateDto? value1, StateDto? value2)
     {
-        if (value1 == null && value2 == null) return true;
-        if (value1 == null || value2 == null) return false;
+        if (value1 == null && value2 == null) return false;
+        if (value1 == null || value2 == null) return true;
         return value1.IsDifferent(value2);
     }
     public StateDto? CreateCopy(StateDto? value)

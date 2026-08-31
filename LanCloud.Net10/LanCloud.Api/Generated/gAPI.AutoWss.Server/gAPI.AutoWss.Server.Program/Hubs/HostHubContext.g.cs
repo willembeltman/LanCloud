@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Fabric;
 using LanCloud.Shared.Interfaces;
 
@@ -7,14 +8,15 @@ using LanCloud.Shared.Interfaces;
 namespace gAPI.Generated;
 
 public class HostHubContext(
+    IServerAuthenticationService authenticationService,
     FabricClient fabricClient,
     ILoggerFactory loggerFactory)
     : IHostHubContext
 {
     public IHostHub ToAll
-        => new HostHub(fabricClient, loggerFactory, null, null);
+        => new HostHub(authenticationService, fabricClient, loggerFactory, null, null);
     public IHostHub ToUser(UserId userId)
-        => new HostHub(fabricClient, loggerFactory, null, userId);
+        => new HostHub(authenticationService, fabricClient, loggerFactory, null, userId);
     public IHostHub ToSession(SessionId sessionId)
-        => new HostHub(fabricClient, loggerFactory, sessionId, null);
+        => new HostHub(authenticationService, fabricClient, loggerFactory, sessionId, null);
 }

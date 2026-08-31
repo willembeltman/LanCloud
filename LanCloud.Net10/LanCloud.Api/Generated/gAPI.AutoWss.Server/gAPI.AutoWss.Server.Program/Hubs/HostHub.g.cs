@@ -1,6 +1,7 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Fabric;
 using LanCloud.Shared.Dtos;
@@ -18,6 +19,7 @@ using System.Threading.Tasks;
 namespace gAPI.Generated;
 
 public class HostHub(
+    IServerAuthenticationService ___authenticationService,
     FabricClient ___fabricClient,
     ILoggerFactory ___loggerFactory,
     SessionId? ___sessionId,
@@ -40,12 +42,15 @@ public class HostHub(
 
 
         
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         await ___fabricClient.SendAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId,
             ___sessionId,
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ___cts.Token);
     }
@@ -66,12 +71,15 @@ public class HostHub(
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostHub_Test4_1_Serializer, ___cts.Token);
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostHub_Test4_2_Serializer, ___cts.Token);
         
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         await ___fabricClient.SendAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId,
             ___sessionId,
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ___cts.Token);
     }
@@ -88,12 +96,15 @@ public class HostHub(
             relativePath);
 
 
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId, 
             ___sessionId, 
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ct);
         await foreach (var response in responses)
@@ -119,12 +130,15 @@ public class HostHub(
             relativeFullName);
 
 
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId, 
             ___sessionId, 
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ct);
         await foreach (var response in responses)
@@ -152,12 +166,15 @@ public class HostHub(
             startOffset);
 
 
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId, 
             ___sessionId, 
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ct);
         await foreach (var response in responses)
@@ -181,12 +198,15 @@ public class HostHub(
         var ___payload = IHostHub_Test3_Serializer();
 
 
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId, 
             ___sessionId, 
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ct);
         await foreach (var response in responses)
@@ -216,12 +236,15 @@ public class HostHub(
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 1, test, IHostHub_Test6_1_Serializer, ct);
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostHub_Test6_2_Serializer, ct);
 
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         var responses = ___fabricClient.InvokeAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
             ___userId, 
             ___sessionId, 
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ct);
         await foreach (var response in responses)
