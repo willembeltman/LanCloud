@@ -14,4 +14,5 @@ public interface IHostHub
     IAsyncEnumerable<string> Test3(CancellationToken ct);
     Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2);
     IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, CancellationToken ct);
+    Task StartTest(CancellationToken ct);
 }

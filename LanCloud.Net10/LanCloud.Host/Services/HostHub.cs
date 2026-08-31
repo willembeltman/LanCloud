@@ -4,13 +4,14 @@ using LanCloud.Host.Models;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Interfaces;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace LanCloud.Host.Services;
 
 public class HostHub(
     IClientConnection clientConnection,
-    ITestApi hostApi,
+    ITestApi testApi,
     HostConfig config)
     : IHostedService
     , IHostHub
@@ -18,23 +19,6 @@ public class HostHub(
     async Task IHostedService.StartAsync(CancellationToken ct)
     {
         await clientConnection.SubscribeAsync(this, ct);
-
-        //async IAsyncEnumerable<string> test()
-        //{
-        //    yield return "1";
-        //    await Task.Yield();
-        //    yield return "2";
-        //    await Task.Yield();
-        //    yield return "3";
-        //    await Task.Yield();
-        //}
-
-        //var list = hostApi.Test6("test", test(), test(), ct);
-
-        //await foreach (var item in list)
-        //{
-
-        //}
     }
 
     async Task IHostedService.StopAsync(CancellationToken ct)
@@ -127,10 +111,41 @@ public class HostHub(
         }
 
         yield return "1";
-        await Task.Yield();
+        //await Task.Yield();
         yield return "2";
-        await Task.Yield();
+        //await Task.Yield();
         yield return "3";
-        await Task.Yield();
+        //await Task.Yield();
+    }
+
+    public async Task StartTest(CancellationToken ct)
+    {
+        // Dit draait op de client
+        async IAsyncEnumerable<string> test()
+        {
+            yield return "1";
+            yield return "2";
+            yield return "3";
+        }
+
+        var tries = 10;
+        Stopwatch watch = Stopwatch.StartNew();
+        for (int i = 0; i < tries; i++)
+        {
+            // Call naar server
+            var list = testApi.Test6(
+                "test", 
+                test(), 
+                test(), 
+                ct);
+
+            await foreach (var item in list)
+            {
+
+            }
+        }
+        var avg = watch.ElapsedMilliseconds / 
+            tries;
+        Console.WriteLine(avg);
     }
 }

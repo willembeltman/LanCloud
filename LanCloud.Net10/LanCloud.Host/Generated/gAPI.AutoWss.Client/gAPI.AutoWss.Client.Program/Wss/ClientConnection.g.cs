@@ -147,6 +147,17 @@ public class ClientConnection
                                 }
                                 return;
                             }
+                        case "StartTest":
+                            {
+                                var ___offset = 0;
+                                var ___span = new Span<byte>(___sendRequest.BinaryData);
+                                foreach (var client in clients)
+                                {
+                                    await client.StartTest(
+                                        ___ct);
+                                }
+                                return;
+                            }
                     }
                     break;
                 }

@@ -83,6 +83,30 @@ public class HostHub(
             ___payload, 
             ___cts.Token);
     }
+    public async Task StartTest(
+        CancellationToken ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("StartTest()");
+
+        var ___serviceMethodId = new ServiceMethodId("StartTest");
+        var ___requestId = RequestId.New();
+        var ___payload = IHostHub_StartTest_Serializer();
+
+
+        
+        var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
+        await ___fabricClient.SendAsync(
+            ___requestId,
+            ___serviceId, 
+            ___serviceMethodId, 
+            ___userId,
+            ___sessionId,
+            ___stateIsChanged,
+            ___stateIsChanged ? ___authenticationService.GetStateData() : null,
+            ___payload, 
+            ct);
+    }
     public async IAsyncEnumerable<ShareEntryDto> ListDirectory(
         string relativePath,
         [EnumeratorCancellation] CancellationToken ct)
@@ -337,6 +361,10 @@ public class HostHub(
         if (___length != ___offset)
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;
+    }
+    public byte[] IHostHub_StartTest_Serializer()
+    {
+        return [];
     }
 
     public void Dispose()

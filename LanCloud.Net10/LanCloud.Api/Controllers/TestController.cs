@@ -1,5 +1,6 @@
 ﻿using gAPI.Generated;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace LanCloud.Api.Controllers;
 
@@ -10,35 +11,29 @@ public class TestController(
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
+        await clientContext.HostHub.ToAll.StartTest(ct);
+
         async IAsyncEnumerable<string> test()
         {
             yield return "1";
-            await Task.Yield();
             yield return "2";
-            await Task.Yield();
             yield return "3";
-            await Task.Yield();
         }
 
-        var list = clientContext.HostHub.ToAll.Test6("test", test(), test(), ct);
 
-        await foreach (var item in list)
+        var tries = 10;
+        Stopwatch watch = Stopwatch.StartNew();
+        for (int i = 0; i < tries; i++)
         {
+            var list = clientContext.HostHub.ToAll.Test6("test", test(), test(), ct);
+
+            await foreach (var item in list)
+            {
+            }
         }
+        var avg = watch.ElapsedMilliseconds / tries;
+        Console.WriteLine($"{avg}ms");
 
-        //var list = await clientContext.HostHub.ToAll.ListDirectory("", ct).ToArrayAsync(ct);
-        //var files = list.Where(a => a.IsDirectory == false).ToArray();
-        //var file = files.FirstOrDefault();
-        //if (file == null || file.SessionId == null)
-        //    throw new FileNotFoundException();
-        //var chunks = clientContext.HostHub.ToSession(file.SessionId.Value)
-        //    .ReadFile(file.Name, 0, ct);
-
-        //await foreach (var chunk in chunks)
-        //{
-        //    var offset = chunk.Offset;
-        //}
-
-        return Content("Hoi");
+        return Content($"{avg}ms");
     }
 }

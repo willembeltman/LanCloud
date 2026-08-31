@@ -36,21 +36,22 @@ public class TestApi : ITestApi
     {
         return "";
     }
-    public async IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct)
+    // Dit draait op de server
+    public async IAsyncEnumerable<string> Test6(
+        string name, 
+        IAsyncEnumerable<string> test, 
+        IAsyncEnumerable<string> test2, 
+        [EnumeratorCancellation] CancellationToken ct)
     {
         await foreach (var testItem in test)
         {
-            //await Task.Delay(40000);
         }
         await foreach (var testItem in test2)
         {
         }
 
         yield return "1";
-        await Task.Yield();
         yield return "2";
-        await Task.Yield();
         yield return "3";
-        await Task.Yield();
     }
 }
