@@ -29,9 +29,12 @@ public class HostHub(
         //    await Task.Yield();
         //}
 
-        //await hostApi.Test("test", test(), test());
+        //var list = hostApi.Test6("test", test(), test(), ct);
 
-        //var text = await hostApi.Test2();
+        //await foreach (var item in list)
+        //{
+
+        //}
     }
 
     async Task IHostedService.StopAsync(CancellationToken ct)

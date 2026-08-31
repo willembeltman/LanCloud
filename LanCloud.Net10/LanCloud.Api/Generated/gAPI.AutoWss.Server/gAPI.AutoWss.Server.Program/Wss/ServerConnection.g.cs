@@ -139,15 +139,12 @@ public class ServerConnection : WssServerConnection
 
         var response = await TestApi.Test2();
 
-        //var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         await Send_InvokeResponse_ToClientAsync(new InvokeResponseDto()
         {
             RequestId = ___invokeRequest.RequestId,
             ServiceId = ___invokeRequest.ServiceId,
             MethodId = ___invokeRequest.MethodId,
             SessionId = ___authenticationService.SessionId,
-            //StateIsChanged = ___stateIsChanged,
-            //StateData = ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             BinaryData = ITestApi_Test2_Serializer(response)
         }, ___ct);
     }
@@ -166,15 +163,12 @@ public class ServerConnection : WssServerConnection
             test,
             test2);
 
-        //var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
         await Send_InvokeResponse_ToClientAsync(new InvokeResponseDto()
         {
             RequestId = ___invokeRequest.RequestId,
             ServiceId = ___invokeRequest.ServiceId,
             MethodId = ___invokeRequest.MethodId,
             SessionId = ___authenticationService.SessionId,
-            //StateIsChanged = ___stateIsChanged,
-            //StateData = ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             BinaryData = ITestApi_Test5_Serializer(response)
         }, ___ct);
     }
@@ -191,15 +185,12 @@ public class ServerConnection : WssServerConnection
 
         await foreach (var response in responses)
         {
-            //var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
             await Send_InvokeResponse_ToClientAsync(new InvokeResponseDto()
                 {
                     RequestId = ___invokeRequest.RequestId,
                     ServiceId = ___invokeRequest.ServiceId,
                     MethodId = ___invokeRequest.MethodId,
                     SessionId = ___authenticationService.SessionId,
-                    //StateIsChanged = ___stateIsChanged,
-                    //StateData = ___stateIsChanged ? ___authenticationService.GetStateData() : null,
                     BinaryData = ITestApi_Test3_Serializer(response)
                 }, ___ct);
         }
@@ -222,15 +213,12 @@ public class ServerConnection : WssServerConnection
 
         await foreach (var response in responses)
         {
-            //var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
             await Send_InvokeResponse_ToClientAsync(new InvokeResponseDto()
                 {
                     RequestId = ___invokeRequest.RequestId,
                     ServiceId = ___invokeRequest.ServiceId,
                     MethodId = ___invokeRequest.MethodId,
                     SessionId = ___authenticationService.SessionId,
-                    //StateIsChanged = ___stateIsChanged,
-                    //StateData = ___stateIsChanged ? ___authenticationService.GetStateData() : null,
                     BinaryData = ITestApi_Test6_Serializer(response)
                 }, ___ct);
         }
