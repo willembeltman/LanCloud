@@ -188,15 +188,19 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
+                                        var stateIsChanged = HttpClient.IsStateDataChanged();
                                         await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto()
-                                            {
-                                                RequestId = ___invokeRequest.RequestId,
-                                                ServiceId = ___invokeRequest.ServiceId,
-                                                MethodId = ___invokeRequest.MethodId,
-                                                SessionId = ___invokeRequest.SessionId,
-                                                BinaryData = IHostHub_ListDirectory_Serializer(response)
-                                            }, ___ct);
+                                            new InvokeResponseDto(
+                                                HttpClient.SessionId,
+                                                ___invokeRequest.RequestId,
+                                                ___invokeRequest.ServiceId,
+                                                ___invokeRequest.MethodId,
+                                                ___invokeRequest.UserId,
+                                                ___invokeRequest.SessionId,
+                                                stateIsChanged,
+                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
+                                                IHostHub_ListDirectory_Serializer(response)
+                                            ), ___ct);
                                     }
                                 }
                             }
@@ -213,15 +217,19 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
+                                        var stateIsChanged = HttpClient.IsStateDataChanged();
                                         await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto()
-                                            {
-                                                RequestId = ___invokeRequest.RequestId,
-                                                ServiceId = ___invokeRequest.ServiceId,
-                                                MethodId = ___invokeRequest.MethodId,
-                                                SessionId = ___invokeRequest.SessionId,
-                                                BinaryData = IHostHub_Get_Serializer(response)
-                                            }, ___ct);
+                                            new InvokeResponseDto(
+                                                HttpClient.SessionId,
+                                                ___invokeRequest.RequestId,
+                                                ___invokeRequest.ServiceId,
+                                                ___invokeRequest.MethodId,
+                                                ___invokeRequest.UserId,
+                                                ___invokeRequest.SessionId,
+                                                stateIsChanged,
+                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
+                                                IHostHub_Get_Serializer(response)
+                                            ), ___ct);
                                     }
                                 }
                             }
@@ -240,15 +248,19 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
+                                        var stateIsChanged = HttpClient.IsStateDataChanged();
                                         await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto()
-                                            {
-                                                RequestId = ___invokeRequest.RequestId,
-                                                ServiceId = ___invokeRequest.ServiceId,
-                                                MethodId = ___invokeRequest.MethodId,
-                                                SessionId = ___invokeRequest.SessionId,
-                                                BinaryData = IHostHub_ReadFile_Serializer(response)
-                                            }, ___ct);
+                                            new InvokeResponseDto(
+                                                HttpClient.SessionId,
+                                                ___invokeRequest.RequestId,
+                                                ___invokeRequest.ServiceId,
+                                                ___invokeRequest.MethodId,
+                                                ___invokeRequest.UserId,
+                                                ___invokeRequest.SessionId,
+                                                stateIsChanged,
+                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
+                                                IHostHub_ReadFile_Serializer(response)
+                                            ), ___ct);
                                     }
                                 }
                             }
@@ -263,15 +275,19 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
+                                        var stateIsChanged = HttpClient.IsStateDataChanged();
                                         await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto()
-                                            {
-                                                RequestId = ___invokeRequest.RequestId,
-                                                ServiceId = ___invokeRequest.ServiceId,
-                                                MethodId = ___invokeRequest.MethodId,
-                                                SessionId = ___invokeRequest.SessionId,
-                                                BinaryData = IHostHub_Test3_Serializer(response)
-                                            }, ___ct);
+                                            new InvokeResponseDto(
+                                                HttpClient.SessionId,
+                                                ___invokeRequest.RequestId,
+                                                ___invokeRequest.ServiceId,
+                                                ___invokeRequest.MethodId,
+                                                ___invokeRequest.UserId,
+                                                ___invokeRequest.SessionId,
+                                                stateIsChanged,
+                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
+                                                IHostHub_Test3_Serializer(response)
+                                            ), ___ct);
                                     }
                                 }
                             }
@@ -292,15 +308,19 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
+                                        var stateIsChanged = HttpClient.IsStateDataChanged();
                                         await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto()
-                                            {
-                                                RequestId = ___invokeRequest.RequestId,
-                                                ServiceId = ___invokeRequest.ServiceId,
-                                                MethodId = ___invokeRequest.MethodId,
-                                                SessionId = ___invokeRequest.SessionId,
-                                                BinaryData = IHostHub_Test6_Serializer(response)
-                                            }, ___ct);
+                                            new InvokeResponseDto(
+                                                HttpClient.SessionId,
+                                                ___invokeRequest.RequestId,
+                                                ___invokeRequest.ServiceId,
+                                                ___invokeRequest.MethodId,
+                                                ___invokeRequest.UserId,
+                                                ___invokeRequest.SessionId,
+                                                stateIsChanged,
+                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
+                                                IHostHub_Test6_Serializer(response)
+                                            ), ___ct);
                                     }
                                 }
                             }

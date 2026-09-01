@@ -44,15 +44,17 @@ public sealed class TestApi(
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_SendRequest_ToServerAsync(new SendRequestDto()
-        {
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new("Test1"),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = ITestApi_Test1_Serializer()
-        }, ___activityCts.Token);
+        await ___clientConnection.Send_SendRequest_ToServerAsync(
+            new SendRequestDto(
+                ___requestId,
+                ___ServiceId,
+                new("Test1"),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+                ITestApi_Test1_Serializer()
+            ), ___activityCts.Token);
     }
     public async Task Test4(
         string name,
@@ -73,15 +75,17 @@ public sealed class TestApi(
         await ___clientConnection.TryConnectAsync(___Cts.Token);
 
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_SendRequest_ToServerAsync(new SendRequestDto()
-        {
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new("Test4"),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = ITestApi_Test4_Serializer(name)
-        }, ___activityCts.Token);
+        await ___clientConnection.Send_SendRequest_ToServerAsync(
+            new SendRequestDto(
+                ___requestId,
+                ___ServiceId,
+                new("Test4"),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+                ITestApi_Test4_Serializer(name)
+            ), ___activityCts.Token);
     }
     public async Task<string> Test2()
     {
@@ -99,15 +103,17 @@ public sealed class TestApi(
 
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(new InvokeRequestDto()
-        {
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new("Test2"),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = ITestApi_Test2_Serializer()
-        }, ___activityCts.Token);
+        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
+            new InvokeRequestDto(
+                ___requestId,
+                ___ServiceId,
+                new("Test2"),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+                ITestApi_Test2_Serializer()
+            ), ___activityCts.Token);
 
         string ___result = default!;
         await foreach (var item in ___channel.Reader.ReadAllAsync())
@@ -143,15 +149,17 @@ public sealed class TestApi(
     ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, ITestApi_Test5_2_Serializer, ___activityCts.Token);
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(new InvokeRequestDto()
-        {
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new("Test5"),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = ITestApi_Test5_Serializer(name)
-        }, ___activityCts.Token);
+        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
+            new InvokeRequestDto(
+                ___requestId,
+                ___ServiceId,
+                new("Test5"),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
+                ITestApi_Test5_Serializer(name)
+            ), ___activityCts.Token);
 
         string ___result = default!;
         await foreach (var item in ___channel.Reader.ReadAllAsync())
@@ -183,15 +191,16 @@ public sealed class TestApi(
         
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(new InvokeRequestDto()
-        {
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new("Test3"),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = ITestApi_Test3_Serializer()
-        }, ___activityCts.Token);
+        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
+            new InvokeRequestDto(
+                ___requestId,
+                ___ServiceId,
+                new("Test3"),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,ITestApi_Test3_Serializer()
+            ), ___activityCts.Token);
 
         try
         {
@@ -230,15 +239,16 @@ public sealed class TestApi(
         ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, ITestApi_Test6_2_Serializer, ___activityCts.Token);
         await ___clientConnection.TryConnectAsync(___Cts.Token);
         var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(new InvokeRequestDto()
-        {
-            RequestId = ___requestId,
-            ServiceId = ___ServiceId,
-            MethodId = new("Test6"),
-            StateIsChanged = ___stateIsChanged,
-            StateData = ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-            BinaryData = ITestApi_Test6_Serializer(name)
-        }, ___activityCts.Token);
+        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
+            new InvokeRequestDto(
+                ___requestId,
+                ___ServiceId,
+                new("Test6"),
+                ___httpClient.UserId,
+                ___httpClient.SessionId,
+                ___stateIsChanged,
+                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,ITestApi_Test6_Serializer(name)
+            ), ___activityCts.Token);
 
         try
         {

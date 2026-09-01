@@ -43,7 +43,7 @@ public class HostHub(
 
         
         var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
-        await ___fabricClient.SendAsync(
+        var response = await ___fabricClient.SendAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
@@ -53,6 +53,11 @@ public class HostHub(
             ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ___cts.Token);
+
+        if (response.StateIsChanged)
+            await ___authenticationService.UpdateStateDataAsync(
+                response.StateData, 
+                ___cts.Token);
     }
     public async Task Test4(
         string name,
@@ -72,7 +77,7 @@ public class HostHub(
         ___fabricClient.RegisterAsyncEnumerableArgument(___requestId, 2, test2, IHostHub_Test4_2_Serializer, ___cts.Token);
         
         var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
-        await ___fabricClient.SendAsync(
+        var response = await ___fabricClient.SendAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
@@ -82,6 +87,11 @@ public class HostHub(
             ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ___cts.Token);
+
+        if (response.StateIsChanged)
+            await ___authenticationService.UpdateStateDataAsync(
+                response.StateData, 
+                ___cts.Token);
     }
     public async Task StartTest(
         CancellationToken ct)
@@ -96,7 +106,7 @@ public class HostHub(
 
         
         var ___stateIsChanged = ___authenticationService.IsStateDataChanged();
-        await ___fabricClient.SendAsync(
+        var response = await ___fabricClient.SendAsync(
             ___requestId,
             ___serviceId, 
             ___serviceMethodId, 
@@ -106,6 +116,11 @@ public class HostHub(
             ___stateIsChanged ? ___authenticationService.GetStateData() : null,
             ___payload, 
             ct);
+
+        if (response.StateIsChanged)
+            await ___authenticationService.UpdateStateDataAsync(
+                response.StateData, 
+                ct);
     }
     public async IAsyncEnumerable<ShareEntryDto> ListDirectory(
         string relativePath,
@@ -133,6 +148,11 @@ public class HostHub(
             ct);
         await foreach (var response in responses)
         {
+            if (response.StateIsChanged)
+                await ___authenticationService.UpdateStateDataAsync(
+                    response.StateData, 
+                    ct);
+
             if (ct.IsCancellationRequested)
                 yield break;
 
@@ -167,6 +187,11 @@ public class HostHub(
             ct);
         await foreach (var response in responses)
         {
+            if (response.StateIsChanged)
+                await ___authenticationService.UpdateStateDataAsync(
+                    response.StateData, 
+                    ct);
+
             if (ct.IsCancellationRequested)
                 yield break;
 
@@ -203,6 +228,11 @@ public class HostHub(
             ct);
         await foreach (var response in responses)
         {
+            if (response.StateIsChanged)
+                await ___authenticationService.UpdateStateDataAsync(
+                    response.StateData, 
+                    ct);
+
             if (ct.IsCancellationRequested)
                 yield break;
 
@@ -235,6 +265,11 @@ public class HostHub(
             ct);
         await foreach (var response in responses)
         {
+            if (response.StateIsChanged)
+                await ___authenticationService.UpdateStateDataAsync(
+                    response.StateData, 
+                    ct);
+
             if (ct.IsCancellationRequested)
                 yield break;
 
@@ -273,6 +308,11 @@ public class HostHub(
             ct);
         await foreach (var response in responses)
         {
+            if (response.StateIsChanged)
+                await ___authenticationService.UpdateStateDataAsync(
+                    response.StateData, 
+                    ct);
+
             if (ct.IsCancellationRequested)
                 yield break;
 
