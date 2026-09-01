@@ -1,5 +1,4 @@
 ﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server;
 using gAPI.Core.Server.Authentication;
@@ -60,6 +59,7 @@ public static class AddAutoWssServerExtension
         TimeProvider? dateTime = null)
     {
         services.AddSingleton(dateTime ?? TimeProvider.System);
+        services.AddSingleton(new AuthenticationOptions(true));
 
         services.AddHttpContextAccessor();
         if (frontendUrl != null)
@@ -77,20 +77,18 @@ public static class AddAutoWssServerExtension
                 });
             });
         }
-        services.AddScoped<ServerConnection>();
-        services.AddSingleton(sp => new FabricClient(
-            sp.GetRequiredService<SessionCache>(),
-            sp.GetRequiredService<ILoggerFactory>(), 
-            fabricConnectionString));
-
-        var connectionCollection = new WssServerConnectionCollection();
-        services.AddSingleton(connectionCollection);
-
-        var SseServiceSubscriptionCollection = new SseServiceSubscriptionCollection();
-        services.AddSingleton(SseServiceSubscriptionCollection);
 
         var sessionCache = new SessionCache();
         services.AddSingleton(sessionCache);
+
+        services.AddScoped<ServerConnection>();
+        services.AddSingleton(sp => new FabricClient(
+            sessionCache,
+            sp.GetRequiredService<ILoggerFactory>(), 
+            fabricConnectionString));
+
+        services.AddSingleton(new WssServerConnectionCollection());
+        services.AddSingleton(new ServiceSubscriptionCollection());
 
         if (fabricConnectionString == null)
         {

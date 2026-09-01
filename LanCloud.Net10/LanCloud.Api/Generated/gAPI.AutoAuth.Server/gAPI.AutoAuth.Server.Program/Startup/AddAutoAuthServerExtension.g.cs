@@ -58,53 +58,13 @@ public static class AddAutoAuthServerExtension
     {
         if (dbConnectionString == null)
         {
-            services.AddScoped<IServerAuthenticationService, NoDbServerAuthenticationService<AuthUser, StateDto>>();
-
-            // Todo State ellende
+            services.AddScoped<NoDbAuthenticationService>();
+            services.AddScoped<IAuthenticationService>(sp => sp.GetRequiredService<NoDbAuthenticationService>());
         }
         else
         {
-            services.AddScoped<ServerAuthenticationAccessor>();
             services.AddScoped<AuthenticationService>();
-            services.AddScoped<IAuthenticationService>(sp =>
-            {
-                var accessor = sp.GetRequiredService<ServerAuthenticationAccessor>();
-
-                if (accessor.Current is null)
-                    return sp.GetRequiredService<AuthenticationService>();
-
-                return (accessor.Current as IAuthenticationService)!;
-            });
-            services.AddScoped<IAuthenticationService<AuthUser, StateDto>>(sp =>
-            {
-                var accessor = sp.GetRequiredService<ServerAuthenticationAccessor>();
-
-                if (accessor.Current is null)
-                    return sp.GetRequiredService<AuthenticationService>();
-
-                return (accessor.Current as IAuthenticationService<AuthUser, StateDto>)!;
-            });
-            services.AddScoped<AuthenticationService<AuthUser, StateDto>>(sp =>
-            {
-                var accessor = sp.GetRequiredService<ServerAuthenticationAccessor>();
-
-                if (accessor.Current is null)
-                    return sp.GetRequiredService<AuthenticationService>();
-
-                return (accessor.Current as AuthenticationService<AuthUser, StateDto>)!;
-            });
-            services.AddScoped<IServerAuthenticationService>(sp =>
-            {
-                var accessor = sp.GetRequiredService<ServerAuthenticationAccessor>();
-
-                if (accessor.Current is null)
-                    return sp.GetRequiredService<AuthenticationService>();
-
-                return (accessor.Current as IServerAuthenticationService)!;
-            });
-
-            services.AddAuthentication("gAPI")
-                    .AddScheme<AuthenticationSchemeOptions, AuthenticationHandler>("gAPI", _ => { });
+            services.AddScoped<IAuthenticationService>(sp => sp.GetRequiredService<AuthenticationService>());
 
             services.AddScoped<IAuthenticationSecurity>(sp => 
                 new AuthenticationSecurity<AuthUser, StateDto>(
@@ -131,28 +91,14 @@ public static class AddAutoAuthServerExtension
             services.AddScoped<IUserTokenFactory<AuthUser>, UserTokenFactory<AuthUser>>();
             services.AddScoped<IAccountService, AccountService<AuthUser, StateDto>>();
 
-            // DATABASE SECTION
-
-            // ✅ Factory voor gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>
-            services.AddDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>(options =>
-            {
-                if (useMemoryDatabase)
-                {
-                    options.UseInMemoryDatabase("InMemoryDb");
-                }
-                else
-                {
-                    options.UseSqlServer(
-                        dbConnectionString,
-                        sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
-                }
-            });
-
-            // ✅ Normale gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>
-            services.AddScoped<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>(sp =>
-                sp.GetRequiredService<IDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>>()
-                  .CreateDbContext());
+            services.AddDatabase(useMemoryDatabase, dbConnectionString);
         }
+
+        services.AddAuthentication("gAPI")
+                .AddScheme<AuthenticationSchemeOptions, AuthenticationHandler>("gAPI", _ => { });
+
+        services.AddScoped<IAuthenticationService<AuthUser, StateDto>>(sp => sp.GetRequiredService<IAuthenticationService>());
+        services.AddScoped<IServerAuthenticationService>(sp => sp.GetRequiredService<IAuthenticationService>());
 
         // Register StateParser
         services.AddScoped<StateParser>();
@@ -163,4 +109,33 @@ public static class AddAutoAuthServerExtension
         services.AddScoped<IStateMapping<AuthUser, StateDto>, StateMapping>();
         return services;
     }
+
+    // Private voor geen verwarring.
+    private static IServiceCollection AddDatabase(
+        this IServiceCollection services,
+        bool useMemoryDatabase = false,
+        string? dbConnectionString = null)
+{
+
+    // ✅ Factory voor gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>
+    services.AddDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>(options =>
+    {
+        if (useMemoryDatabase)
+        {
+            options.UseInMemoryDatabase("InMemoryDb");
+        }
+        else
+        {
+            options.UseSqlServer(
+                dbConnectionString,
+                sql => sql.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null));
+        }
+    });
+
+    // ✅ Normale gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>
+    services.AddScoped<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>(sp =>
+        sp.GetRequiredService<IDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<AuthUser>>>()
+            .CreateDbContext());
+    return services;
+}
 }

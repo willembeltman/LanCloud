@@ -6,11 +6,15 @@ namespace LanCloud.Api.Controllers;
 
 [Route("test")]
 public class TestController(
+    IAuthenticationService authenticationService,
     IClientContext clientContext)
     : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
+
+        authenticationService.State.Index++;
+
         await clientContext.HostHub.ToAll.StartTest(ct);
 
         async IAsyncEnumerable<string> test()

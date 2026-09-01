@@ -40,10 +40,7 @@ public static class AccountServiceEndpointsExtensions
             [FromServices] IHostEnvironment ___hostEnvironment, 
             [FromServices] IAccountService accountService) =>
         {
-            var initializeResult = await Initialize(___sessionId, ___stateData, ___authentication, ___httpContext, ct);
-            if (initializeResult.Forbidden == true) return Results.Forbid();
             var response = await accountService.RegisterAsync(userName, email, password, passwordRepeat, ct);
-            await SetupResponse(___authentication, ___hostEnvironment, ___httpContext, ___dateTime, ct);
             return Results.Ok(response);
         })
         .AllowAnonymous()
@@ -64,10 +61,7 @@ public static class AccountServiceEndpointsExtensions
             [FromServices] IHostEnvironment ___hostEnvironment, 
             [FromServices] IAccountService accountService) =>
         {
-            var initializeResult = await Initialize(___sessionId, ___stateData, ___authentication, ___httpContext, ct);
-            if (initializeResult.Forbidden == true) return Results.Forbid();
             var response = await accountService.LoginAsync(email, password, ct);
-            await SetupResponse(___authentication, ___hostEnvironment, ___httpContext, ___dateTime, ct);
             return Results.Ok(response);
         })
         .AllowAnonymous()
@@ -86,64 +80,11 @@ public static class AccountServiceEndpointsExtensions
             [FromServices] IHostEnvironment ___hostEnvironment, 
             [FromServices] IAccountService accountService) =>
         {
-            var initializeResult = await Initialize(___sessionId, ___stateData, ___authentication, ___httpContext, ct);
-            if (initializeResult.Forbidden == true) return Results.Forbid();
-            if (initializeResult.Authenticated == false) return Results.Unauthorized();
             var response = await accountService.LogoffAsync(ct);
-            await SetupResponse(___authentication, ___hostEnvironment, ___httpContext, ___dateTime, ct);
             return Results.Ok(response);
         })
-        .AllowAnonymous()
+        .RequireAuthorization()
         .DisableAntiforgery();
         return app;
-    }
-
-    private static async Task<AuthenticationInitializeResult> Initialize(string ___sessionId, string? ___stateData, IServerAuthenticationService ___authentication, HttpContext ___httpContext, CancellationToken ___ct)
-    {
-        IPAddress? ___forwardedIp = ___httpContext.Connection.RemoteIpAddress;
-        if (___httpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var ___ipHeader))
-        {
-            var ___firstIp = ___ipHeader.ToString().Split(',')[0].Trim();
-            if (IPAddress.TryParse(___firstIp, out var ___parsedIp))
-                ___forwardedIp = ___parsedIp;
-        }
-
-        var ___path = ___httpContext.Request.Path;
-        var ___queryString = ___httpContext.Request.QueryString;
-        if (___httpContext.Request.Headers.TryGetValue("X-Forwarded-Uri", out var ___uriHeader))
-        {
-            if (Uri.TryCreate(new Uri("http://dummy"), ___uriHeader.ToString(), out var ___uri))
-            {
-                ___path = ___uri.AbsolutePath;
-                ___queryString = new QueryString(___uri.Query);
-            }
-        }
-
-        return await ___authentication.InitializeAsync(
-            ___path,
-            ___queryString,
-            ___forwardedIp,
-            ___httpContext.Request.Cookies["AuthenticationToken"],
-            new StringValues(___sessionId),
-            new StringValues(___stateData),
-            true,
-            ___ct);
-    }
-    private static async Task SetupResponse(IServerAuthenticationService ___authentication, IHostEnvironment ___hostEnvironment, HttpContext ___httpContext, TimeProvider ___dateTime, CancellationToken ___ct)
-    {
-        ___httpContext.Response.Headers["X-SessionId"] = ___authentication.SessionId.ToStringValues();
-        ___httpContext.Response.Headers["X-StateData"] = ___authentication.GetStateData();
-        if (___authentication.IsCookieDataChanged() && ___authentication.GetCookieData() != null)
-        {
-            ___httpContext.Response.Cookies.Append(
-                "AuthenticationToken",
-                ___authentication.GetCookieData(),
-                new CookieOptions
-                {
-                    SameSite = ___hostEnvironment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,
-                    Secure = !___hostEnvironment.IsDevelopment(),
-                    Expires = ___dateTime.GetUtcNow().AddDays(7)
-                });
-        }
     }
 }

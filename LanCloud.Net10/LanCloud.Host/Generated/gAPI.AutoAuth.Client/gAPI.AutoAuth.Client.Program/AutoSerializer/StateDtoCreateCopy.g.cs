@@ -14,6 +14,7 @@ public static class StateDtoCreateCopy
         var copy = new StateDto();
         copy.User = value.User == null ? null : value.User.CreateCopy();
         copy.ForceReconnect = value.ForceReconnect;
+        copy.Index = value.Index;
         return copy;
     }
 }

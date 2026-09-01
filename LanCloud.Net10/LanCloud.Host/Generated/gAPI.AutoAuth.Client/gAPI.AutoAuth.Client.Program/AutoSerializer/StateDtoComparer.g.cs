@@ -22,6 +22,7 @@ public static class StateDtoComparer
         }
 
         if (value.ForceReconnect != otherValue.ForceReconnect) return true;
+        if (value.Index != otherValue.Index) return true;
         return false;
     }
 }

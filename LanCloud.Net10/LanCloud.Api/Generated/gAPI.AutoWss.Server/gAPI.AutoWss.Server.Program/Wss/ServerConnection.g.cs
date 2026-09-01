@@ -30,12 +30,12 @@ public class ServerConnection : WssServerConnection
 
     public ServerConnection(
         IServerAuthenticationService authenticationService,
-        SseServiceSubscriptionCollection SseServiceSubscriptionCollection,
+        ServiceSubscriptionCollection ServiceSubscriptionCollection,
         WssServerConnectionCollection connections,
         FabricClient fabricClient,
         ITestApi testApi,
         ILoggerFactory loggerFactory) 
-        : base(authenticationService, SseServiceSubscriptionCollection, connections, fabricClient, loggerFactory)
+        : base(authenticationService, ServiceSubscriptionCollection, connections, fabricClient, loggerFactory)
     {
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;

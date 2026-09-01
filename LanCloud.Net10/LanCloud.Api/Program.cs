@@ -15,6 +15,7 @@ builder.Services.AddSingleton<EntryCollection>();
 
 var app = builder.Build();
 app.MapAutoWssServer();
+app.MapAutoAuth();
 app.MapControllers();
 app.UseHttpsRedirection();
 app.Run();

@@ -13,21 +13,15 @@ using System.Security.Claims;
 #nullable enable
 namespace gAPI.Generated;
 
-public class AuthenticationService(
-    IAuthenticationStateFactory<AuthUser> authenticationStateFactory,
-    IUserTokenFactory<AuthUser> userTokenFactory,
+public class NoDbAuthenticationService(
     IStateMapping<AuthUser, StateDto> stateMapping,
     IStateParser<StateDto> stateSerializer,
-    IHostEnvironment hostEnvironment,
     FabricClient fabricClient,
     AuthenticationOptions authenticationOptions,
     IEnumerable<IAuthenticationCheck<AuthUser, StateDto>> authenticationChecks) 
-    : AuthenticationService<AuthUser, StateDto>(
-        authenticationStateFactory,
-        userTokenFactory,
+    : NoDbServerAuthenticationService<AuthUser, StateDto>(
         stateMapping,
         stateSerializer,
-        hostEnvironment,
         fabricClient,
         authenticationOptions,
         authenticationChecks)

@@ -12,6 +12,7 @@ namespace LanCloud.Host.Services;
 public class HostHub(
     IClientConnection clientConnection,
     ITestApi testApi,
+    IAuthenticatedHttpClient authenticatedHttpClient,
     HostConfig config)
     : IHostedService
     , IHostHub
@@ -120,6 +121,9 @@ public class HostHub(
 
     public async Task StartTest(CancellationToken ct)
     {
+        var state = await authenticatedHttpClient.GetStateAsync();
+        state.Index++;
+
         // Dit draait op de client
         async IAsyncEnumerable<string> test()
         {

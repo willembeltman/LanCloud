@@ -1,11 +1,7 @@
 ﻿using gAPI.Core.Dtos;
-using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Server;
 using gAPI.Core.Server.Authentication;
-using gAPI.Core.Server.Collections;
-using gAPI.Core.Server.Config;
-using gAPI.Core.Server.Fabric;
 using LanCloud.Api.Services;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Interfaces;
@@ -37,11 +33,14 @@ public static class MapAutoWssServerExtension
 
         app.UseCors("AllowSpecificOrigin");
         app.UseRouting();
+        
+        // State endpoint
+        app.MapGet("/__state", ([FromHeader(Name = "X-SessionId")] string sessionId) => { }).AllowAnonymous();
 
-        app.UseWebSockets();
+        // Wss endpoint
         app.MapWssEndpoint();
-        app.MapStateEndpoint();
 
+        // Minimal api endpoints
 
         app.MapAccountServiceEndpoints();
 
