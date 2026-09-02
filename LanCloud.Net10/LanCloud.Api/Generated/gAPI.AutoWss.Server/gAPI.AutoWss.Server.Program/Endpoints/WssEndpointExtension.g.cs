@@ -31,7 +31,7 @@ public static class WssEndpointExtension
         app.MapGet("/fabricr", async (
             [FromQuery] string sessionId,
             [FromServices] FabricClient fabricClient,
-            [FromServices] ServerConnection hub,
+            [FromServices] ServerConnection serverConnection,
             [FromServices] ILoggerFactory loggerFactory,
             HttpContext httpContext,
             CancellationToken ct) =>
@@ -55,7 +55,7 @@ public static class WssEndpointExtension
                 }
 
                 using var socket = await httpContext.WebSockets.AcceptWebSocketAsync();
-                await hub.RunAsync(
+                await serverConnection.RunAsync(
                     socket,
                     httpContext.Request.Path,
                     httpContext.Request.QueryString,

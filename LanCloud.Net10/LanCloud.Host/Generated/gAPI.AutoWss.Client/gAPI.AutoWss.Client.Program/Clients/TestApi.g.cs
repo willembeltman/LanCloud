@@ -22,7 +22,7 @@ namespace gAPI.Generated;
 
 public sealed class TestApi(
     WssClientConnection ___clientConnection,
-    IWssLoggerFactory ___loggerFactory,
+    IClientLoggerFactory ___loggerFactory,
     IClientAuthenticatedHttpClient ___httpClient)
     : ITestApi
     , IDisposable

@@ -27,7 +27,7 @@ public class ClientConnection
         string wssBackendUrl)
         : base(httpClient, wssBackendUrl)
     {
-        ___Logger = ((IWssLoggerFactory)this).CreateLogger<ClientConnection>();
+        ___Logger = ((IClientLoggerFactory)this).CreateLogger<ClientConnection>();
         TestApi = new TestApi(this, this, httpClient);
     }
 
