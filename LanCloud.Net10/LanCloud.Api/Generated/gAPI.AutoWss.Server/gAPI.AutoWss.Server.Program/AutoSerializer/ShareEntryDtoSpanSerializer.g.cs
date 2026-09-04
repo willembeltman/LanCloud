@@ -31,7 +31,7 @@ public static class ShareEntryDtoSpanSerializer
         DateTimeSerializers.Write(ref ___span, ref ___offset, value.LastModified);
         PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.SessionId != null);
         if (value.SessionId != null)
-            SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId.Value);
+            SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId);
     }
 
     [IsSpanSerializerRead]
@@ -67,7 +67,7 @@ public static class ShareEntryDtoSpanSerializer
         DateTimeSerializers.Length(ref ___offset, value.LastModified);
         PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.SessionId != null);
         if (value.SessionId != null)
-            SessionIdSpanSerializer.Length(ref ___offset, value.SessionId.Value);
+            SessionIdSpanSerializer.Length(ref ___offset, value.SessionId);
         return ___offset;
     }
 }

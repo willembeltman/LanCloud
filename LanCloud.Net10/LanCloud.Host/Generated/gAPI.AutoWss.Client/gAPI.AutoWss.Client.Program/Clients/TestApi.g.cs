@@ -1,6 +1,5 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.Client.Interfaces;
-using gAPI.Core.Client.Wss;
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
@@ -21,7 +20,7 @@ using System.Threading.Tasks;
 namespace gAPI.Generated;
 
 public sealed class TestApi(
-    WssClientConnection ___clientConnection,
+    IWssClientConnection ___clientConnection,
     IClientLoggerFactory ___loggerFactory,
     IClientAuthenticatedHttpClient ___httpClient)
     : ITestApi
@@ -30,255 +29,306 @@ public sealed class TestApi(
     readonly CancellationTokenSource ___Cts = new();
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<TestApi>();
     readonly ServiceId ___ServiceId = new("ITestApi");
+    
     public async Task Test1()
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-        {
             ___Logger.LogTrace("Test1()");
-        }
-
+        
         var ___activityCts = ___Cts;
 
-        var ___requestId = RequestId.New();
-
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("Test1"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
         await ___clientConnection.TryConnectAsync(___Cts.Token);
-
-        var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_SendRequest_ToServerAsync(
-            new SendRequestDto(
-                ___requestId,
-                ___ServiceId,
-                new("Test1"),
-                ___httpClient.UserId,
-                ___httpClient.SessionId,
-                ___stateIsChanged,
-                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-                ITestApi_Test1_Serializer()
-            ), ___activityCts.Token);
-    }
-    public async Task Test4(
-        string name,
-        IAsyncEnumerable<string> test,
-        IAsyncEnumerable<string> test2)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
+        
         {
-            ___Logger.LogTrace("Test4({name}, {test}, {test2})", name, test, test2);
+            await ___clientConnection.Send_SendRequest_ToServerAsync(
+                ___routing,
+                ___Test1_Serializer(),
+                ___activityCts.Token);
         }
-
-        var ___activityCts = ___Cts;
-
-        var ___requestId = RequestId.New();
-        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 1, test, ITestApi_Test4_1_Serializer, ___activityCts.Token);
-        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, ITestApi_Test4_2_Serializer, ___activityCts.Token);
-
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
-
-        var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_SendRequest_ToServerAsync(
-            new SendRequestDto(
-                ___requestId,
-                ___ServiceId,
-                new("Test4"),
-                ___httpClient.UserId,
-                ___httpClient.SessionId,
-                ___stateIsChanged,
-                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-                ITestApi_Test4_Serializer(name)
-            ), ___activityCts.Token);
     }
+    private byte[] ___Test1_Serializer()
+    {
+        return [];
+    }
+
     public async Task<string> Test2()
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-        {
             ___Logger.LogTrace("Test2()");
-        }
-
-        var ___requestId = RequestId.New();
-
-        var ___channel = Channel.CreateUnbounded<InvokeResponseDto>();
-        ___clientConnection.RegisterInvokeRequest(___requestId, ___channel);
-
+        
         var ___activityCts = ___Cts;
 
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("Test2"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        
         await ___clientConnection.TryConnectAsync(___Cts.Token);
-        var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
-            new InvokeRequestDto(
-                ___requestId,
-                ___ServiceId,
-                new("Test2"),
-                ___httpClient.UserId,
-                ___httpClient.SessionId,
-                ___stateIsChanged,
-                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-                ITestApi_Test2_Serializer()
-            ), ___activityCts.Token);
 
         string ___result = default!;
-        await foreach (var item in ___channel.Reader.ReadAllAsync())
+        
         {
-            var ___offset = 0;
-            var ___span = new Span<byte>(item.BinaryData);
-            ___result = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-        }
+            var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
+                ___routing,
+                ___Test2_Serializer(),
+                ___activityCts.Token);
 
-        ___activityCts.Cancel();
-        ___clientConnection.UnregisterInvokeRequest(___requestId);
+            await foreach (var item in ___responses)
+            {
+                var ___offset = 0;
+                var ___span = new Span<byte>(item);
+                ___result = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+            }
+        }
 
         return ___result;
     }
-    public async Task<string> Test5(
-        string name,
-        IAsyncEnumerable<string> test,
-        IAsyncEnumerable<string> test2)
+    private byte[] ___Test2_Serializer()
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-        {
-            ___Logger.LogTrace("Test5({name}, {test}, {test2})", name, test, test2);
-        }
-
-        var ___requestId = RequestId.New();
-
-        var ___channel = Channel.CreateUnbounded<InvokeResponseDto>();
-        ___clientConnection.RegisterInvokeRequest(___requestId, ___channel);
-
-        var ___activityCts = ___Cts;
-
-    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 1, test, ITestApi_Test5_1_Serializer, ___activityCts.Token);
-    ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, ITestApi_Test5_2_Serializer, ___activityCts.Token);
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
-        var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
-            new InvokeRequestDto(
-                ___requestId,
-                ___ServiceId,
-                new("Test5"),
-                ___httpClient.UserId,
-                ___httpClient.SessionId,
-                ___stateIsChanged,
-                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,
-                ITestApi_Test5_Serializer(name)
-            ), ___activityCts.Token);
-
-        string ___result = default!;
-        await foreach (var item in ___channel.Reader.ReadAllAsync())
-        {
-            var ___offset = 0;
-            var ___span = new Span<byte>(item.BinaryData);
-            ___result = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-        }
-
-        ___activityCts.Cancel();
-        ___clientConnection.UnregisterInvokeRequest(___requestId);
-
-        return ___result;
+        return [];
     }
-    public async IAsyncEnumerable<string> Test3(
-        [EnumeratorCancellation] CancellationToken ct = default)
+
+    public async IAsyncEnumerable<string> Test3([EnumeratorCancellation] CancellationToken ct = default)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-        {
             ___Logger.LogTrace("Test3()");
-        }
 
         var ___requestId = RequestId.New();
-
-        var ___channel = Channel.CreateUnbounded<InvokeResponseDto>();
-        ___clientConnection.RegisterInvokeRequest(___requestId, ___channel);
+        var ___routing = new RoutingDto(
+            ___requestId,
+            ___ServiceId,
+            new("Test3"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
         
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
-        
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
-        var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
-            new InvokeRequestDto(
-                ___requestId,
-                ___ServiceId,
-                new("Test3"),
-                ___httpClient.UserId,
-                ___httpClient.SessionId,
-                ___stateIsChanged,
-                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,ITestApi_Test3_Serializer()
-            ), ___activityCts.Token);
 
-        try
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        
+        
         {
-            await foreach (var item in ___channel.Reader.ReadAllAsync())
+            var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
+                ___routing,
+                ___Test3_Serializer(),
+                ___activityCts.Token);
+
+            await foreach (var item in ___responses)
             {
                 var ___offset = 0;
-                var ___span = new Span<byte>(item.BinaryData);
+                var ___span = new Span<byte>(item);
                 yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
             }
         }
-        finally
-        {
-            ___activityCts.Cancel();
-            ___clientConnection.UnregisterInvokeRequest(___requestId);
-        }
     }
-    public async IAsyncEnumerable<string> Test6(
-        string name,
-        IAsyncEnumerable<string> test,
-        IAsyncEnumerable<string> test2,
-        [EnumeratorCancellation] CancellationToken ct = default)
+    private byte[] ___Test3_Serializer()
+    {
+        return [];
+    }
+
+    public async Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-        {
-            ___Logger.LogTrace("Test6({name}, {test}, {test2})", name, test, test2);
-        }
-
-        var ___requestId = RequestId.New();
-
-        var ___channel = Channel.CreateUnbounded<InvokeResponseDto>();
-        ___clientConnection.RegisterInvokeRequest(___requestId, ___channel);
+            ___Logger.LogTrace("Test4({name}, {test}, {test2})", name, test, test2);
         
-        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+        var ___activityCts = ___Cts;
+
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("Test4"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
         
-        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 1, test, ITestApi_Test6_1_Serializer, ___activityCts.Token);
-        ___clientConnection.RegisterAsyncEnumerableArgument(___requestId, 2, test2, ITestApi_Test6_2_Serializer, ___activityCts.Token);
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 1, test, ___Test4_1_Serializer, ___activityCts.Token);
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 2, test2, ___Test4_2_Serializer, ___activityCts.Token);
         await ___clientConnection.TryConnectAsync(___Cts.Token);
-        var ___stateIsChanged = ___httpClient.IsStateDataChanged();
-        await ___clientConnection.Send_InvokeRequest_ToServerAsync(
-            new InvokeRequestDto(
-                ___requestId,
-                ___ServiceId,
-                new("Test6"),
-                ___httpClient.UserId,
-                ___httpClient.SessionId,
-                ___stateIsChanged,
-                ___stateIsChanged ? await ___httpClient.GetStateDataAsync(false, ___activityCts.Token) : null,ITestApi_Test6_Serializer(name)
-            ), ___activityCts.Token);
-
+        
         try
         {
-            await foreach (var item in ___channel.Reader.ReadAllAsync())
+            await ___clientConnection.Send_SendRequest_ToServerAsync(
+                ___routing,
+                ___Test4_Serializer(name),
+                ___activityCts.Token);
+        }
+        finally
+        {
+            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
+        }
+    }
+    private byte[] ___Test4_Serializer(string name)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    private byte[] ___Test4_1_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+    private byte[] ___Test4_2_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public async Task<string> Test5(string name,IAsyncEnumerable<string> test,IAsyncEnumerable<string> test2)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test5({name}, {test}, {test2})", name, test, test2);
+        
+        var ___activityCts = ___Cts;
+
+        var ___routing = new RoutingDto(
+            RequestId.New(),
+            ___ServiceId,
+            new("Test5"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 1, test, ___Test5_1_Serializer, ___activityCts.Token);
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 2, test2, ___Test5_2_Serializer, ___activityCts.Token);
+        
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+
+        string ___result = default!;
+        
+        try
+        {
+            var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
+                ___routing,
+                ___Test5_Serializer(name),
+                ___activityCts.Token);
+
+            await foreach (var item in ___responses)
             {
                 var ___offset = 0;
-                var ___span = new Span<byte>(item.BinaryData);
+                var ___span = new Span<byte>(item);
+                ___result = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+            }
+        }
+        finally
+        {
+            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
+        }
+
+        return ___result;
+    }
+    private byte[] ___Test5_Serializer(string name)
+    {
+        var ___offset = 0;
+        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        var ___length = ___offset;
+        ___offset = 0;
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
+        if (___length != ___offset)
+            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
+        return ___buffer;
+    }
+    private byte[] ___Test5_1_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+    private byte[] ___Test5_2_Serializer(string value)
+    {
+        var ___offset = 0;
+        
+        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
+        var ___buffer = new byte[___offset];
+        var ___span = new Span<byte>(___buffer);
+        ___offset = 0;
+        
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
+        return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public async IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test6({name}, {test}, {test2})", name, test, test2);
+
+        var ___requestId = RequestId.New();
+        var ___routing = new RoutingDto(
+            ___requestId,
+            ___ServiceId,
+            new("Test6"),
+            ___httpClient.UserId,
+            ___httpClient.SessionId
+        );
+        
+        using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
+
+        await ___clientConnection.TryConnectAsync(___Cts.Token);
+        
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 1, test, ___Test6_1_Serializer, ___activityCts.Token);
+        ___clientConnection.RegisterAsyncEnumerableArgument(___routing, 2, test2, ___Test6_2_Serializer, ___activityCts.Token);
+        
+        try
+        {
+            var ___responses = ___clientConnection.Send_InvokeRequest_ToServerAsync(
+                ___routing,
+                ___Test6_Serializer(name),
+                ___activityCts.Token);
+
+            await foreach (var item in ___responses)
+            {
+                var ___offset = 0;
+                var ___span = new Span<byte>(item);
                 yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
             }
         }
         finally
         {
-            ___activityCts.Cancel();
-            ___clientConnection.UnregisterInvokeRequest(___requestId);
+            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
         }
     }
-    public byte[] ITestApi_Test1_Serializer()
-    {
-        return [];
-    }
-    public byte[] ITestApi_Test2_Serializer()
-    {
-        return [];
-    }
-    public byte[] ITestApi_Test3_Serializer()
-    {
-        return [];
-    }
-    public byte[] ITestApi_Test4_Serializer(
-        string name)
+    private byte[] ___Test6_Serializer(string name)
     {
         var ___offset = 0;
         PrimitivesSpanSerializer.LengthString(ref ___offset, name);
@@ -291,35 +341,7 @@ public sealed class TestApi(
             throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
         return ___buffer;
     }
-    public byte[] ITestApi_Test5_Serializer(
-        string name)
-    {
-        var ___offset = 0;
-        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        var ___length = ___offset;
-        ___offset = 0;
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
-        if (___length != ___offset)
-            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
-        return ___buffer;
-    }
-    public byte[] ITestApi_Test6_Serializer(
-        string name)
-    {
-        var ___offset = 0;
-        PrimitivesSpanSerializer.LengthString(ref ___offset, name);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        var ___length = ___offset;
-        ___offset = 0;
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, name);
-        if (___length != ___offset)
-            throw new Exception($"Binary length doesn't match: {___length} != {___offset}");
-        return ___buffer;
-    }
-    public byte[] ITestApi_Test4_1_Serializer(string value)
+    private byte[] ___Test6_1_Serializer(string value)
     {
         var ___offset = 0;
         
@@ -331,7 +353,7 @@ public sealed class TestApi(
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-    public byte[] ITestApi_Test4_2_Serializer(string value)
+    private byte[] ___Test6_2_Serializer(string value)
     {
         var ___offset = 0;
         
@@ -343,54 +365,8 @@ public sealed class TestApi(
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-    public byte[] ITestApi_Test5_1_Serializer(string value)
-    {
-        var ___offset = 0;
-        
-        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        ___offset = 0;
-        
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
-    public byte[] ITestApi_Test5_2_Serializer(string value)
-    {
-        var ___offset = 0;
-        
-        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        ___offset = 0;
-        
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
-    public byte[] ITestApi_Test6_1_Serializer(string value)
-    {
-        var ___offset = 0;
-        
-        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        ___offset = 0;
-        
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
-    public byte[] ITestApi_Test6_2_Serializer(string value)
-    {
-        var ___offset = 0;
-        
-        PrimitivesSpanSerializer.LengthString(ref ___offset, value);
-        var ___buffer = new byte[___offset];
-        var ___span = new Span<byte>(___buffer);
-        ___offset = 0;
-        
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
-        return ___span.Slice(0, ___offset).ToArray();
-    }
+    
+    
     public void Dispose()
     {
         ___Cts.Cancel();
@@ -398,5 +374,4 @@ public sealed class TestApi(
 
         GC.SuppressFinalize(this);
     }
-
 }

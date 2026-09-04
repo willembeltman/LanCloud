@@ -87,7 +87,7 @@ public static class AddAutoWssServerExtension
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
-        services.AddSingleton(new WssServerConnectionCollection());
+        services.AddSingleton(new ServerConnectionCollection());
         services.AddSingleton(new ServiceSubscriptionCollection());
 
         if (fabricConnectionString == null)

@@ -34,8 +34,10 @@ public class ClientConnection
     readonly ILogger ___Logger;
     readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
     
+    
     public TestApi TestApi { get; }
     ITestApi IClientConnection.TestApi => TestApi;
+    
 
     readonly List<IHostHub> HostHubs = [];
     readonly SemaphoreSlim HostHubsLock = new(1, 1);
@@ -52,7 +54,7 @@ public class ClientConnection
             HostHubsLock.Release();
         }
     }
-
+    
     public async Task SubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
         await TryConnectAsync(___ct);
@@ -80,6 +82,7 @@ public class ClientConnection
             }, ___ct);
         }
     }
+    
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
         if (!Initialized)
@@ -108,18 +111,18 @@ public class ClientConnection
             }, ___ct);
         }
     }
-
+    
     protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Send_SendRequest_ToServiceAsync({___sendRequest})", ___sendRequest);
-
-        switch (___sendRequest.ServiceId.Value)
+        
+        switch (___sendRequest.Routing.ServiceId.Value)
         {
             case "IHostHub":
                 {
                     var clients = await GetHostHubsSnapshotAsync();
-                    switch (___sendRequest.MethodId.Value)
+                    switch (___sendRequest.Routing.MethodId.Value)
                     {
                         case "Test1":
                             {
@@ -132,12 +135,13 @@ public class ClientConnection
                                 return;
                             }
                         case "Test4":
+                            try
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.RequestId, 1, IHostHub_Test4_1_Deserializer);
-                                var test2 = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.RequestId, 2, IHostHub_Test4_2_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 1, IHostHub_Test4_1_Deserializer);
+                                var test2 = RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 2, IHostHub_Test4_2_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     await client.Test4(
@@ -146,6 +150,10 @@ public class ClientConnection
                                         test2);
                                 }
                                 return;
+                            }
+                            finally
+                            {
+                                UnRegisterRemoteAsyncEnumerableArgument(___sendRequest.Routing);
                             }
                         case "StartTest":
                             {
@@ -162,19 +170,22 @@ public class ClientConnection
                     break;
                 }
         }
-        throw new Exception($"Service \"{___sendRequest.ServiceId.Value}\" / Method \"{___sendRequest.MethodId.Value}\" not found");
+
+        throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
-    protected override async Task Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationToken ___ct)
+    
+    protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Send_InvokeRequest_ToServiceAsync({___invokeRequest})", ___invokeRequest);
 
-        switch (___invokeRequest.ServiceId.Value)
+
+        switch (___invokeRequest.Routing.ServiceId.Value)
         {
             case "IHostHub":
                 {
                     var clients = await GetHostHubsSnapshotAsync();
-                    switch (___invokeRequest.MethodId.Value)
+                    switch (___invokeRequest.Routing.MethodId.Value)
                     {
                         case "ListDirectory":
                             {
@@ -188,23 +199,11 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        var stateIsChanged = HttpClient.IsStateDataChanged();
-                                        await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto(
-                                                HttpClient.SessionId,
-                                                ___invokeRequest.RequestId,
-                                                ___invokeRequest.ServiceId,
-                                                ___invokeRequest.MethodId,
-                                                ___invokeRequest.UserId,
-                                                ___invokeRequest.SessionId,
-                                                stateIsChanged,
-                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
-                                                IHostHub_ListDirectory_Serializer(response)
-                                            ), ___ct);
+                                        yield return IHostHub_ListDirectory_Serializer(response);
                                     }
                                 }
                             }
-                            return;
+                            yield break;
                         case "Get":
                             {
                                 var ___offset = 0;
@@ -217,23 +216,11 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        var stateIsChanged = HttpClient.IsStateDataChanged();
-                                        await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto(
-                                                HttpClient.SessionId,
-                                                ___invokeRequest.RequestId,
-                                                ___invokeRequest.ServiceId,
-                                                ___invokeRequest.MethodId,
-                                                ___invokeRequest.UserId,
-                                                ___invokeRequest.SessionId,
-                                                stateIsChanged,
-                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
-                                                IHostHub_Get_Serializer(response)
-                                            ), ___ct);
+                                        yield return IHostHub_Get_Serializer(response);
                                     }
                                 }
                             }
-                            return;
+                            yield break;
                         case "ReadFile":
                             {
                                 var ___offset = 0;
@@ -248,23 +235,11 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        var stateIsChanged = HttpClient.IsStateDataChanged();
-                                        await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto(
-                                                HttpClient.SessionId,
-                                                ___invokeRequest.RequestId,
-                                                ___invokeRequest.ServiceId,
-                                                ___invokeRequest.MethodId,
-                                                ___invokeRequest.UserId,
-                                                ___invokeRequest.SessionId,
-                                                stateIsChanged,
-                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
-                                                IHostHub_ReadFile_Serializer(response)
-                                            ), ___ct);
+                                        yield return IHostHub_ReadFile_Serializer(response);
                                     }
                                 }
                             }
-                            return;
+                            yield break;
                         case "Test3":
                             {
                                 var ___offset = 0;
@@ -275,30 +250,19 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        var stateIsChanged = HttpClient.IsStateDataChanged();
-                                        await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto(
-                                                HttpClient.SessionId,
-                                                ___invokeRequest.RequestId,
-                                                ___invokeRequest.ServiceId,
-                                                ___invokeRequest.MethodId,
-                                                ___invokeRequest.UserId,
-                                                ___invokeRequest.SessionId,
-                                                stateIsChanged,
-                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
-                                                IHostHub_Test3_Serializer(response)
-                                            ), ___ct);
+                                        yield return IHostHub_Test3_Serializer(response);
                                     }
                                 }
                             }
-                            return;
+                            yield break;
                         case "Test6":
+                            try
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 var name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.RequestId, 1, IHostHub_Test6_1_Deserializer);
-                                var test2 = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.RequestId, 2, IHostHub_Test6_2_Deserializer);
+                                var test = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 1, IHostHub_Test6_1_Deserializer);
+                                var test2 = RegisterRemoteAsyncEnumerableArgument<string>(___invokeRequest.Routing, 2, IHostHub_Test6_2_Deserializer);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.Test6(
@@ -308,30 +272,23 @@ public class ClientConnection
                                         ___ct);
                                     await foreach (var response in responses)
                                     {
-                                        var stateIsChanged = HttpClient.IsStateDataChanged();
-                                        await Send_InvokeResponse_ToServerAsync(
-                                            new InvokeResponseDto(
-                                                HttpClient.SessionId,
-                                                ___invokeRequest.RequestId,
-                                                ___invokeRequest.ServiceId,
-                                                ___invokeRequest.MethodId,
-                                                ___invokeRequest.UserId,
-                                                ___invokeRequest.SessionId,
-                                                stateIsChanged,
-                                                stateIsChanged ? await HttpClient.GetStateDataAsync() : null,
-                                                IHostHub_Test6_Serializer(response)
-                                            ), ___ct);
+                                        yield return IHostHub_Test6_Serializer(response);
                                     }
                                 }
                             }
-                            return;
+                            finally
+                            {
+                                UnRegisterRemoteAsyncEnumerableArgument(___invokeRequest.Routing);
+                            }
+                            yield break;
                     }
                     break;
                 }
         }
-        throw new Exception($"Service \"{___invokeRequest.ServiceId.Value}\" / Method \"{___invokeRequest.MethodId.Value}\" not found");
-    }
 
+        throw new Exception($"Service \"{___invokeRequest.Routing.ServiceId.Value}\" / Method \"{___invokeRequest.Routing.MethodId.Value}\" not found");
+    }
+    
 
     public byte[] IHostHub_ListDirectory_Serializer(ShareEntryDto value)
     {
@@ -372,7 +329,7 @@ public class ClientConnection
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-
+    
 
     public string IHostHub_Test4_1_Deserializer(byte[] value)
     {
@@ -401,4 +358,5 @@ public class ClientConnection
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+    
 }

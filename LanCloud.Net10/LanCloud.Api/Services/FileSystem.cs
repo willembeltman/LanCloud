@@ -176,7 +176,7 @@ public class FileSystem(
             }
 
             return clientContext.HostHub
-                .ToSession(entry.ShareEntryDto.SessionId.Value)
+                .ToSession(entry.ShareEntryDto.SessionId)
                 .ReadFile(
                     entry.ReadPath,
                     startOffset,
