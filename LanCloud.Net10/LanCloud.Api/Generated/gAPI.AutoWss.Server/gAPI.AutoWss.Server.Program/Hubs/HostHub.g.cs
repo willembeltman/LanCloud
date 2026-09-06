@@ -31,7 +31,7 @@ public class HostHub(
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<HostHub>();
     readonly ServiceId ___ServiceId = new("IHostHub");
 
-    public async IAsyncEnumerable<ShareEntryDto> ListDirectory(string relativePath, [EnumeratorCancellation] CancellationToken ct)
+    public IAsyncEnumerable<ShareEntryDto> ListDirectory(string relativePath, [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("ListDirectory({relativePath})", relativePath);
@@ -45,26 +45,32 @@ public class HostHub(
         );
         var ___payload = ___ListDirectory_Serializer(
             relativePath);
-
-
-        var responses = ___fabricClient.InvokeAsync(
-            ___authenticationService,
-            ___routing, 
-            ___payload, 
-            ct);
-        await foreach (var response in responses)
+        
+        
         {
-            if (response.StateIsChanged)
-                await ___authenticationService.UpdateStateDataAsync(
-                    response.StateData, 
-                    ct);
+            var ___responses = ___fabricClient.InvokeAsync(
+                ___authenticationService,
+                ___routing, 
+                ___payload, 
+                ct);
+            return ListDirectory_Enumerator(___routing, ___responses, ct);
+        }
+    }
+    public async IAsyncEnumerable<ShareEntryDto> ListDirectory_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("ListDirectory_Enumerator({responses})", responses);
+        
+        {
+            await foreach (var response in responses)
+            {
+                if (___ct.IsCancellationRequested)
+                    yield break;
 
-            if (ct.IsCancellationRequested)
-                yield break;
-
-            var ___offset = 0;
-            var ___span = new Span<byte>(response.BinaryData);
-            yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
+                var ___offset = 0;
+                var ___span = new Span<byte>(response);
+                yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
+            }
         }
     }
     private byte[] ___ListDirectory_Serializer(string relativePath)
@@ -81,7 +87,7 @@ public class HostHub(
         return ___buffer;
     }
 
-    public async IAsyncEnumerable<ShareEntryDto> Get(string relativeFullName, [EnumeratorCancellation] CancellationToken ct)
+    public IAsyncEnumerable<ShareEntryDto> Get(string relativeFullName, [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Get({relativeFullName})", relativeFullName);
@@ -95,26 +101,32 @@ public class HostHub(
         );
         var ___payload = ___Get_Serializer(
             relativeFullName);
-
-
-        var responses = ___fabricClient.InvokeAsync(
-            ___authenticationService,
-            ___routing, 
-            ___payload, 
-            ct);
-        await foreach (var response in responses)
+        
+        
         {
-            if (response.StateIsChanged)
-                await ___authenticationService.UpdateStateDataAsync(
-                    response.StateData, 
-                    ct);
+            var ___responses = ___fabricClient.InvokeAsync(
+                ___authenticationService,
+                ___routing, 
+                ___payload, 
+                ct);
+            return Get_Enumerator(___routing, ___responses, ct);
+        }
+    }
+    public async IAsyncEnumerable<ShareEntryDto> Get_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Get_Enumerator({responses})", responses);
+        
+        {
+            await foreach (var response in responses)
+            {
+                if (___ct.IsCancellationRequested)
+                    yield break;
 
-            if (ct.IsCancellationRequested)
-                yield break;
-
-            var ___offset = 0;
-            var ___span = new Span<byte>(response.BinaryData);
-            yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
+                var ___offset = 0;
+                var ___span = new Span<byte>(response);
+                yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
+            }
         }
     }
     private byte[] ___Get_Serializer(string relativeFullName)
@@ -131,7 +143,7 @@ public class HostHub(
         return ___buffer;
     }
 
-    public async IAsyncEnumerable<DataChunkDto> ReadFile(string relativeFullName, long startOffset, [EnumeratorCancellation] CancellationToken ct)
+    public IAsyncEnumerable<DataChunkDto> ReadFile(string relativeFullName, long startOffset, [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("ReadFile({relativeFullName}, {startOffset})", relativeFullName, startOffset);
@@ -146,26 +158,32 @@ public class HostHub(
         var ___payload = ___ReadFile_Serializer(
             relativeFullName, 
             startOffset);
-
-
-        var responses = ___fabricClient.InvokeAsync(
-            ___authenticationService,
-            ___routing, 
-            ___payload, 
-            ct);
-        await foreach (var response in responses)
+        
+        
         {
-            if (response.StateIsChanged)
-                await ___authenticationService.UpdateStateDataAsync(
-                    response.StateData, 
-                    ct);
+            var ___responses = ___fabricClient.InvokeAsync(
+                ___authenticationService,
+                ___routing, 
+                ___payload, 
+                ct);
+            return ReadFile_Enumerator(___routing, ___responses, ct);
+        }
+    }
+    public async IAsyncEnumerable<DataChunkDto> ReadFile_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("ReadFile_Enumerator({responses})", responses);
+        
+        {
+            await foreach (var response in responses)
+            {
+                if (___ct.IsCancellationRequested)
+                    yield break;
 
-            if (ct.IsCancellationRequested)
-                yield break;
-
-            var ___offset = 0;
-            var ___span = new Span<byte>(response.BinaryData);
-            yield return DataChunkDtoSpanSerializer.ReadDataChunkDto(___span, ref ___offset);
+                var ___offset = 0;
+                var ___span = new Span<byte>(response);
+                yield return DataChunkDtoSpanSerializer.ReadDataChunkDto(___span, ref ___offset);
+            }
         }
     }
     private byte[] ___ReadFile_Serializer(string relativeFullName, long startOffset)
@@ -184,7 +202,7 @@ public class HostHub(
         return ___buffer;
     }
 
-    public async Task Test1()
+    public Task Test1()
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Test1()");
@@ -199,20 +217,32 @@ public class HostHub(
         );
         var ___payload = ___Test1_Serializer();
 
-
         
-        await ___fabricClient.SendAsync(
-            ___authenticationService,
-            ___routing,
-            ___payload, 
-            ___Cts.Token);
+        
+        {
+            var task = ___fabricClient.SendAsync(
+                ___authenticationService,
+                ___routing,
+                ___payload, 
+                ___Cts.Token);
+            return Test1_Task(___routing, task, ___Cts.Token);
+        }
+    }
+    public async Task Test1_Task(RoutingDto ___routing, Task ___task, CancellationToken ___ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test1_Task({___routing}, {___task})", ___routing, ___task);
+        
+        {
+            await ___task;
+        }
     }
     private byte[] ___Test1_Serializer()
     {
         return [];
     }
 
-    public async IAsyncEnumerable<string> Test3([EnumeratorCancellation] CancellationToken ct)
+    public IAsyncEnumerable<string> Test3([EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Test3()");
@@ -225,26 +255,32 @@ public class HostHub(
             ___sessionId
         );
         var ___payload = ___Test3_Serializer();
-
-
-        var responses = ___fabricClient.InvokeAsync(
-            ___authenticationService,
-            ___routing, 
-            ___payload, 
-            ct);
-        await foreach (var response in responses)
+        
+        
         {
-            if (response.StateIsChanged)
-                await ___authenticationService.UpdateStateDataAsync(
-                    response.StateData, 
-                    ct);
+            var ___responses = ___fabricClient.InvokeAsync(
+                ___authenticationService,
+                ___routing, 
+                ___payload, 
+                ct);
+            return Test3_Enumerator(___routing, ___responses, ct);
+        }
+    }
+    public async IAsyncEnumerable<string> Test3_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test3_Enumerator({responses})", responses);
+        
+        {
+            await foreach (var response in responses)
+            {
+                if (___ct.IsCancellationRequested)
+                    yield break;
 
-            if (ct.IsCancellationRequested)
-                yield break;
-
-            var ___offset = 0;
-            var ___span = new Span<byte>(response.BinaryData);
-            yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                var ___offset = 0;
+                var ___span = new Span<byte>(response);
+                yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+            }
         }
     }
     private byte[] ___Test3_Serializer()
@@ -252,7 +288,7 @@ public class HostHub(
         return [];
     }
 
-    public async Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
+    public Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Test4({name}, {test}, {test2})", name, test, test2);
@@ -268,15 +304,37 @@ public class HostHub(
         var ___payload = ___Test4_Serializer(
             name);
 
-
+        
         ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, 1, test, ___Test4_1_Serializer, ___Cts.Token);
         ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, 2, test2, ___Test4_2_Serializer, ___Cts.Token);
         
-        await ___fabricClient.SendAsync(
-            ___authenticationService,
-            ___routing,
-            ___payload, 
-            ___Cts.Token);
+        try
+        {
+            var task = ___fabricClient.SendAsync(
+                ___authenticationService,
+                ___routing,
+                ___payload, 
+                ___Cts.Token);
+            return Test4_Task(___routing, task, ___Cts.Token);
+        }
+        finally
+        {
+            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+        }
+    }
+    public async Task Test4_Task(RoutingDto ___routing, Task ___task, CancellationToken ___ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test4_Task({___routing}, {___task})", ___routing, ___task);
+        
+        try
+        {
+            await ___task;
+        }
+        finally
+        {
+            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+        }
     }
     private byte[] ___Test4_Serializer(string name)
     {
@@ -316,7 +374,7 @@ public class HostHub(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public async IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct)
+    public IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Test6({name}, {test}, {test2})", name, test, test2);
@@ -330,28 +388,45 @@ public class HostHub(
         );
         var ___payload = ___Test6_Serializer(
             name);
-
+        
         ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, 1, test, ___Test6_1_Serializer, ct);
         ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, 2, test2, ___Test6_2_Serializer, ct);
-
-        var responses = ___fabricClient.InvokeAsync(
-            ___authenticationService,
-            ___routing, 
-            ___payload, 
-            ct);
-        await foreach (var response in responses)
+        
+        try
         {
-            if (response.StateIsChanged)
-                await ___authenticationService.UpdateStateDataAsync(
-                    response.StateData, 
-                    ct);
+            var ___responses = ___fabricClient.InvokeAsync(
+                ___authenticationService,
+                ___routing, 
+                ___payload, 
+                ct);
+            return Test6_Enumerator(___routing, ___responses, ct);
+        }
+        catch
+        {
+            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+            throw;
+        }
+    }
+    public async IAsyncEnumerable<string> Test6_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("Test6_Enumerator({responses})", responses);
+        
+        try
+        {
+            await foreach (var response in responses)
+            {
+                if (___ct.IsCancellationRequested)
+                    yield break;
 
-            if (ct.IsCancellationRequested)
-                yield break;
-
-            var ___offset = 0;
-            var ___span = new Span<byte>(response.BinaryData);
-            yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+                var ___offset = 0;
+                var ___span = new Span<byte>(response);
+                yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+            }
+        }
+        finally
+        {
+            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
         }
     }
     private byte[] ___Test6_Serializer(string name)
@@ -392,7 +467,7 @@ public class HostHub(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public async Task StartTest(CancellationToken ct)
+    public Task StartTest(CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("StartTest()");
@@ -407,13 +482,25 @@ public class HostHub(
         );
         var ___payload = ___StartTest_Serializer();
 
-
         
-        await ___fabricClient.SendAsync(
-            ___authenticationService,
-            ___routing,
-            ___payload, 
-            ct);
+        
+        {
+            var task = ___fabricClient.SendAsync(
+                ___authenticationService,
+                ___routing,
+                ___payload, 
+                ct);
+            return StartTest_Task(___routing, task, ct);
+        }
+    }
+    public async Task StartTest_Task(RoutingDto ___routing, Task ___task, CancellationToken ___ct)
+    {
+        if (___Logger.IsEnabled(LogLevel.Trace))
+            ___Logger.LogTrace("StartTest_Task({___routing}, {___task})", ___routing, ___task);
+        
+        {
+            await ___task;
+        }
     }
     private byte[] ___StartTest_Serializer()
     {

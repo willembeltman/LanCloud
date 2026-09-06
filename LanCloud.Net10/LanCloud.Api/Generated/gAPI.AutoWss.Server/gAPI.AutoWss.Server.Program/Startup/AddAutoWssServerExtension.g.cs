@@ -81,14 +81,23 @@ public static class AddAutoWssServerExtension
         var sessionCache = new SessionCache();
         services.AddSingleton(sessionCache);
 
+        var requestCache = new StreamingCache();
+        services.AddSingleton(requestCache);
+
+        var serviceSubscriptionCollection = new ServiceSubscriptionCollection();
+        services.AddSingleton(serviceSubscriptionCollection);
+
+        var serverConnectionCollection = new ServerConnectionCollection();
+        services.AddSingleton(serverConnectionCollection);
+
         services.AddScoped<ServerConnection>();
         services.AddSingleton(sp => new FabricClient(
             sessionCache,
+            requestCache,
+            serviceSubscriptionCollection,
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 
-        services.AddSingleton(new ServerConnectionCollection());
-        services.AddSingleton(new ServiceSubscriptionCollection());
 
         if (fabricConnectionString == null)
         {

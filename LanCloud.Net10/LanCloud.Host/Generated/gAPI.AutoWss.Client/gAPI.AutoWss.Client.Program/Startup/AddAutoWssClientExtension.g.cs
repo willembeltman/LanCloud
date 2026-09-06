@@ -41,16 +41,16 @@ public static class AddAutoWssClientExtension
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
         // Connection stuff
-        services.AddScoped<ClientConnection>(sp => 
+        services.AddSingleton<ClientConnection>(sp => 
             new ClientConnection(sp.GetRequiredService<IClientAuthenticatedHttpClient>(), wssBackendUrl));
-        services.AddScoped<IClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
-        services.AddScoped<IClientLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());
+        services.AddSingleton<IClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
+        services.AddSingleton<IClientLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());
         
         // Api clients
-        services.AddScoped<ITestApi>(sp => sp.GetRequiredService<ClientConnection>().TestApi);
+        services.AddSingleton<ITestApi>(sp => sp.GetRequiredService<ClientConnection>().TestApi);
         
         // Minimal api clients
-        services.AddScoped<IAccountService, AccountService>();
+        services.AddSingleton<IAccountService, AccountService>();
 
         return services;
     }

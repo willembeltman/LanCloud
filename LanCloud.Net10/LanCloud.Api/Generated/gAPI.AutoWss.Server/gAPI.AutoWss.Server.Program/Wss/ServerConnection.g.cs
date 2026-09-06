@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,12 +31,13 @@ public class ServerConnection : WssServerConnection
 
     public ServerConnection(
         IServerAuthenticationService authenticationService,
-        ServiceSubscriptionCollection ServiceSubscriptionCollection,
+        ServiceSubscriptionCollection serviceSubscriptions,
         ServerConnectionCollection connections,
+        StreamingCache requestCache,
         FabricClient fabricClient,
         ITestApi testApi,
         ILoggerFactory loggerFactory) 
-        : base(authenticationService, ServiceSubscriptionCollection, connections, fabricClient, loggerFactory)
+        : base(authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
     {
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;
@@ -106,78 +108,45 @@ public class ServerConnection : WssServerConnection
         throw new Exception($"Invoke {___invokeRequest.Routing.ServiceId.Value}.{___invokeRequest.Routing.MethodId.Value} not implemented");
     }
     
-    public async Task ITestApi_Test1(SendRequestDto ___sendRequest, CancellationToken ___ct)
+    public Task ITestApi_Test1(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
             ___logger.LogTrace("ITestApi_Test1({___sendRequest})", ___sendRequest);
-
-        await TestApi.Test1();
+        
+        {
+            var ___task = TestApi.Test1();
+            return ITestApi_Test1_Task(___sendRequest, ___task, ___ct);
+        }
     }
-    public async Task ITestApi_Test4(SendRequestDto ___sendRequest, string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, CancellationToken ___ct)
+    public async Task ITestApi_Test1_Task(SendRequestDto ___sendRequest, Task task, CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("ITestApi_Test4({___sendRequest})", ___sendRequest);
-
-        await TestApi.Test4(
-            name,
-            test,
-            test2);
+            ___logger.LogTrace("ITestApi_Test1({___sendRequest})", ___sendRequest);
+        
+        {
+            await task;
+        }
     }
-    
-    public async IAsyncEnumerable<byte[]> ITestApi_Test2(InvokeRequestDto ___invokeRequest, CancellationToken ___ct)
+
+    public IAsyncEnumerable<byte[]> ITestApi_Test2(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
             ___logger.LogTrace("ITestApi_Test2({___invokeRequest})", ___invokeRequest);
-
-        var response = await TestApi.Test2();
-
-        yield return ITestApi_Test2_Serializer(response);
-    }
-    public async IAsyncEnumerable<byte[]> ITestApi_Test5(InvokeRequestDto ___invokeRequest, string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, CancellationToken ___ct)
-    {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("ITestApi_Test5({___invokeRequest})", ___invokeRequest);
-
-        var response = await TestApi.Test5(
-            name,
-            test,
-            test2);
-
-        yield return ITestApi_Test5_Serializer(response);
-    }
-    
-    public async IAsyncEnumerable<byte[]> ITestApi_Test3(InvokeRequestDto ___invokeRequest, CancellationToken ___ct)
-    {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("ITestApi_Test3({___invokeRequest})", ___invokeRequest);
-
-        var responses = TestApi.Test3(
-            ___ct);
-
-        await foreach (var response in responses)
+        
         {
-            yield return ITestApi_Test3_Serializer(response);
+            var ___responseTask = TestApi.Test2();
+            return ITestApi_Test2_Enumerator(___invokeRequest, ___responseTask, ___ct);
         }
     }
-    public async IAsyncEnumerable<byte[]> ITestApi_Test6(InvokeRequestDto ___invokeRequest, string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, CancellationToken ___ct)
+    public async IAsyncEnumerable<byte[]> ITestApi_Test2_Enumerator(InvokeRequestDto ___invokeRequest, Task<string> ___responseTask, [EnumeratorCancellation] CancellationToken ___ct)
     {
         if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("ITestApi_Test6({___invokeRequest})", ___invokeRequest);
-
-        var responses = TestApi.Test6(
-            name,
-            test,
-            test2,
-            ___ct);
-
-        await foreach (var response in responses)
+            ___logger.LogTrace("ITestApi_Test2({___invokeRequest})", ___invokeRequest);
+        
         {
-            yield return ITestApi_Test6_Serializer(response);
+            yield return ITestApi_Test2_Serializer(await ___responseTask);
         }
     }
-    
-    
-
     public byte[] ITestApi_Test2_Serializer(string value)
     {
         var ___offset = 0;
@@ -186,6 +155,31 @@ public class ServerConnection : WssServerConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
+    public IAsyncEnumerable<byte[]> ITestApi_Test3(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Test3({___invokeRequest})", ___invokeRequest);
+        
+        {
+            var responses = TestApi.Test3(
+                ___ct);
+            return ITestApi_Test3_Enumerator(___invokeRequest, responses, ___ct);
+        }
+    }
+    public async IAsyncEnumerable<byte[]> ITestApi_Test3_Enumerator(InvokeRequestDto ___invokeRequest,  IAsyncEnumerable<string> ___responseList, [EnumeratorCancellation] CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Test3_Enumerator({___invokeRequest}, {___responseList})", 
+                ___invokeRequest,
+                ___responseList);
+        
+        {
+            await foreach (var response in ___responseList)
+            {
+                yield return ITestApi_Test3_Serializer(response);
+            }
+        }
+    }
     public byte[] ITestApi_Test3_Serializer(string value)
     {
         var ___offset = 0;
@@ -194,30 +188,42 @@ public class ServerConnection : WssServerConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public byte[] ITestApi_Test5_Serializer(string value)
+    public Task ITestApi_Test4(SendRequestDto ___sendRequest, string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, CancellationToken ___ct)
     {
-        var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
-        return ___span.Slice(0, ___offset).ToArray();
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Test4({___sendRequest})", ___sendRequest);
+        
+        try
+        {
+            var ___task = TestApi.Test4(name, test, test2);
+            return ITestApi_Test4_Task(___sendRequest, ___task, ___ct);
+        }
+        catch
+        {
+            UnRegisterRemoteAsyncEnumerableArguments(___sendRequest.Routing);
+            throw;
+        }
     }
-
-    public byte[] ITestApi_Test6_Serializer(string value)
+    public async Task ITestApi_Test4_Task(SendRequestDto ___sendRequest, Task task, CancellationToken ___ct)
     {
-        var ___offset = 0;
-        var ___span = new Span<byte>(___Buffer);
-        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
-        return ___span.Slice(0, ___offset).ToArray();
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Test4({___sendRequest})", ___sendRequest);
+        
+        try
+        {
+            await task;
+        }
+        finally
+        {
+            UnRegisterRemoteAsyncEnumerableArguments(___sendRequest.Routing);
+        }
     }
-    
-
     public string ITestApi_Test4_1_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
-
     public string ITestApi_Test4_2_Deserializer(byte[] value)
     {
         var ___offset = 0;
@@ -225,13 +231,52 @@ public class ServerConnection : WssServerConnection
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
+    public IAsyncEnumerable<byte[]> ITestApi_Test5(InvokeRequestDto ___invokeRequest, string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Test5({___invokeRequest})", ___invokeRequest);
+        
+        try
+        {
+            var ___responseTask = TestApi.Test5(
+                name,
+                test,
+                test2);
+            return ITestApi_Test5_Enumerator(___invokeRequest, ___responseTask, ___ct);
+        }
+        catch
+        {
+            UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+            throw;
+        }
+    }
+    public async IAsyncEnumerable<byte[]> ITestApi_Test5_Enumerator(InvokeRequestDto ___invokeRequest, Task<string> ___responseTask, [EnumeratorCancellation] CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Test5({___invokeRequest})", ___invokeRequest);
+        
+        try
+        {
+            yield return ITestApi_Test5_Serializer(await ___responseTask);
+        }
+        finally
+        {
+            UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+        }
+    }
+    public byte[] ITestApi_Test5_Serializer(string value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
+        return ___span.Slice(0, ___offset).ToArray();
+    }
     public string ITestApi_Test5_1_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
-
     public string ITestApi_Test5_2_Deserializer(byte[] value)
     {
         var ___offset = 0;
@@ -239,17 +284,64 @@ public class ServerConnection : WssServerConnection
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
+    public IAsyncEnumerable<byte[]> ITestApi_Test6(InvokeRequestDto ___invokeRequest, string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Test6({___invokeRequest})", ___invokeRequest);
+        
+        try
+        {
+            var responses = TestApi.Test6(
+                name,
+                test,
+                test2,
+                ___ct);
+            return ITestApi_Test6_Enumerator(___invokeRequest, responses, ___ct);
+        }
+        catch
+        {
+            UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+            throw;
+        }
+    }
+    public async IAsyncEnumerable<byte[]> ITestApi_Test6_Enumerator(InvokeRequestDto ___invokeRequest,  IAsyncEnumerable<string> ___responseList, [EnumeratorCancellation] CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Test6_Enumerator({___invokeRequest}, {___responseList})", 
+                ___invokeRequest,
+                ___responseList);
+        
+        try
+        {
+            await foreach (var response in ___responseList)
+            {
+                yield return ITestApi_Test6_Serializer(response);
+            }
+        }
+        finally
+        {
+            UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
+        }
+    }
+    public byte[] ITestApi_Test6_Serializer(string value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(___Buffer);
+        PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);   
+        return ___span.Slice(0, ___offset).ToArray();
+    }
     public string ITestApi_Test6_1_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
-
     public string ITestApi_Test6_2_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+
+    
 }

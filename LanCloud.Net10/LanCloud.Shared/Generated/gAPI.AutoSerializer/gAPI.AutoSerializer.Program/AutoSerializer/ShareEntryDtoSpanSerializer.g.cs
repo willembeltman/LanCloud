@@ -8,7 +8,7 @@ using System.Buffers.Binary;
 using System.Text;
 
 #nullable enable
-namespace gAPI.Generated;
+namespace LanCloud.Shared.Dtos;
 
 public static class ShareEntryDtoSpanSerializer
 {

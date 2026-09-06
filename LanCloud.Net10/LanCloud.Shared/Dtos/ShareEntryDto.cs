@@ -1,7 +1,9 @@
-﻿using gAPI.Core.Ids;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Ids;
 
 namespace LanCloud.Shared.Dtos;
 
+[GenerateSerializer]
 public class ShareEntryDto
 {
     public string Name { get; set; } = string.Empty;
