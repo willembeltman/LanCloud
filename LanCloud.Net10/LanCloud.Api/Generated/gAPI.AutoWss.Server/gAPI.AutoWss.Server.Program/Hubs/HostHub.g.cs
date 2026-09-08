@@ -49,7 +49,6 @@ public class HostHub(
         
         {
             var ___responses = ___fabricClient.InvokeAsync(
-                ___authenticationService,
                 ___routing, 
                 ___payload, 
                 ct);
@@ -105,7 +104,6 @@ public class HostHub(
         
         {
             var ___responses = ___fabricClient.InvokeAsync(
-                ___authenticationService,
                 ___routing, 
                 ___payload, 
                 ct);
@@ -162,7 +160,6 @@ public class HostHub(
         
         {
             var ___responses = ___fabricClient.InvokeAsync(
-                ___authenticationService,
                 ___routing, 
                 ___payload, 
                 ct);
@@ -221,7 +218,6 @@ public class HostHub(
         
         {
             var task = ___fabricClient.SendAsync(
-                ___authenticationService,
                 ___routing,
                 ___payload, 
                 ___Cts.Token);
@@ -259,7 +255,6 @@ public class HostHub(
         
         {
             var ___responses = ___fabricClient.InvokeAsync(
-                ___authenticationService,
                 ___routing, 
                 ___payload, 
                 ct);
@@ -305,13 +300,12 @@ public class HostHub(
             name);
 
         
-        ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, 1, test, ___Test4_1_Serializer, ___Cts.Token);
-        ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, 2, test2, ___Test4_2_Serializer, ___Cts.Token);
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 1, test, ___Test4_1_Serializer, ___Cts.Token);
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 2, test2, ___Test4_2_Serializer, ___Cts.Token);
         
         try
         {
             var task = ___fabricClient.SendAsync(
-                ___authenticationService,
                 ___routing,
                 ___payload, 
                 ___Cts.Token);
@@ -389,13 +383,12 @@ public class HostHub(
         var ___payload = ___Test6_Serializer(
             name);
         
-        ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, 1, test, ___Test6_1_Serializer, ct);
-        ___fabricClient.RegisterAsyncEnumerableArgument(___authenticationService, ___routing, 2, test2, ___Test6_2_Serializer, ct);
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 1, test, ___Test6_1_Serializer, ct);
+        ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 2, test2, ___Test6_2_Serializer, ct);
         
         try
         {
             var ___responses = ___fabricClient.InvokeAsync(
-                ___authenticationService,
                 ___routing, 
                 ___payload, 
                 ct);
@@ -486,7 +479,6 @@ public class HostHub(
         
         {
             var task = ___fabricClient.SendAsync(
-                ___authenticationService,
                 ___routing,
                 ___payload, 
                 ct);

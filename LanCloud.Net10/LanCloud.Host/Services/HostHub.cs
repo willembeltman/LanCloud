@@ -132,10 +132,10 @@ public class HostHub(
             yield return "3";
         }
 
-        var tries = 10;
-        Stopwatch watch = Stopwatch.StartNew();
-        for (int i = 0; i < tries; i++)
-        {
+        //var tries = 10;
+        //var watch = Stopwatch.StartNew();
+        //for (int i = 0; i < tries; i++)
+        //{
             // Call naar server
             var list = testApi.Test6(
                 "test", 
@@ -147,9 +147,9 @@ public class HostHub(
             {
 
             }
-        }
-        var avg = watch.ElapsedMilliseconds / 
-            tries;
-        Console.WriteLine(avg);
+        //}
+        //var avg = watch.ElapsedMilliseconds / 
+        //    tries;
+        //Console.WriteLine(avg);
     }
 }
