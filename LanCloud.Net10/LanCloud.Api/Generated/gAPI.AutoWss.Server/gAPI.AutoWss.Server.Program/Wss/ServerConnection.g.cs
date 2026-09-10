@@ -65,6 +65,10 @@ public class ServerConnection : WssServerConnection
                             RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 1, ITestApi_Test4_1_Deserializer),
                             RegisterRemoteAsyncEnumerableArgument<string>(___sendRequest.Routing, 2, ITestApi_Test4_2_Deserializer),
                             ___ct);
+                    case "Doiets":
+                        return ITestApi_Doiets(
+                            ___sendRequest,
+                            ___ct);
                 }
                 break;
         }
@@ -341,6 +345,26 @@ public class ServerConnection : WssServerConnection
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+
+    public Task ITestApi_Doiets(SendRequestDto ___sendRequest, CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Doiets({___sendRequest})", ___sendRequest);
+        
+        {
+            var ___task = TestApi.Doiets();
+            return ITestApi_Doiets_Task(___sendRequest, ___task, ___ct);
+        }
+    }
+    public async Task ITestApi_Doiets_Task(SendRequestDto ___sendRequest, Task task, CancellationToken ___ct)
+    {
+        if (___logger.IsEnabled(LogLevel.Trace))
+            ___logger.LogTrace("ITestApi_Doiets({___sendRequest})", ___sendRequest);
+        
+        {
+            await task;
+        }
     }
 
     

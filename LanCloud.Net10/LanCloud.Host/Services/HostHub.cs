@@ -20,6 +20,11 @@ public class HostHub(
     async Task IHostedService.StartAsync(CancellationToken ct)
     {
         await clientConnection.SubscribeAsync(this, ct);
+
+        var state = await authenticatedHttpClient.GetStateAsync();
+        state.Index++;
+
+        testApi.Doiets();
     }
 
     async Task IHostedService.StopAsync(CancellationToken ct)
@@ -81,7 +86,7 @@ public class HostHub(
     public async Task Test1()
     {
     }
-    public async IAsyncEnumerable<string> Test3([EnumeratorCancellation]CancellationToken ct)
+    public async IAsyncEnumerable<string> Test3([EnumeratorCancellation] CancellationToken ct)
     {
         yield return "1";
         await Task.Yield();
@@ -136,17 +141,17 @@ public class HostHub(
         //var watch = Stopwatch.StartNew();
         //for (int i = 0; i < tries; i++)
         //{
-            // Call naar server
-            var list = testApi.Test6(
-                "test", 
-                test(), 
-                test(), 
-                ct);
+        // Call naar server
+        var list = testApi.Test6(
+            "test",
+            test(),
+            test(),
+            ct);
 
-            await foreach (var item in list)
-            {
+        await foreach (var item in list)
+        {
 
-            }
+        }
         //}
         //var avg = watch.ElapsedMilliseconds / 
         //    tries;
