@@ -4,6 +4,7 @@ using LanCloud.Host.Models;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Interfaces;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace LanCloud.Host.Services;
@@ -136,24 +137,24 @@ public class HostHub(
             yield return "3";
         }
 
-        //var tries = 10;
-        //var watch = Stopwatch.StartNew();
-        //for (int i = 0; i < tries; i++)
-        //{
-        // Call naar server
-        var list = testApi.Test6(
-            "test",
-            test(),
-            test(),
-            ct);
-
-        await foreach (var item in list)
+        var tries = 10;
+        var watch = Stopwatch.StartNew();
+        for (int i = 0; i < tries; i++)
         {
+           // Call naar server
+           var list = testApi.Test6(
+               "test",
+               test(),
+               test(),
+               ct);
 
+            await foreach (var item in list)
+            {
+
+            }
         }
-        //}
-        //var avg = watch.ElapsedMilliseconds / 
-        //    tries;
-        //Console.WriteLine(avg);
+        var avg = watch.ElapsedMilliseconds /
+            tries;
+        Console.WriteLine(avg);
     }
 }

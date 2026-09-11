@@ -15,9 +15,9 @@ public class TestController(
 
         authenticationService.State.Index++;
 
-        //await clientContext.HostHub.ToAll.Test1();
+        await clientContext.HostHub.ToAll.Test1();
 
-        //await clientContext.HostHub.ToAll.StartTest(ct);
+        await clientContext.HostHub.ToAll.StartTest(ct);
 
         async IAsyncEnumerable<string> test()
         {
@@ -27,19 +27,19 @@ public class TestController(
         }
 
 
-        //var tries = 10;
-        //Stopwatch watch = Stopwatch.StartNew();
-        //for (int i = 0; i < tries; i++)
-        //{
-        var list = clientContext.HostHub.ToAll.Test6("test", test(), test(), ct);
-
-        await foreach (var item in list)
+        var tries = 10;
+        Stopwatch watch = Stopwatch.StartNew();
+        for (int i = 0; i < tries; i++)
         {
+            var list = clientContext.HostHub.ToAll.Test6("test", test(), test(), ct);
+
+            await foreach (var item in list)
+            {
+            }
         }
-        //}
-        //var avg = watch.ElapsedMilliseconds / tries;
-        //Console.WriteLine($"{avg}ms");
-        var avg = 0;
+        var avg = watch.ElapsedMilliseconds / tries;
+        Console.WriteLine($"{avg}ms");
+        //var avg = 0;
         return Content($"{avg}ms");
     }
 }
