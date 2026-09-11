@@ -47,8 +47,8 @@ public static class AddAutoWssServerExtension
     {
         return AddAutoWssServer(
             services, 
-            config.FrontendUrl,
             config.FabricConnectionString,
+            config.FrontendUrl,
             dateTime);
     }
 

@@ -97,7 +97,7 @@ public static class AddAutoAuthServerExtension
 
             services.AddDatabase(useMemoryDatabase, dbConnectionString);
         }
-
+        services.AddAuthorization();
         services.AddAuthentication("gAPI")
                 .AddScheme<AuthenticationSchemeOptions, gAPI.Core.Server.Authentication.AuthenticationHandler>("gAPI", _ => { });
 
