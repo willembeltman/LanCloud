@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- Zorgt ervoor dat gegenereerde code fysiek op schijf wordt opgeslagen -->
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<!-- Verplaatst de output naar een nette map in je projectroot in plaats van diep in obj -->
+		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+	</PropertyGroup>
+	
+	<Target Name="ClearGeneratedFolder" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<FolderToClean Include="$(ProjectDir)Generated\" />
+		</ItemGroup>
+		<RemoveDir Directories="@(FolderToClean)" />
+		<MakeDir Directories="@(FolderToClean)" />
+	</Target>
+
+	<ItemGroup>
+		<!-- Zorgt ervoor dat de compiler de fysieke bestanden niet dubbel meeneemt -->
+		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI\gAPI.Core.Server\gAPI.Core.Server.csproj" />
+		<ProjectReference Include="..\LanCloud.Shared\LanCloud.Shared.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\gAPI\gAPI.AutoWss.Server\gAPI.AutoWss.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\gAPI\gAPI.AutoAuth.Server\gAPI.AutoAuth.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.11" />
+	</ItemGroup>
+
+</Project>
