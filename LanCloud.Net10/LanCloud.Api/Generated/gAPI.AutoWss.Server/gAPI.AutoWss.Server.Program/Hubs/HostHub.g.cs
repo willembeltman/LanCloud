@@ -31,7 +31,7 @@ public class HostHub(
     readonly ILogger ___Logger = ___loggerFactory.CreateLogger<HostHub>();
     readonly ServiceId ___ServiceId = new("IHostHub");
 
-    public IAsyncEnumerable<ShareEntryDto> ListDirectory(string relativePath, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<ShareEntryDto> ListDirectory(string relativePath, [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("ListDirectory({relativePath})", relativePath);
@@ -46,28 +46,21 @@ public class HostHub(
         var ___payload = ___ListDirectory_Serializer(
             relativePath);
         
+       
+        var ___responses = ___fabricClient.InvokeAsync(
+            ___routing, 
+            ___payload, 
+            ct);
+
         
         {
-            var ___responses = ___fabricClient.InvokeAsync(
-                ___routing, 
-                ___payload, 
-                ct);
-            return ListDirectory_Enumerator(___routing, ___responses, ct);
-        }
-    }
-    public async IAsyncEnumerable<ShareEntryDto> ListDirectory_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("ListDirectory_Enumerator({responses})", responses);
-        
-        {
-            await foreach (var response in responses)
+            await foreach (var ___response in ___responses)
             {
-                if (___ct.IsCancellationRequested)
+                if (ct.IsCancellationRequested)
                     yield break;
 
                 var ___offset = 0;
-                var ___span = new Span<byte>(response);
+                var ___span = new Span<byte>(___response);
                 yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
             }
         }
@@ -86,7 +79,7 @@ public class HostHub(
         return ___buffer;
     }
 
-    public IAsyncEnumerable<ShareEntryDto> Get(string relativeFullName, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<ShareEntryDto> Get(string relativeFullName, [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Get({relativeFullName})", relativeFullName);
@@ -101,28 +94,21 @@ public class HostHub(
         var ___payload = ___Get_Serializer(
             relativeFullName);
         
+       
+        var ___responses = ___fabricClient.InvokeAsync(
+            ___routing, 
+            ___payload, 
+            ct);
+
         
         {
-            var ___responses = ___fabricClient.InvokeAsync(
-                ___routing, 
-                ___payload, 
-                ct);
-            return Get_Enumerator(___routing, ___responses, ct);
-        }
-    }
-    public async IAsyncEnumerable<ShareEntryDto> Get_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Get_Enumerator({responses})", responses);
-        
-        {
-            await foreach (var response in responses)
+            await foreach (var ___response in ___responses)
             {
-                if (___ct.IsCancellationRequested)
+                if (ct.IsCancellationRequested)
                     yield break;
 
                 var ___offset = 0;
-                var ___span = new Span<byte>(response);
+                var ___span = new Span<byte>(___response);
                 yield return ShareEntryDtoSpanSerializer.ReadShareEntryDto(___span, ref ___offset);
             }
         }
@@ -141,7 +127,7 @@ public class HostHub(
         return ___buffer;
     }
 
-    public IAsyncEnumerable<DataChunkDto> ReadFile(string relativeFullName, long startOffset, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<DataChunkDto> ReadFile(string relativeFullName, long startOffset, [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("ReadFile({relativeFullName}, {startOffset})", relativeFullName, startOffset);
@@ -157,28 +143,21 @@ public class HostHub(
             relativeFullName, 
             startOffset);
         
+       
+        var ___responses = ___fabricClient.InvokeAsync(
+            ___routing, 
+            ___payload, 
+            ct);
+
         
         {
-            var ___responses = ___fabricClient.InvokeAsync(
-                ___routing, 
-                ___payload, 
-                ct);
-            return ReadFile_Enumerator(___routing, ___responses, ct);
-        }
-    }
-    public async IAsyncEnumerable<DataChunkDto> ReadFile_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("ReadFile_Enumerator({responses})", responses);
-        
-        {
-            await foreach (var response in responses)
+            await foreach (var ___response in ___responses)
             {
-                if (___ct.IsCancellationRequested)
+                if (ct.IsCancellationRequested)
                     yield break;
 
                 var ___offset = 0;
-                var ___span = new Span<byte>(response);
+                var ___span = new Span<byte>(___response);
                 yield return DataChunkDtoSpanSerializer.ReadDataChunkDto(___span, ref ___offset);
             }
         }
@@ -238,7 +217,7 @@ public class HostHub(
         return [];
     }
 
-    public IAsyncEnumerable<string> Test3([EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<string> Test3([EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Test3()");
@@ -252,28 +231,21 @@ public class HostHub(
         );
         var ___payload = ___Test3_Serializer();
         
+       
+        var ___responses = ___fabricClient.InvokeAsync(
+            ___routing, 
+            ___payload, 
+            ct);
+
         
         {
-            var ___responses = ___fabricClient.InvokeAsync(
-                ___routing, 
-                ___payload, 
-                ct);
-            return Test3_Enumerator(___routing, ___responses, ct);
-        }
-    }
-    public async IAsyncEnumerable<string> Test3_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Test3_Enumerator({responses})", responses);
-        
-        {
-            await foreach (var response in responses)
+            await foreach (var ___response in ___responses)
             {
-                if (___ct.IsCancellationRequested)
+                if (ct.IsCancellationRequested)
                     yield break;
 
                 var ___offset = 0;
-                var ___span = new Span<byte>(response);
+                var ___span = new Span<byte>(___response);
                 yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
             }
         }
@@ -368,7 +340,7 @@ public class HostHub(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Test6({name}, {test}, {test2})", name, test, test2);
@@ -385,35 +357,22 @@ public class HostHub(
         
         ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 1, test, ___Test6_1_Serializer, ct);
         ___fabricClient.RegisterAsyncEnumerableArgument(___routing, 2, test2, ___Test6_2_Serializer, ct);
+       
+        var ___responses = ___fabricClient.InvokeAsync(
+            ___routing, 
+            ___payload, 
+            ct);
+
         
         try
         {
-            var ___responses = ___fabricClient.InvokeAsync(
-                ___routing, 
-                ___payload, 
-                ct);
-            return Test6_Enumerator(___routing, ___responses, ct);
-        }
-        catch
-        {
-            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
-            throw;
-        }
-    }
-    public async IAsyncEnumerable<string> Test6_Enumerator(RoutingDto ___routing, IAsyncEnumerable<byte[]> responses, CancellationToken ___ct)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Test6_Enumerator({responses})", responses);
-        
-        try
-        {
-            await foreach (var response in responses)
+            await foreach (var ___response in ___responses)
             {
-                if (___ct.IsCancellationRequested)
+                if (ct.IsCancellationRequested)
                     yield break;
 
                 var ___offset = 0;
-                var ___span = new Span<byte>(response);
+                var ___span = new Span<byte>(___response);
                 yield return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
             }
         }

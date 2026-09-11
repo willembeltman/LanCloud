@@ -1,10 +1,9 @@
-﻿using gAPI.Core.Dtos;
+using gAPI.Core.Dtos;
 using gAPI.Generated;
 using LanCloud.Host.Models;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Interfaces;
 using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace LanCloud.Host.Services;
@@ -24,7 +23,7 @@ public class HostHub(
         var state = await authenticatedHttpClient.GetStateAsync();
         state.Index++;
 
-        testApi.Doiets();
+        // testApi.Test1();
     }
 
     async Task IHostedService.StopAsync(CancellationToken ct)

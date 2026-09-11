@@ -365,35 +365,6 @@ public sealed class TestApi(
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-
-    public async Task Doiets()
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Doiets()");
-        
-        var ___activityCts = ___Cts;
-
-        var ___routing = new RoutingDto(
-            RequestId.New(),
-            ___ServiceId,
-            new("Doiets"),
-            ___httpClient.UserId,
-            ___httpClient.SessionId
-        );
-        
-        await ___clientConnection.TryConnectAsync(___Cts.Token);
-        
-        {
-            await ___clientConnection.Send_SendRequest_ToServerAsync(
-                ___routing,
-                ___Doiets_Serializer(),
-                ___activityCts.Token);
-        }
-    }
-    private byte[] ___Doiets_Serializer()
-    {
-        return [];
-    }
     
     
     public void Dispose()
