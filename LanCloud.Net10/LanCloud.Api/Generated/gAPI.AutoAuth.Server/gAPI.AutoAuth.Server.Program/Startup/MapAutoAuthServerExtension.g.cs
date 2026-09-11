@@ -3,6 +3,7 @@ using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Extensions;
 using LanCloud.Shared.Dtos;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -12,7 +13,7 @@ namespace gAPI.Generated;
 
 public static class MapAutoAuthServerExtension
 {
-    public static WebApplication MapAutoAuth(this WebApplication app)
+    public static WebApplication MapAutoAuthServer(this WebApplication app)
     {
         app.UseMiddleware<gAPI.Core.Server.Authentication.AuthenticationMiddleware>();
         app.UseAuthentication();

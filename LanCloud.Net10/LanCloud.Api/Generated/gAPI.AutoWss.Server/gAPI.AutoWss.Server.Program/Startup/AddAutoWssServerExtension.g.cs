@@ -59,7 +59,6 @@ public static class AddAutoWssServerExtension
         TimeProvider? dateTime = null)
     {
         services.AddSingleton(dateTime ?? TimeProvider.System);
-        services.AddSingleton(new AuthenticationOptions(true));
 
         services.AddHttpContextAccessor();
         if (frontendUrl != null)

@@ -1,11 +1,4 @@
-﻿using gAPI.Core.Ids;
-using gAPI.Core.Interfaces;
-using gAPI.Core.Server.Authentication;
-using gAPI.Core.Server.Collections;
-using gAPI.Core.Server.Entities;
-using gAPI.Core.Server.Fabric;
-using gAPI.Core.Server.Interfaces;
-using LanCloud.Shared.Dtos;
+﻿using gAPI.Core.Server.Authentication;
 using Microsoft.Extensions.Primitives;
 using System.Security.Claims;
 
@@ -14,17 +7,17 @@ using System.Security.Claims;
 namespace gAPI.Generated;
 
 public class NoDbAuthenticationService(
-    IStateMapping<AuthUser, StateDto> stateMapping,
-    IStateParser<StateDto> stateSerializer,
-    FabricClient fabricClient,
+    gAPI.Core.Server.Interfaces.IStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto> stateMapping,
+    gAPI.Core.Interfaces.IStateParser<LanCloud.Shared.Dtos.StateDto> stateSerializer,
+    gAPI.Core.Server.Fabric.FabricClient fabricClient,
     AuthenticationOptions authenticationOptions,
-    IEnumerable<IAuthenticationCheck<AuthUser, StateDto>> authenticationChecks) 
-    : NoDbServerAuthenticationService<AuthUser, StateDto>(
+    IEnumerable<gAPI.Core.Server.Interfaces.IAuthenticationCheck<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>> authenticationChecks) 
+    : gAPI.Core.Server.Authentication.NoDbServerAuthenticationService<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>(
         stateMapping,
         stateSerializer,
         fabricClient,
         authenticationOptions,
         authenticationChecks)
-    , IAuthenticationService
+    , gAPI.Generated.IAuthenticationService
 {
 }

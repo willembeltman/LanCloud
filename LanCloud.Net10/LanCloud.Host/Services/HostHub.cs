@@ -110,18 +110,14 @@ public class HostHub(
     {
         await foreach (var testItem in test)
         {
-            //await Task.Delay(40000);
         }
         await foreach (var testItem in test2)
         {
         }
 
         yield return "1";
-        //await Task.Yield();
         yield return "2";
-        //await Task.Yield();
         yield return "3";
-        //await Task.Yield();
     }
 
     public async Task StartTest(CancellationToken ct)
@@ -129,7 +125,6 @@ public class HostHub(
         var state = await authenticatedHttpClient.GetStateAsync();
         state.Index++;
 
-        // Dit draait op de client
         async IAsyncEnumerable<string> test()
         {
             yield return "1";
@@ -137,24 +132,25 @@ public class HostHub(
             yield return "3";
         }
 
-        var tries = 10;
-        var watch = Stopwatch.StartNew();
-        for (int i = 0; i < tries; i++)
+        //var tries = 10;
+        //var watch = Stopwatch.StartNew();
+        //for (int i = 0; i < tries; i++)
+        //{
+        // Call naar server
+        var list = testApi.Test6(
+            "test",
+            test(),
+            test(),
+            ct);
+
+        await foreach (var item in list)
         {
-           // Call naar server
-           var list = testApi.Test6(
-               "test",
-               test(),
-               test(),
-               ct);
 
-            await foreach (var item in list)
-            {
-
-            }
         }
-        var avg = watch.ElapsedMilliseconds /
-            tries;
+        //}
+        //var avg = watch.ElapsedMilliseconds /
+        //    tries;
+        var avg = 0;
         Console.WriteLine(avg);
     }
 }
