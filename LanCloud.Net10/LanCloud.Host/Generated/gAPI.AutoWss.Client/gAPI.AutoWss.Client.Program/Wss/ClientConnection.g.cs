@@ -82,7 +82,6 @@ public class ClientConnection
             ), ___ct);
         }
     }
-    
     public async Task UnsubscribeAsync(object implementation, CancellationToken ___ct = default)
     {
         if (!Initialized)
@@ -125,8 +124,6 @@ public class ClientConnection
                     {
                         case "Test1":
                             {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     await client.Test1();
@@ -134,7 +131,6 @@ public class ClientConnection
                                 return;
                             }
                         case "Test4":
-                            try
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___sendRequest.BinaryData);
@@ -150,14 +146,8 @@ public class ClientConnection
                                 }
                                 return;
                             }
-                            finally
-                            {
-                                UnRegisterRemoteAsyncEnumerableArguments(___sendRequest.Routing);
-                            }
                         case "StartTest":
                             {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___sendRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     await client.StartTest(
@@ -172,7 +162,6 @@ public class ClientConnection
 
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
     }
-    
     protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
@@ -241,8 +230,6 @@ public class ClientConnection
                             yield break;
                         case "Test3":
                             {
-                                var ___offset = 0;
-                                var ___span = new Span<byte>(___invokeRequest.BinaryData);
                                 foreach (var client in clients)
                                 {
                                     var responses = client.Test3(
@@ -255,7 +242,6 @@ public class ClientConnection
                             }
                             yield break;
                         case "Test6":
-                            try
                             {
                                 var ___offset = 0;
                                 var ___span = new Span<byte>(___invokeRequest.BinaryData);
@@ -275,10 +261,6 @@ public class ClientConnection
                                     }
                                 }
                             }
-                            finally
-                            {
-                                UnRegisterRemoteAsyncEnumerableArguments(___invokeRequest.Routing);
-                            }
                             yield break;
                     }
                     break;
@@ -288,7 +270,6 @@ public class ClientConnection
         throw new Exception($"Service \"{___invokeRequest.Routing.ServiceId.Value}\" / Method \"{___invokeRequest.Routing.MethodId.Value}\" not found");
     }
     
-
     public byte[] IHostHub_ListDirectory_Serializer(ShareEntryDto value)
     {
         var ___offset = 0;
@@ -313,12 +294,26 @@ public class ClientConnection
         return ___span.Slice(0, ___offset).ToArray();
     }
 
+
     public byte[] IHostHub_Test3_Serializer(string value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(___Buffer);
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
+    }
+
+    public string IHostHub_Test4_1_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
+    }
+    public string IHostHub_Test4_2_Deserializer(byte[] value)
+    {
+        var ___offset = 0;
+        var ___span = new Span<byte>(value);
+        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
 
     public byte[] IHostHub_Test6_Serializer(string value)
@@ -328,34 +323,18 @@ public class ClientConnection
         PrimitivesSpanSerializer.WriteString(ref ___span, ref ___offset, value);
         return ___span.Slice(0, ___offset).ToArray();
     }
-    
-
-    public string IHostHub_Test4_1_Deserializer(byte[] value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(value);
-        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-    }
-
-    public string IHostHub_Test4_2_Deserializer(byte[] value)
-    {
-        var ___offset = 0;
-        var ___span = new Span<byte>(value);
-        return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-    }
-
     public string IHostHub_Test6_1_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
-
     public string IHostHub_Test6_2_Deserializer(byte[] value)
     {
         var ___offset = 0;
         var ___span = new Span<byte>(value);
         return PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
     }
+
     
 }

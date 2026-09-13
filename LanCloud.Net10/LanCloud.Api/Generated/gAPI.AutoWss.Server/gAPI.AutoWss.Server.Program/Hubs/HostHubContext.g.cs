@@ -8,15 +8,14 @@ using LanCloud.Shared.Interfaces;
 namespace gAPI.Generated;
 
 public class HostHubContext(
-    IServerAuthenticationService authenticationService,
     FabricClient fabricClient,
     ILoggerFactory loggerFactory)
     : IHostHubContext
 {
     public IHostHub ToAll
-        => new HostHub(authenticationService, fabricClient, loggerFactory, null, null);
+        => new HostHub(fabricClient, loggerFactory, null, null);
     public IHostHub ToUser(UserId userId)
-        => new HostHub(authenticationService, fabricClient, loggerFactory, null, userId);
+        => new HostHub(fabricClient, loggerFactory, null, userId);
     public IHostHub ToSession(SessionId sessionId)
-        => new HostHub(authenticationService, fabricClient, loggerFactory, sessionId, null);
+        => new HostHub(fabricClient, loggerFactory, sessionId, null);
 }

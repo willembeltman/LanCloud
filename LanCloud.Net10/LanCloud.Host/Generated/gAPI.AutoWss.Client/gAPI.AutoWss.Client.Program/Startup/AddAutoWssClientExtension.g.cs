@@ -30,6 +30,8 @@ public static class AddAutoWssClientExtension
         ClientConfig config,
         TimeProvider? dateTime = null)
     {
+        if (config.WssBackendUrl == null)
+            throw new Exception("WssBackendUrl must be filled in config");
         return AddAutoWssClient(services, config.WssBackendUrl, dateTime);
     }
 

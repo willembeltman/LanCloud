@@ -10,14 +10,12 @@ public class NoDbAuthenticationService(
     gAPI.Core.Server.Interfaces.IStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto> stateMapping,
     gAPI.Core.Interfaces.IStateParser<LanCloud.Shared.Dtos.StateDto> stateSerializer,
     gAPI.Core.Server.Fabric.FabricClient fabricClient,
-    AuthenticationOptions authenticationOptions,
-    IEnumerable<gAPI.Core.Server.Interfaces.IAuthenticationCheck<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>> authenticationChecks) 
+    AuthenticationOptions authenticationOptions) 
     : gAPI.Core.Server.Authentication.NoDbServerAuthenticationService<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>(
         stateMapping,
         stateSerializer,
         fabricClient,
-        authenticationOptions,
-        authenticationChecks)
+        authenticationOptions)
     , gAPI.Generated.IAuthenticationService
 {
 }

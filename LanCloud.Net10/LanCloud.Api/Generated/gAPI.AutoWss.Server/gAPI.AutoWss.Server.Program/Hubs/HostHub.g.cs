@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 namespace gAPI.Generated;
 
 public class HostHub(
-    IServerAuthenticationService ___authenticationService,
     FabricClient ___fabricClient,
     ILoggerFactory ___loggerFactory,
     SessionId? ___sessionId,
@@ -178,7 +177,7 @@ public class HostHub(
         return ___buffer;
     }
 
-    public Task Test1()
+    public async Task Test1()
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Test1()");
@@ -196,20 +195,10 @@ public class HostHub(
         
         
         {
-            var task = ___fabricClient.SendAsync(
+            await ___fabricClient.SendAsync(
                 ___routing,
                 ___payload, 
                 ___Cts.Token);
-            return Test1_Task(___routing, task, ___Cts.Token);
-        }
-    }
-    public async Task Test1_Task(RoutingDto ___routing, Task ___task, CancellationToken ___ct)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Test1_Task({___routing}, {___task})", ___routing, ___task);
-        
-        {
-            await ___task;
         }
     }
     private byte[] ___Test1_Serializer()
@@ -255,7 +244,7 @@ public class HostHub(
         return [];
     }
 
-    public Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
+    public async Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("Test4({name}, {test}, {test2})", name, test, test2);
@@ -277,29 +266,15 @@ public class HostHub(
         
         try
         {
-            var task = ___fabricClient.SendAsync(
+            await ___fabricClient.SendAsync(
                 ___routing,
                 ___payload, 
                 ___Cts.Token);
-            return Test4_Task(___routing, task, ___Cts.Token);
         }
         finally
         {
-            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
-        }
-    }
-    public async Task Test4_Task(RoutingDto ___routing, Task ___task, CancellationToken ___ct)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Test4_Task({___routing}, {___task})", ___routing, ___task);
-        
-        try
-        {
-            await ___task;
-        }
-        finally
-        {
-            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, 1);
+            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, 2);
         }
     }
     private byte[] ___Test4_Serializer(string name)
@@ -378,7 +353,8 @@ public class HostHub(
         }
         finally
         {
-            ___fabricClient.UnRegisterAsyncEnumerableArguments(___routing);
+            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, 1);
+            await ___fabricClient.UnRegisterAsyncEnumerableArgument(___routing, 2);
         }
     }
     private byte[] ___Test6_Serializer(string name)
@@ -419,7 +395,7 @@ public class HostHub(
         return ___span.Slice(0, ___offset).ToArray();
     }
 
-    public Task StartTest(CancellationToken ct)
+    public async Task StartTest(CancellationToken ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
             ___Logger.LogTrace("StartTest()");
@@ -437,20 +413,10 @@ public class HostHub(
         
         
         {
-            var task = ___fabricClient.SendAsync(
+            await ___fabricClient.SendAsync(
                 ___routing,
                 ___payload, 
                 ct);
-            return StartTest_Task(___routing, task, ct);
-        }
-    }
-    public async Task StartTest_Task(RoutingDto ___routing, Task ___task, CancellationToken ___ct)
-    {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("StartTest_Task({___routing}, {___task})", ___routing, ___task);
-        
-        {
-            await ___task;
         }
     }
     private byte[] ___StartTest_Serializer()

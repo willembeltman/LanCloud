@@ -166,7 +166,8 @@ public sealed class TestApi(
         }
         finally
         {
-            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 1);
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 2);
         }
     }
     private byte[] ___Test4_Serializer(string name)
@@ -245,7 +246,8 @@ public sealed class TestApi(
         }
         finally
         {
-            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 1);
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 2);
         }
 
         return ___result;
@@ -325,7 +327,8 @@ public sealed class TestApi(
         }
         finally
         {
-            ___clientConnection.UnRegisterAsyncEnumerableArguments(___routing);
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 1);
+            await ___clientConnection.UnRegisterAsyncEnumerableArgument(___routing, 2);
         }
     }
     private byte[] ___Test6_Serializer(string name)
