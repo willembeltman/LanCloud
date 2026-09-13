@@ -1,5 +1,6 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
+using gAPI.Core.Server.Entities;
 using gAPI.Generated;
 using LanCloud.Api.Helpers;
 using LanCloud.Api.Models;
@@ -220,6 +221,15 @@ public class FileSystem(
 
         var slash = path.LastIndexOf('/');
         return slash < 0 ? path : path[(slash + 1)..];
+    }
+
+    internal AuthUser? ValidateUser(string? userName, string? password)
+    {
+        return new AuthUser()
+        {
+            Email = userName ?? "",
+            UserName = userName ?? ""
+        };
     }
 }
 

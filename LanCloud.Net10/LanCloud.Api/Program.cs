@@ -3,15 +3,17 @@ using LanCloud.Api.Helpers;
 using LanCloud.Api.Services;
 using LanCloud.Shared.Models;
 
-var localShare = new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalData"));
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoWssServer("Server=localhost;Port=9494;");
 builder.Services.AddAutoAuthServer();
 
+builder.Services.AddHostedService<FtpServer>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<FileSystem>();
-builder.Services.AddSingleton(localShare);
 builder.Services.AddSingleton<EntryCollection>();
+
+var localShare = new LocalShare(Path.Combine(Environment.CurrentDirectory, "LocalData"));
+builder.Services.AddSingleton(localShare);
 
 var app = builder.Build();
 app.MapAutoWssServer();
