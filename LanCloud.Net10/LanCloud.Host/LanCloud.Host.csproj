@@ -29,11 +29,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\gAPI\gAPI.AutoWss.Client\gAPI.AutoWss.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-
 		<!--<ProjectReference Include="..\gAPI\gAPI.Core.Client\gAPI.Core.Client.csproj" />-->
 		<PackageReference Include="gAPI.Core.Client" Version="0.0.1-beta" />
 		
+		<!--<ProjectReference Include="..\gAPI\gAPI.AutoWss.Client\gAPI.AutoWss.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
+		<PackageReference Include="gAPI.AutoWss.Client" Version="0.0.1-beta">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+
 		<!--<ProjectReference Include="..\gAPI\gAPI.AutoAuth.Client\gAPI.AutoAuth.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
 		<PackageReference Include="gAPI.AutoAuth.Client" Version="0.0.1-beta">
 			<PrivateAssets>all</PrivateAssets>
