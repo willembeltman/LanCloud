@@ -8,7 +8,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\gAPI\gAPI.Fabric.Server\gAPI.Fabric.Server.csproj" />
+		<!--<ProjectReference Include="..\gAPI\gAPI.Fabric.Server\gAPI.Fabric.Server.csproj" />-->
+		<PackageReference Include="gAPI.Fabric.Server" Version="0.0.1-beta" />
 	</ItemGroup>
 
 </Project>
