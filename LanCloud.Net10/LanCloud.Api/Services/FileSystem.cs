@@ -6,15 +6,18 @@ using LanCloud.Api.Helpers;
 using LanCloud.Api.Models;
 using LanCloud.Shared.Dtos;
 using LanCloud.Shared.Models;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 
 namespace LanCloud.Api.Services;
 
 public class FileSystem(
     IClientContext clientContext,
-    EntryCollection entryCollection,
-    LocalShare localShare)
+    RespondedEntryCollection entryCollection,
+    ApiConfig apiConfig)
 {
+    LocalShare LocalShare => apiConfig.LocalShare;
+
     public async Task<AuthenticationInfo> GetAuthenticationInfo(CancellationToken ct)
     {
         return new AuthenticationInfo(
@@ -22,21 +25,29 @@ public class FileSystem(
             Realm: "LanCloud");
     }
 
-    public async Task<bool> Authenticate(string username, string password, CancellationToken ct)
+    public async Task<bool> IsAuthenticated(string username, string password, CancellationToken ct)
     {
         return true;
     }
-
-    public Task CreateDirectory(string path, CancellationToken ct = default)
+    public async Task<AuthUser?> ValidateUser(string? userName, string? password, CancellationToken ct)
     {
-        return localShare.CreateDirectory(path, ct);
+        return new AuthUser()
+        {
+            Email = userName ?? "",
+            UserName = userName ?? ""
+        };
     }
 
-    public async Task Delete(string path, CancellationToken ct = default)
+    public Task CreateDirectory(string path, CancellationToken ct)
     {
-        if (await localShare.Exist(path, ct))
+        return LocalShare.CreateDirectory(path, ct);
+    }
+
+    public async Task Delete(string path, CancellationToken ct)
+    {
+        if (await LocalShare.Exist(path, ct))
         {
-            await localShare.Delete(path, ct);
+            await LocalShare.Delete(path, ct);
             return;
         }
 
@@ -44,23 +55,23 @@ public class FileSystem(
             "Remote files are read-only.");
     }
 
-    public async Task Move(string sourcePath, string destinationPath, CancellationToken ct = default)
+    public async Task Move(string sourcePath, string destinationPath, CancellationToken ct)
     {
-        if (!await localShare.Exist(sourcePath, ct))
+        if (!await LocalShare.Exist(sourcePath, ct))
         {
             throw new InvalidOperationException(
                 "Remote files are read-only.");
         }
 
-        await localShare.Move(
+        await LocalShare.Move(
             sourcePath,
             destinationPath,
             ct);
     }
 
-    public async Task<FileSystemEntry?> Get(string path, CancellationToken ct = default)
+    public async Task<FileSystemEntry?> Get(string path, CancellationToken ct)
     {
-        path = EntryCollection.Normalize(path);
+        path = RespondedEntryCollection.Normalize(path);
 
         if (string.IsNullOrEmpty(path))
         {
@@ -72,14 +83,14 @@ public class FileSystem(
                 DateTime.UtcNow,
                 DateTime.UtcNow);
 
-            var rootShareEntry = new ShareEntryDto
+            var rootShareEntry = new HubEntryDto
             {
                 Name = "",
                 Path = "",
                 IsDirectory = true
             };
 
-            var rootEntry = new Entry(
+            var rootEntry = new RespondedEntry(
                 rootFsEntry,
                 rootShareEntry,
                 "");
@@ -95,7 +106,7 @@ public class FileSystem(
             .ToArrayAsync(ct)
             .AsTask();
 
-        var localTask = localShare
+        var localTask = LocalShare
             .Get(path, null, ct)
             .ToArrayAsync(ct)
             .AsTask();
@@ -118,9 +129,9 @@ public class FileSystem(
             ct);
     }
 
-    public async IAsyncEnumerable<FileSystemEntry> ListDirectory(string path, [EnumeratorCancellation] CancellationToken ct = default)
+    public async IAsyncEnumerable<FileSystemEntry> ListDirectory(string path, [EnumeratorCancellation] CancellationToken ct)
     {
-        path = EntryCollection.Normalize(path);
+        path = RespondedEntryCollection.Normalize(path);
 
         var remoteTask = clientContext.HostHub
             .ToAll
@@ -128,7 +139,7 @@ public class FileSystem(
             .ToArrayAsync(ct)
             .AsTask();
 
-        var localTask = localShare
+        var localTask = LocalShare
             .ListDirectory(path, null, ct)
             .ToArrayAsync(ct)
             .AsTask();
@@ -149,7 +160,7 @@ public class FileSystem(
         }
     }
 
-    public async Task<Stream?> OpenRead(string path, CancellationToken ct = default)
+    public async Task<Stream?> OpenRead(string path, CancellationToken ct)
     {
         if (!entryCollection.TryGet(path, out var entry) ||
             entry == null)
@@ -170,7 +181,7 @@ public class FileSystem(
         {
             if (entry.ShareEntryDto.SessionId == null)
             {
-                return localShare.ReadFile(
+                return LocalShare.ReadFile(
                     entry.ReadPath,
                     startOffset,
                     streamCt);
@@ -190,15 +201,19 @@ public class FileSystem(
             ct);
     }
 
-    public Task Write(string path, Stream stream, CancellationToken ct = default)
+    public Task Write(string path, Stream stream, CancellationToken ct)
     {
-        return localShare.Write(path, stream, ct);
+        return LocalShare.Write(path, stream, ct);
+    }
+    public Task Append(string path, Stream stream, CancellationToken ct)
+    {
+        return LocalShare.Append(path, stream, ct);
     }
 
     private async Task<FileSystemEntry> CreateFileSystemEntry(
         string visiblePath,
         string readPath,
-        ShareEntryDto shareFile,
+        HubEntryDto shareFile,
         CancellationToken ct)
     {
         var fsFile = new FileSystemEntry(
@@ -208,14 +223,14 @@ public class FileSystem(
             shareFile.Size,
             shareFile.Created,
             shareFile.LastModified);
-        var entry = new Entry(fsFile, shareFile, readPath);
+        var entry = new RespondedEntry(fsFile, shareFile, readPath);
         entryCollection.Responded(visiblePath, entry);
         return fsFile;
     }
 
     private static string GetName(string path, string fallback)
     {
-        path = EntryCollection.Normalize(path);
+        path = RespondedEntryCollection.Normalize(path);
         if (string.IsNullOrEmpty(path))
             return fallback;
 
@@ -223,246 +238,4 @@ public class FileSystem(
         return slash < 0 ? path : path[(slash + 1)..];
     }
 
-    internal AuthUser? ValidateUser(string? userName, string? password)
-    {
-        return new AuthUser()
-        {
-            Email = userName ?? "",
-            UserName = userName ?? ""
-        };
-    }
 }
-
-
-//public class FileSystem(
-//    IClientContext clientContext,
-//    EntryCollection entryCollection,
-//    LocalShare localShare)
-//{
-//    public async Task<AuthenticationInfo> GetAuthenticationInfo(CancellationToken ct)
-//    {
-//        return new AuthenticationInfo(
-//            Required: true,
-//            Realm: "LanCloud");
-//    }
-
-//    public async Task<bool> Authenticate(string username, string password, CancellationToken ct)
-//    {
-//        return true;
-//    }
-
-//    public async Task CreateDirectory(string path, CancellationToken ct = default)
-//    {
-//        await localShare.CreateDirectory(path, ct);
-//        await entryCollection.CreateDirectory(path, ct);
-//    }
-
-//    public async Task Delete(string path, CancellationToken ct = default)
-//    {
-//        try
-//        {
-//            await localShare.Delete(path, ct);
-//        }
-//        catch (FileNotFoundException)
-//        {
-//            // Remote-only entries bestaan lokaal niet; de tombstone hieronder verbergt ze in de API.
-//        }
-//        catch (DirectoryNotFoundException)
-//        {
-//            // Remote-only entries bestaan lokaal niet; de tombstone hieronder verbergt ze in de API.
-//        }
-
-//        await entryCollection.Delete(path, ct);
-//    }
-
-//    public async Task Move(string sourcePath, string destinationPath, CancellationToken ct = default)
-//    {
-//        var sourceExistsLocally = await LocalEntryExists(sourcePath, ct);
-
-//        await localShare.Move(sourcePath, destinationPath, ct);
-//        await entryCollection.Move(
-//            sourcePath,
-//            destinationPath,
-//            trackSourceAsMoved: !sourceExistsLocally,
-//            ct);
-//    }
-
-//    public async Task<FileSystemEntry?> Get(string path, CancellationToken ct = default)
-//    {
-//        path = EntryCollection.Normalize(path);
-
-//        if (entryCollection.IsRemoved(path))
-//            return null;
-
-//        if (string.IsNullOrEmpty(path))
-//        {
-//            var rootFsEntry = new FileSystemEntry("", "", true, 0, DateTime.UtcNow, DateTime.UtcNow);
-//            var rootEntry = new Entry(rootFsEntry, new ShareEntryDto { Name = "", Path = "", IsDirectory = true }, "");
-//            await entryCollection.Responded("", rootEntry, ct);
-//            return rootFsEntry;
-//        }
-
-//        var readPath = entryCollection.ResolveReadPath(path);
-//        var allShareFiles = await GetShareEntries(readPath, ct);
-
-//        var shareFile = allShareFiles
-//            .OrderByDescending(a => a.GetLastDate())
-//            .FirstOrDefault();
-//        if (shareFile == null) return null;
-
-//        return await CreateFileSystemEntry(path, readPath, shareFile, ct);
-//    }
-
-//    public async IAsyncEnumerable<FileSystemEntry> ListDirectory(string path, [EnumeratorCancellation] CancellationToken ct = default)
-//    {
-//        path = EntryCollection.Normalize(path);
-
-//        if (entryCollection.IsRemoved(path))
-//            yield break;
-
-//        var allShareFiles = new List<ShareEntryDto>();
-//        var readPath = entryCollection.ResolveReadPath(path);
-//        allShareFiles.AddRange(await ListShareEntries(readPath, ct));
-
-//        foreach (var movedSource in entryCollection.GetMovedSourcesForDirectory(path))
-//            allShareFiles.AddRange(await GetShareEntries(movedSource, ct));
-
-//        var files = allShareFiles
-//            .Select(a => (ShareFile: a, VisiblePath: entryCollection.ResolveVisiblePath(a.Path)))
-//            .Where(a => GetParentPath(a.VisiblePath) == path)
-//            .GroupBy(a => a.VisiblePath)
-//            .Select(a => a.OrderByDescending(b => b.ShareFile.GetLastDate()).First());
-
-//        foreach (var (shareFile, visiblePath) in files)
-//        {
-//            if (entryCollection.IsRemoved(visiblePath))
-//                continue;
-
-//            yield return await CreateFileSystemEntry(visiblePath, shareFile.Path, shareFile, ct);
-//        }
-//    }
-
-//    public async Task<Stream?> OpenRead(string path, CancellationToken ct = default)
-//    {
-//        if (entryCollection.IsRemoved(path))
-//            return null;
-
-//        if (!entryCollection.RespondedEntries.TryGetValue(path, out var respondedEntity))
-//        {
-//            var fetched = await Get(path, ct);
-//            if (fetched == null || !entryCollection.RespondedEntries.TryGetValue(path, out respondedEntity))
-//                return null;
-//        }
-
-//        IAsyncEnumerable<FileChunkDto> OpenChunks(long startOffset, CancellationToken streamCt)
-//        {
-//            if (respondedEntity.ShareEntryDto.SessionId == null)
-//            {
-//                return localShare
-//                    .ReadFile(respondedEntity.ReadPath, startOffset, streamCt);
-//            }
-
-//            return clientContext.HostHub
-//                .ToSession(respondedEntity.ShareEntryDto.SessionId.Value)
-//                .ReadFile(respondedEntity.ReadPath, startOffset, streamCt);
-//        }
-
-//        return new ChunkedStream(OpenChunks, respondedEntity, ct);
-//    }
-
-//    public async Task Write(string path, Stream stream, CancellationToken ct = default)
-//    {
-//        await localShare.Write(path, stream, ct);
-//        await entryCollection.Write(path, ct);
-//    }
-
-//    private async Task<List<ShareEntryDto>> GetShareEntries(string path, CancellationToken ct)
-//    {
-//        var allShareFiles = new List<ShareEntryDto>();
-//        try
-//        {
-//            var remoteFiles = await clientContext.HostHub.ToAll
-//                .Get(path, ct)
-//                .ToListAsync(ct);
-//            allShareFiles.AddRange(remoteFiles);
-//        }
-//        catch
-//        {
-//            // Negeren als er geen host clients verbonden zijn
-//        }
-
-//        var localShareFiles = localShare.Get(path, null, ct);
-//        await foreach (var localFile in localShareFiles)
-//            allShareFiles.Add(localFile);
-
-//        return allShareFiles;
-//    }
-
-//    private async Task<bool> LocalEntryExists(string path, CancellationToken ct)
-//    {
-//        await foreach (var _ in localShare.Get(path, null, ct))
-//            return true;
-
-//        return false;
-//    }
-
-//    private async Task<List<ShareEntryDto>> ListShareEntries(string path, CancellationToken ct)
-//    {
-//        var allShareFiles = new List<ShareEntryDto>();
-//        try
-//        {
-//            var remoteFiles = await clientContext.HostHub.ToAll
-//                .ListDirectory(path, ct)
-//                .ToListAsync(ct);
-//            allShareFiles.AddRange(remoteFiles);
-//        }
-//        catch
-//        {
-//            // Negeren als er geen host clients verbonden zijn
-//        }
-
-//        var localShareFiles = localShare
-//            .ListDirectory(path, null, ct);
-//        await foreach (var localFile in localShareFiles)
-//            allShareFiles.Add(localFile);
-
-//        return allShareFiles;
-//    }
-
-//    private async Task<FileSystemEntry> CreateFileSystemEntry(
-//        string visiblePath,
-//        string readPath,
-//        ShareEntryDto shareFile,
-//        CancellationToken ct)
-//    {
-//        var fsFile = new FileSystemEntry(
-//            GetName(visiblePath, shareFile.Name),
-//            visiblePath,
-//            shareFile.IsDirectory,
-//            shareFile.Size,
-//            shareFile.Created,
-//            shareFile.LastModified);
-//        var entry = new Entry(fsFile, shareFile, readPath);
-//        await entryCollection.Responded(visiblePath, entry, ct);
-//        return fsFile;
-//    }
-
-//    private static string GetName(string path, string fallback)
-//    {
-//        path = EntryCollection.Normalize(path);
-//        if (string.IsNullOrEmpty(path))
-//            return fallback;
-
-//        var slash = path.LastIndexOf('/');
-//        return slash < 0 ? path : path[(slash + 1)..];
-//    }
-
-//    private static string GetParentPath(string path)
-//    {
-//        path = EntryCollection.Normalize(path);
-//        var slash = path.LastIndexOf('/');
-
-//        return slash < 0 ? string.Empty : path[..slash];
-//    }
-
-//}

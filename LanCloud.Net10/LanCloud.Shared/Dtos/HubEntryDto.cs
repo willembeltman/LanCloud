@@ -3,7 +3,7 @@ using gAPI.Core.Ids;
 
 namespace LanCloud.Shared.Dtos;
 
-public class ShareEntryDto
+public class HubEntryDto
 {
     public string Name { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;

@@ -3,4 +3,5 @@
 namespace LanCloud.Api.Models;
 
 public record ApiConfig(
-    LocalShare LocalShare);
+    LocalShare LocalShare,
+    string? CertificateFilename = null);

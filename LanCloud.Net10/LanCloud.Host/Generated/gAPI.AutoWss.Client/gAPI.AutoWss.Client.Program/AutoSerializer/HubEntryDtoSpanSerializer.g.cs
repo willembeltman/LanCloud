@@ -10,14 +10,14 @@ using System.Text;
 #nullable enable
 namespace gAPI.Generated;
 
-public static class ShareEntryDtoSpanSerializer
+public static class HubEntryDtoSpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0x951C1F21;
+    public const uint TypeId = 0x32C1AA85;
     public const uint SchemaHash = 0x1C31B869;
 
     [IsSpanSerializerWrite]
-    public static void Write(this ref Span<byte> ___span, ref int ___offset, ShareEntryDto value)
+    public static void Write(this ref Span<byte> ___span, ref int ___offset, HubEntryDto value)
     {
         PrimitivesSpanSerializer.WriteUShort(ref ___span, ref ___offset, Magic); // Magic string `GA` => it's a gAPI stream
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
@@ -35,7 +35,7 @@ public static class ShareEntryDtoSpanSerializer
     }
 
     [IsSpanSerializerRead]
-    public static ShareEntryDto ReadShareEntryDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static HubEntryDto ReadHubEntryDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -44,7 +44,7 @@ public static class ShareEntryDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new ShareEntryDto();
+        var value = new HubEntryDto();
         value.Name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
         value.Path = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
         value.IsDirectory = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset);
@@ -56,7 +56,7 @@ public static class ShareEntryDtoSpanSerializer
     }
 
     [IsSpanSerializerLength]
-    public static int Length(ref int ___offset, ShareEntryDto value)
+    public static int Length(ref int ___offset, HubEntryDto value)
     {
         ___offset += 10;
         PrimitivesSpanSerializer.LengthString(ref ___offset, value.Name);

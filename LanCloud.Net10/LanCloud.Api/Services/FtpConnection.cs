@@ -22,10 +22,14 @@ public enum DataConnectionType
     Active,
 }
 
-public class FtpConnection : IDisposable
+public class FtpConnection(
+    ILoggerFactory loggerFactory,
+    FileSystem fileSystem,
+    TcpClient client,
+    string? certificateFilename = null)
 {
     const int FtpBufferSize = 64 * 1024;
-
+    readonly ILogger<FtpConnection> Logger = loggerFactory.CreateLogger<FtpConnection>();
     TcpClient? DataClient;
     TcpListener? PassiveListener;
     NetworkStream? ControlStream;
@@ -33,317 +37,209 @@ public class FtpConnection : IDisposable
     StreamWriter? ControlWriter;
     TransferType ConnectionType = TransferType.Ascii;
     DataConnectionType DataConnectionType = DataConnectionType.Active;
-
-    string? UserName;
     IPEndPoint? DataEndpoint;
-    readonly string? CertificateFileName;
     X509Certificate? Cert;
     SslStream? SslStream;
-    bool Disposed;
     string CurrentPath = "/";
     AuthUser? CurrentUser;
-    List<string> _validCommands;
+    string? StoredUserName;
+    string? StoredRenameFrom = null;
+    HashSet<string> AnomiousAllowedCommands = ["AUTH", "USER", "PASS", "QUIT", "HELP", "NOOP"];
+    bool QuitFlag = false;
 
-    public FtpConnection(
-        FileSystem fileSystem,
-        TcpClient client,
-        string? certificateFilename = null)
+    public IPEndPoint? RemoteEndPoint => client.Client.RemoteEndPoint as IPEndPoint; // Exposed for monitoring
+
+    public async Task Start(CancellationToken parentCt)
     {
-        FileSystem = fileSystem;
-        ControlClient = client;
-        CertificateFileName = certificateFilename;
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(parentCt);
+        var ct = cts.Token;
 
-        var RemoteEndPoint = client.Client.RemoteEndPoint as IPEndPoint;
-        Name = RemoteEndPoint?.Address.ToString() ?? "";
-
-        _validCommands = new List<string>();
-    }
-
-    string Name { get; }
-    public FileSystem FileSystem { get; }
-    TcpClient ControlClient { get; }
-
-    private string? CheckUser()
-    {
-        if (CurrentUser == null)
-        {
-            return "530 Not logged in";
-        }
-
-        return null;
-    }
-
-    public async Task HandleClient()
-    {
-        ControlStream = ControlClient.GetStream();
+        ControlStream = client.GetStream();
 
         ControlReader = new StreamReader(ControlStream);
         ControlWriter = new StreamWriter(ControlStream);
+        DataClient = new TcpClient();
 
         ControlWriter.WriteLine("220 Service Ready.");
         ControlWriter.Flush();
 
-        _validCommands.AddRange(new string[] { "AUTH", "USER", "PASS", "QUIT", "HELP", "NOOP" });
-
         string? line;
-
-        DataClient = new TcpClient();
-
-        string? renameFrom = null;
-
         try
         {
-            while ((line = ControlReader.ReadLine()) != null)
+            while (true)
             {
-                //Logger.Info("FTP Received:  " + line);
+                line = await ControlReader.ReadLineAsync(ct);
 
-                string? response = null;
+                // First do our own cancellation check, the line might have come back because of a cancel
+                if (ct.IsCancellationRequested)
+                {
+                    // No cancel needed if it is already cancelled
+                    break;
+                }
 
-                string[] command = line.Split(' ');
+                // Then check if the connection closed / response is null
+                if (line == null)
+                {
+                    // If so cancel and return
+                    await cts.CancelAsync();
+                    break;
+                }
 
-                string cmd = command[0].ToUpperInvariant();
-                string? arguments = command.Length > 1 ? line.Substring(command[0].Length + 1) : null;
+                // Then log the incomming request
+                if (Logger.IsEnabled(LogLevel.Trace))
+                    Logger.LogTrace("FTP Received:  {line}", line);
 
-                if (arguments != null && arguments.Trim().Length == 0)
+                // Format the line in commands, command and arguments
+                var commands = line.Split(' ');
+                var command = commands[0].ToUpperInvariant();
+                var arguments = commands.Length > 1 ? line.Substring(commands[0].Length + 1) : null;
+
+                // Reset argument to null if it is a empty/whiteline string
+                if (string.IsNullOrWhiteSpace(arguments))
                 {
                     arguments = null;
                 }
 
-                if (!_validCommands.Contains(cmd))
+                // Reset RenameFrom cache if this is not the next RenameTo command
+                if (command != "RNTO")
                 {
-                    response = CheckUser();
+                    StoredRenameFrom = null;
                 }
 
-                if (cmd != "RNTO")
+                // Authentication toggles
+                var commandRequiresAuthentication = AnomiousAllowedCommands.Contains(command) == false;
+                var currentUserIsNotAuthenticated = CurrentUser is null;
+
+                var response =
+                    commandRequiresAuthentication && currentUserIsNotAuthenticated
+                    ? "530 Not logged in"
+                    : await HandleCommand(commands, command, arguments, ct);
+
+                // Early return on own cancellation check (maybe parent has called it?)
+                if (ct.IsCancellationRequested)
                 {
-                    renameFrom = null;
-                }
-
-                if (response == null)
-                {
-                    switch (cmd)
-                    {
-                        case "USER":
-                            response = User(arguments);
-                            break;
-                        case "PASS":
-                            response = Password(arguments);
-                            break;
-                        case "CWD":
-                            response = await ChangeWorkingDirectory(arguments);
-                            break;
-                        case "CDUP":
-                            response = await ChangeWorkingDirectory("..");
-                            break;
-                        case "QUIT":
-                            response = "221 Service closing control connection";
-                            break;
-                        case "REIN":
-                            CurrentUser = null;
-                            UserName = null;
-                            PassiveListener = null;
-                            DataClient = null;
-
-                            response = "220 Service ready for new user";
-                            break;
-                        case "PORT":
-                            response = Port(arguments);
-                            break;
-                        case "PASV":
-                            response = Passive();
-                            break;
-                        case "TYPE":
-                            response = Type(command[1], command.Length == 3 ? command[2] : null);
-                            break;
-                        case "STRU":
-                            response = Structure(arguments);
-                            break;
-                        case "MODE":
-                            response = Mode(arguments);
-                            break;
-                        case "RNFR":
-                            renameFrom = arguments;
-                            response = "350 Requested file action pending further information";
-                            break;
-                        case "RNTO":
-                            response = await Rename(renameFrom, arguments);
-                            break;
-                        case "DELE":
-                            response = await Delete(arguments);
-                            break;
-                        case "RMD":
-                            response = await RemoveDir(arguments);
-                            break;
-                        case "MKD":
-                            response = await CreateDir(arguments);
-                            break;
-                        case "PWD":
-                            response = PrintWorkingDirectory();
-                            break;
-                        case "RETR":
-                            response = await Retrieve(arguments);
-                            break;
-                        case "STOR":
-                            response = Store(arguments);
-                            break;
-                        case "STOU":
-                            response = StoreUnique();
-                            break;
-                        case "APPE":
-                            response = Append(arguments);
-                            break;
-                        case "LIST":
-                            response = List(arguments ?? CurrentPath);
-                            break;
-                        case "SYST":
-                            response = "215 UNIX Type: L8";
-                            break;
-                        case "NOOP":
-                            response = "200 OK";
-                            break;
-                        case "ACCT":
-                            response = "200 OK";
-                            break;
-                        case "ALLO":
-                            response = "200 OK";
-                            break;
-                        case "NLST":
-                            response = "502 Command not implemented";
-                            break;
-                        case "SITE":
-                            response = "502 Command not implemented";
-                            break;
-                        case "STAT":
-                            response = "502 Command not implemented";
-                            break;
-                        case "HELP":
-                            response = "502 Command not implemented";
-                            break;
-                        case "SMNT":
-                            response = "502 Command not implemented";
-                            break;
-                        case "REST":
-                            response = "502 Command not implemented";
-                            break;
-                        case "ABOR":
-                            response = "502 Command not implemented";
-                            break;
-
-                        // Extensions defined by rfc 2228
-                        case "AUTH":
-                            response = Auth(arguments);
-                            break;
-
-                        // Extensions defined by rfc 2389
-                        case "FEAT":
-                            response = FeatureList();
-                            break;
-                        case "OPTS":
-                            response = Options(arguments);
-                            break;
-
-                        // Extensions defined by rfc 3659
-                        case "MDTM":
-                            response = await FileModificationTime(arguments);
-                            break;
-                        case "SIZE":
-                            response = await FileSize(arguments);
-                            break;
-
-                        // Extensions defined by rfc 2428
-                        case "EPRT":
-                            response = EPort(arguments);
-                            break;
-                        case "EPSV":
-                            response = EPassive();
-                            break;
-
-                        default:
-                            response = "502 Command not implemented";
-                            break;
-                    }
-                }
-
-                //logEntry.CSMethod = cmd;
-                //logEntry.CSUsername = UserName;
-                //logEntry.SCStatus = response.Substring(0, response.IndexOf(' '));
-
-                //Logger.Info(logEntry);
-
-                if (ControlClient == null || !ControlClient.Connected)
-                {
+                    // No cancel is needed
                     break;
                 }
-                else
+
+                // Early return if the connection has closed
+                if (client?.Connected != true)
                 {
-                    ControlWriter.WriteLine(response);
-                    ControlWriter.Flush();
+                    await cts.CancelAsync();
+                    break;
+                }
 
-                    //Logger.Info("FTP Responded: " + response);
+                // Connection not closed, so we can write the response
+                await ControlWriter.WriteLineAsync(response);
+                await ControlWriter.FlushAsync(ct);
 
-                    if (response.StartsWith("221"))
-                    {
-                        break;
-                    }
+                // Amd log our response
+                if (Logger.IsEnabled(LogLevel.Information))
+                    Logger.LogInformation("FTP Responded: {response}", response);
 
-                    if (cmd == "AUTH" && CertificateFileName != null)
-                    {
-                        var certData = System.IO.File.ReadAllBytes(CertificateFileName);
-                        Cert = X509CertificateLoader.LoadCertificate(certData);
+                // Early return / force close connection AFTER sending quit response (221)
+                if (QuitFlag)
+                {
+                    await cts.CancelAsync();
+                    break;
+                }
 
-                        SslStream = new SslStream(ControlStream);
+                // RESPONSE FOLLOW UP 
 
-                        SslStream.AuthenticateAsServer(Cert);
+                // If the server supports SSL and authentication request has been raised,
+                // switch over to SSL connection after sending back the response
+                // inside the Auth method we do the same check on CertificateFileName
+                // (yes it's kinda hacky, but it follows "the natural way of the loop")
+                if (command == "AUTH" && certificateFilename != null)
+                {
+                    // SSL is supported! Load the SSL certificate
+                    var certData = await File.ReadAllBytesAsync(certificateFilename, ct);
+                    Cert = X509CertificateLoader.LoadCertificate(certData);
 
-                        ControlReader = new StreamReader(SslStream);
-                        ControlWriter = new StreamWriter(SslStream);
-                    }
+                    // Setup SSL stream with original Control stream
+                    SslStream = new SslStream(ControlStream);
+                    await SslStream.AuthenticateAsServerAsync(Cert);
+
+                    // Change the Control reader/writer towards the new SSL stream
+                    ControlReader = new StreamReader(SslStream);
+                    ControlWriter = new StreamWriter(SslStream);
                 }
             }
         }
-        catch// (Exception ex)
+        catch (Exception ex)
         {
-            //Logger.Error(ex);
+            Logger.LogError(ex, "FTP Error");
         }
-
-        Dispose();
+        finally
+        {
+            client?.Close();
+            DataClient?.Close();
+            ControlStream?.Close();
+            ControlReader?.Close();
+            ControlWriter?.Close();
+            cts.Dispose();
+        }
     }
-
-    private string NormalizeFilename(string? path)
+    private async Task<string> HandleCommand(string[] commands, string command, string? arguments, CancellationToken ct)
     {
-        if (path == null)
+        return command switch
         {
-            path = string.Empty;
-        }
-
-        if (!path.StartsWith("/")) // = bestand zonder directory
-        {
-            path = CombineWithCurrentPath(path);
-        }
-
-        return path;
-    }
-
-    private string CombineWithCurrentPath(string? path)
-    {
-        if (string.IsNullOrEmpty(CurrentPath))
-        {
-            return "/" + path;
-        }
-        else
-        {
-            if (CurrentPath.EndsWith("/"))
-            {
-                return CurrentPath + path;
-            }
-            else
-            {
-                return CurrentPath + "/" + path;
-            }
-        }
+            "USER" => User(arguments),
+            "PASS" => await Password(arguments, ct),
+            "CWD" => await ChangeWorkingDirectory(arguments, ct),
+            "CDUP" => await ChangeWorkingDirectory("..", ct),
+            "QUIT" => Quit(),
+            "REIN" => Rein(),
+            "PORT" => Port(arguments),
+            "PASV" => Passive(),
+            "TYPE" => Type(commands[1], commands.Length == 3 ? commands[2] : null),
+            "STRU" => Structure(arguments),
+            "MODE" => Mode(arguments),
+            "RNFR" => SetRenameFrom(arguments),
+            "RNTO" => await SetRenameTo_And_ExecuteRename(arguments, ct),
+            "DELE" => await Delete(arguments, ct),
+            "RMD" => await RemoveDir(arguments, ct),
+            "MKD" => await CreateDir(arguments, ct),
+            "PWD" => PrintWorkingDirectory(),
+            "RETR" => await Retrieve(arguments, ct),
+            "STOR" => Store(arguments),
+            "STOU" => StoreUnique(),
+            "APPE" => Append(arguments),
+            "LIST" => List(arguments ?? CurrentPath),
+            "SYST" => "215 UNIX Type: L8",
+            "NOOP" => "200 OK",
+            "ACCT" => "200 OK",
+            "ALLO" => "200 OK",
+            "NLST" => "502 Command not implemented",
+            "SITE" => "502 Command not implemented",
+            "STAT" => "502 Command not implemented",
+            "HELP" => "502 Command not implemented",
+            "SMNT" => "502 Command not implemented",
+            "REST" => "502 Command not implemented",
+            "ABOR" => "502 Command not implemented",
+            // Extensions defined by rfc 2228
+            "AUTH" => Auth(arguments),
+            // Extensions defined by rfc 2389
+            "FEAT" => FeatureList(),
+            "OPTS" => Options(arguments),
+            // Extensions defined by rfc 3659
+            "MDTM" => await FileModificationTime(arguments, ct),
+            "SIZE" => await FileSize(arguments, ct),
+            // Extensions defined by rfc 2428
+            "EPRT" => EPort(arguments),
+            "EPSV" => EPassive(),
+            _ => "502 Command not implemented",
+        };
     }
 
     #region FTP Commands
+
+    private string Quit()
+    {
+        QuitFlag = true;
+        return "221 Service closing control connection";
+    }
+
 
     private string FeatureList()
     {
@@ -362,7 +258,7 @@ public class FtpConnection : IDisposable
 
     private string Auth(string? authMode)
     {
-        if (CertificateFileName != null)
+        if (certificateFilename != null)
         {
             if (authMode == "TLS")
             {
@@ -381,14 +277,14 @@ public class FtpConnection : IDisposable
 
     private string User(string? username)
     {
-        UserName = username;
+        StoredUserName = username;
 
         return "331 Username ok, need password";
     }
 
-    private string Password(string? password)
+    private async Task<string> Password(string? password, CancellationToken ct)
     {
-        CurrentUser = FileSystem.ValidateUser(UserName, password);
+        CurrentUser = await fileSystem.ValidateUser(StoredUserName, password, ct);
 
         if (CurrentUser != null)
         {
@@ -400,11 +296,21 @@ public class FtpConnection : IDisposable
         }
     }
 
-    private async Task<string> ChangeWorkingDirectory(string? pathname)
+    private string Rein()
+    {
+        CurrentUser = null;
+        StoredUserName = null;
+        PassiveListener = null;
+        DataClient = null;
+
+        return "220 Service ready for new user";
+    }
+
+    private async Task<string> ChangeWorkingDirectory(string? pathname, CancellationToken ct)
     {
         pathname = NormalizeFilename(pathname);
 
-        var info = await FileSystem.Get(pathname);
+        var info = await fileSystem.Get(pathname, ct);
         if (info?.IsDirectory != true)// !FileSystem.DirectoryExists(pathname))
         {
             return $"550 CWD failed. Directory '{pathname}' not found.";
@@ -469,7 +375,7 @@ public class FtpConnection : IDisposable
     {
         DataConnectionType = DataConnectionType.Passive;
 
-        var localEndPoint = ControlClient.Client.LocalEndPoint as IPEndPoint;
+        var localEndPoint = client.Client.LocalEndPoint as IPEndPoint;
         if (localEndPoint == null) throw new Exception("Endpoint null");
         IPAddress localIp = localEndPoint.Address;
 
@@ -493,7 +399,7 @@ public class FtpConnection : IDisposable
     {
         DataConnectionType = DataConnectionType.Passive;
 
-        var localEndPoint = ControlClient.Client.LocalEndPoint as IPEndPoint;
+        var localEndPoint = client.Client.LocalEndPoint as IPEndPoint;
         if (localEndPoint == null) throw new Exception("Endpoint null");
         IPAddress localIp = localEndPoint.Address;
 
@@ -537,16 +443,16 @@ public class FtpConnection : IDisposable
         return string.Format("200 Type set to {0}", ConnectionType);
     }
 
-    private async Task<string> Delete(string? pathname)
+    private async Task<string> Delete(string? pathname, CancellationToken ct)
     {
         pathname = NormalizeFilename(pathname);
 
         if (pathname != null)
         {
-            var info = await FileSystem.Get(pathname);
+            var info = await fileSystem.Get(pathname, ct);
             if (info != null)// FileSystem.FileExists(pathname))
             {
-                await FileSystem.Delete(pathname);
+                await fileSystem.Delete(pathname, ct);
             }
             else
             {
@@ -559,16 +465,16 @@ public class FtpConnection : IDisposable
         return "550 File Not Found";
     }
 
-    private async Task<string> RemoveDir(string? pathname)
+    private async Task<string> RemoveDir(string? pathname, CancellationToken ct)
     {
         pathname = NormalizeFilename(pathname);
 
         if (pathname != null)
         {
-            var info = await FileSystem.Get(pathname);
+            var info = await fileSystem.Get(pathname, ct);
             if (info != null)// FileSystem.DirectoryExists(pathname))
             {
-                await FileSystem.Delete(pathname);
+                await fileSystem.Delete(pathname, ct);
             }
             else
             {
@@ -581,16 +487,16 @@ public class FtpConnection : IDisposable
         return "550 Directory Not Found";
     }
 
-    private async Task<string> CreateDir(string? pathname)
+    private async Task<string> CreateDir(string? pathname, CancellationToken ct)
     {
         pathname = NormalizeFilename(pathname);
 
         if (pathname != null)
         {
-            var info = await FileSystem.Get(pathname);
+            var info = await fileSystem.Get(pathname, ct);
             if (info?.IsDirectory != true)// !FileSystem.DirectoryExists(pathname))
             {
-                await FileSystem.CreateDirectory(pathname);
+                await fileSystem.CreateDirectory(pathname, ct);
             }
             else
             {
@@ -603,13 +509,13 @@ public class FtpConnection : IDisposable
         return "550 Directory Not Found";
     }
 
-    private async Task<string> FileModificationTime(string? pathname)
+    private async Task<string> FileModificationTime(string? pathname, CancellationToken ct)
     {
         pathname = NormalizeFilename(pathname);
 
         if (pathname != null)
         {
-            var info = await FileSystem.Get(pathname);
+            var info = await fileSystem.Get(pathname, ct);
             if (info != null)// FileSystem.FileExists(pathname))
             {
                 return string.Format("213 {0}", info.LastModified.ToString("yyyyMMddHHmmss.fff"));// FileSystem.FileGetLastWriteTime(pathname).ToString("yyyyMMddHHmmss.fff"));
@@ -619,13 +525,13 @@ public class FtpConnection : IDisposable
         return "550 File Not Found";
     }
 
-    private async Task<string> FileSize(string? pathname)
+    private async Task<string> FileSize(string? pathname, CancellationToken ct)
     {
         pathname = NormalizeFilename(pathname);
 
         if (pathname != null)
         {
-            var info = await FileSystem.Get(pathname);
+            var info = await fileSystem.Get(pathname, ct);
             if (info != null) //FileSystem.FileExists(pathname))
             {
                 //long length = 0;
@@ -645,13 +551,13 @@ public class FtpConnection : IDisposable
         return "550 File Not Found";
     }
 
-    private async Task<string> Retrieve(string? pathname)
+    private async Task<string> Retrieve(string? pathname, CancellationToken ct)
     {
         pathname = NormalizeFilename(pathname);
 
         if (pathname != null)
         {
-            var info = await FileSystem.Get(pathname);
+            var info = await fileSystem.Get(pathname, ct);
             if (info != null) //FileSystem.FileExists(pathname))
             {
                 var state = new DataConnectionOperation(RetrieveOperation, pathname);
@@ -683,20 +589,20 @@ public class FtpConnection : IDisposable
 
     private string Append(string? pathname)
     {
-        return "450 Requested file action not taken";
-
-        //pathname = NormalizeFilename(pathname);
-
-        //if (pathname != null)
-        //{
-        //    var state = new DataConnectionOperation(AppendOperation, pathname);
-
-        //    SetupDataConnectionOperation(state);
-
-        //    return string.Format("150 Opening {0} mode data transfer for APPE", DataConnectionType);
-        //}
-
         //return "450 Requested file action not taken";
+
+        pathname = NormalizeFilename(pathname);
+
+        if (pathname != null)
+        {
+            var state = new DataConnectionOperation(AppendOperation, pathname);
+
+            SetupDataConnectionOperation(state);
+
+            return string.Format("150 Opening {0} mode data transfer for APPE", DataConnectionType);
+        }
+
+        return "450 Requested file action not taken";
     }
 
     private string StoreUnique()
@@ -767,7 +673,16 @@ public class FtpConnection : IDisposable
         }
     }
 
-    private async Task<string> Rename(string? renameFrom, string? renameTo)
+    private string SetRenameFrom(string? arguments)
+    {
+        StoredRenameFrom = arguments;
+        return "350 Requested file action pending further information";
+    }
+    private Task<string> SetRenameTo_And_ExecuteRename(string? arguments, CancellationToken ct)
+    {
+        return Rename(StoredRenameFrom, arguments, ct);
+    }
+    private async Task<string> Rename(string? renameFrom, string? renameTo, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(renameFrom) || string.IsNullOrWhiteSpace(renameTo))
         {
@@ -779,15 +694,15 @@ public class FtpConnection : IDisposable
 
         if (renameFrom != null && renameTo != null)
         {
-            var info = await FileSystem.Get(renameFrom);
-            var infoTo = await FileSystem.Get(renameTo);
+            var info = await fileSystem.Get(renameFrom, ct);
+            var infoTo = await fileSystem.Get(renameTo, ct);
             if (info?.IsDirectory == false) //FileSystem.FileExists(renameFrom))
             {
-                await FileSystem.Move(renameFrom, renameTo);
+                await fileSystem.Move(renameFrom, renameTo, ct);
             }
             else if (infoTo?.IsDirectory == true) // FileSystem.DirectoryExists(renameFrom))
             {
-                await FileSystem.Move(renameFrom, renameTo);
+                await fileSystem.Move(renameFrom, renameTo, ct);
             }
             else
             {
@@ -798,6 +713,39 @@ public class FtpConnection : IDisposable
         }
 
         return "450 Requested file action not taken";
+    }
+
+    private string NormalizeFilename(string? path)
+    {
+        if (path == null)
+        {
+            path = string.Empty;
+        }
+
+        if (!path.StartsWith("/")) // = bestand zonder directory
+        {
+            path = CombineWithCurrentPath(path);
+        }
+
+        return path;
+    }
+    private string CombineWithCurrentPath(string? path)
+    {
+        if (string.IsNullOrEmpty(CurrentPath))
+        {
+            return "/" + path;
+        }
+        else
+        {
+            if (CurrentPath.EndsWith("/"))
+            {
+                return CurrentPath + path;
+            }
+            else
+            {
+                return CurrentPath + "/" + path;
+            }
+        }
     }
 
     #endregion
@@ -858,107 +806,109 @@ public class FtpConnection : IDisposable
 
     private async Task<string> RetrieveOperation(NetworkStream dataStream, string pathname, CancellationToken ct)
     {
-        //try
-        //{
-        var stopWatch = Stopwatch.StartNew();
-        long bytes = 0;
-
-        using (var fs = await FileSystem.OpenRead(pathname))
+        try
         {
-            if (fs != null)
-                bytes = CopyStream(fs, dataStream);
-        }
+            var stopWatch = Stopwatch.StartNew();
+            long bytes = 0;
 
-        var sec = stopWatch.Elapsed.TotalSeconds;
-        var speed = Convert.ToInt64(bytes / sec);
-        return $"226 Closing data connection, file transfer successful ({speed}b/sec)";
-        //}
-        //catch (Exception ex)
-        //{
-        //    Logger.Error(ex);
-        //    return $"502 Error while retreiving data";
-        //}
+            using (var fs = await fileSystem.OpenRead(pathname, ct))
+            {
+                if (fs != null)
+                    bytes = await CopyStream(fs, dataStream, ct);
+            }
+
+            var sec = stopWatch.Elapsed.TotalSeconds;
+            var speed = Convert.ToInt64(bytes / sec);
+            return $"226 Closing data connection, file transfer successful ({speed}b/sec)";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error while retreiving data");
+            return $"502 Error while retreiving data";
+        }
     }
 
     private async Task<string> StoreOperation(NetworkStream dataStream, string pathname, CancellationToken ct)
     {
-        //try
-        //{
-        var stopWatch = Stopwatch.StartNew();
-        long bytes = 0;
+        try
+        {
+            var stopWatch = Stopwatch.StartNew();
+            long bytes = 0;
 
-        await FileSystem.Write(pathname, dataStream, ct);
+            await fileSystem.Write(pathname, dataStream, ct);
 
-        //using (var fs = await FileSystem.Write(pathname))
-        //{
-        //    bytes = CopyStream(dataStream, fs);
-        //}
+            //using (var fs = await FileSystem.Write(pathname))
+            //{
+            //    bytes = CopyStream(dataStream, fs);
+            //}
 
-        var sec = stopWatch.Elapsed.TotalSeconds;
-        var speed = Convert.ToInt64(bytes / sec);
+            var sec = stopWatch.Elapsed.TotalSeconds;
+            var speed = Convert.ToInt64(bytes / sec);
 
-        //LogEntry logEntry = new LogEntry
-        //{
-        //    Date = DateTime.Now,
-        //    CIP = ClientIP,
-        //    CSMethod = "STOR",
-        //    CSUsername = UserName,
-        //    SCStatus = "226",
-        //    CSBytes = bytes.ToString()
-        //};
+            //LogEntry logEntry = new LogEntry
+            //{
+            //    Date = DateTime.Now,
+            //    CIP = ClientIP,
+            //    CSMethod = "STOR",
+            //    CSUsername = UserName,
+            //    SCStatus = "226",
+            //    CSBytes = bytes.ToString()
+            //};
 
-        //Logger.Info(logEntry);
+            //Logger.Info(logEntry);
 
-        return $"226 Closing data connection, file transfer successful ({speed}b/sec)";
-        //}
-        //catch (Exception ex)
-        //{
-        //    Logger.Error(ex);
-        //    return $"502 Error while storing data";
-        //}
+            return $"226 Closing data connection, file transfer successful ({speed}b/sec)";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error while storing data");
+            return $"502 Error while storing data";
+        }
     }
 
-    //private string AppendOperation(NetworkStream dataStream, string pathname)
-    //{
-    //    //try
-    //    //{
-    //    var stopWatch = Stopwatch.StartNew();
-    //    long bytes = 0;
+    private async Task<string> AppendOperation(NetworkStream dataStream, string pathname, CancellationToken ct)
+    {
+        try
+        {
+            var stopWatch = Stopwatch.StartNew();
+            long bytes = 0;
 
-    //    using (var fs = FileSystem.FileOpenWriteAppend(pathname))
-    //    {
-    //        bytes = CopyStream(dataStream, fs);
-    //    }
+            await fileSystem.Append(pathname, dataStream, ct);
 
-    //    var sec = stopWatch.Elapsed.TotalSeconds;
-    //    var speed = Convert.ToInt64(bytes / sec);
+            //using (var fs = FileSystem.FileOpenWriteAppend(pathname))
+            //{
+            //    bytes = CopyStream(dataStream, fs);
+            //}
 
-    //    //LogEntry logEntry = new LogEntry
-    //    //{
-    //    //    Date = DateTime.Now,
-    //    //    CIP = ClientIP,
-    //    //    CSMethod = "APPE",
-    //    //    CSUsername = UserName,
-    //    //    SCStatus = "226",
-    //    //    CSBytes = bytes.ToString()
-    //    //};
+            var sec = stopWatch.Elapsed.TotalSeconds;
+            var speed = Convert.ToInt64(bytes / sec);
 
-    //    //Logger.Info(logEntry);
+            //LogEntry logEntry = new LogEntry
+            //{
+            //    Date = DateTime.Now,
+            //    CIP = ClientIP,
+            //    CSMethod = "APPE",
+            //    CSUsername = UserName,
+            //    SCStatus = "226",
+            //    CSBytes = bytes.ToString()
+            //};
 
-    //    return $"226 Closing data connection, file transfer successful ({speed}b/sec)";
-    //    //}
-    //    //catch (Exception ex)
-    //    //{
-    //    //    Logger.Error(ex);
-    //    //    return $"502 Error while appending data";
-    //    //}
-    //}
+            //Logger.Info(logEntry);
+
+            return $"226 Closing data connection, file transfer successful ({speed}b/sec)";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error while appending data");
+            return $"502 Error while appending data";
+        }
+    }
 
     private async Task<string> ListOperation(NetworkStream dataStream, string pathname, CancellationToken ct)
     {
         var dataWriter = new StreamWriter(dataStream, Encoding.ASCII);
 
-        var entries = FileSystem.ListDirectory(pathname);
+        var entries = fileSystem.ListDirectory(pathname, ct);
         await foreach (var entry in entries)
         {
             if (entry.IsDirectory)
@@ -1026,34 +976,45 @@ public class FtpConnection : IDisposable
 
     #region Copy Stream Implementations
 
-    private static long CopyStream(Stream input, Stream output, int bufferSize)
+    private Task<long> CopyStream(Stream input, Stream output, CancellationToken ct)
+    {
+        if (ConnectionType == TransferType.Image)
+        {
+            return CopyStreamBinary(input, output, FtpBufferSize, ct);
+        }
+        else
+        {
+            return CopyStreamAscii(input, output, FtpBufferSize, ct);
+        }
+    }
+    private static async Task<long> CopyStreamBinary(Stream input, Stream output, int bufferSize, CancellationToken ct)
     {
         byte[] buffer = new byte[bufferSize];
         int count = 0;
         long total = 0;
 
-        while ((count = input.Read(buffer, 0, buffer.Length)) > 0)
+        while ((count = await input.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
         {
-            output.Write(buffer, 0, count);
+            await output.WriteAsync(buffer, 0, count, ct);
             total += count;
         }
 
         return total;
     }
 
-    private static long CopyStreamAscii(Stream input, Stream output, int bufferSize)
+    private static async Task<long> CopyStreamAscii(Stream input, Stream output, int bufferSize, CancellationToken ct)
     {
-        char[] buffer = new char[bufferSize];
-        int count = 0;
-        long total = 0;
+        var buffer = new char[bufferSize];
+        var count = 0;
+        var total = 0L;
 
         using (var rdr = new StreamReader(input, Encoding.ASCII))
         {
             using (var wtr = new StreamWriter(output, Encoding.ASCII))
             {
-                while ((count = rdr.Read(buffer, 0, buffer.Length)) > 0)
+                while ((count = await rdr.ReadAsync(buffer, ct)) > 0)
                 {
-                    wtr.Write(buffer, 0, count);
+                    await wtr.WriteAsync(new Memory<char>(buffer, 0, count), ct);
                     total += count;
                 }
             }
@@ -1062,70 +1023,10 @@ public class FtpConnection : IDisposable
         return total;
     }
 
-    private long CopyStream(Stream input, Stream output)
-    {
-        var limitedStream = output; // new RateLimitingStream(output, 131072, 0.5);
-
-        if (ConnectionType == TransferType.Image)
-        {
-            return CopyStream(input, limitedStream, FtpBufferSize);
-        }
-        else
-        {
-            return CopyStreamAscii(input, limitedStream, FtpBufferSize);
-        }
-    }
 
     #endregion
 
-    #region IDisposable
-
-    public void Dispose()
-    {
-        Dispose(true);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!Disposed)
-        {
-            if (disposing)
-            {
-                if (ControlClient != null)
-                {
-                    ControlClient.Close();
-                }
-
-                if (DataClient != null)
-                {
-                    DataClient.Close();
-                }
-
-                if (ControlStream != null)
-                {
-                    ControlStream.Close();
-                }
-
-                if (ControlReader != null)
-                {
-                    ControlReader.Close();
-                }
-
-                if (ControlWriter != null)
-                {
-                    ControlWriter.Close();
-                }
-            }
-        }
-
-        Disposed = true;
-    }
-
-    #endregion
-
-    class DataConnectionOperation(Func<NetworkStream, string, CancellationToken, Task<string>> operation, string arguments)
-    {
-        public Func<NetworkStream, string, CancellationToken, Task<string>> Operation { get; set; } = operation;
-        public string Arguments { get; set; } = arguments;
-    }
+    record DataConnectionOperation(
+        Func<NetworkStream, string, CancellationToken, Task<string>> Operation,
+        string Arguments);
 }

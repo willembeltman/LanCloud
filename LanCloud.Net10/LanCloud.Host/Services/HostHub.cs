@@ -11,7 +11,6 @@ namespace LanCloud.Host.Services;
 
 public class HostHub(
     IClientConnection clientConnection,
-    ITestApi testApi,
     IAuthenticatedHttpClient authenticatedHttpClient,
     HostConfig config)
     : IHostedService
@@ -30,7 +29,7 @@ public class HostHub(
     async Task IHostedService.StopAsync(CancellationToken ct)
         => await clientConnection.UnsubscribeAsync(this, ct);
 
-    async IAsyncEnumerable<ShareEntryDto> IHostHub.ListDirectory(
+    async IAsyncEnumerable<HubEntryDto> IHostHub.ListDirectory(
         string relativeFullName,
         [EnumeratorCancellation] CancellationToken ct)
     {
@@ -48,7 +47,7 @@ public class HostHub(
         }
     }
 
-    async IAsyncEnumerable<ShareEntryDto> IHostHub.Get(
+    async IAsyncEnumerable<HubEntryDto> IHostHub.Get(
         string relativeFullName,
         [EnumeratorCancellation] CancellationToken ct)
     {
@@ -83,74 +82,74 @@ public class HostHub(
         }
     }
 
-    public async Task Test1()
-    {
-    }
-    public async IAsyncEnumerable<string> Test3([EnumeratorCancellation] CancellationToken ct)
-    {
-        yield return "1";
-        await Task.Yield();
-        yield return "2";
-        await Task.Yield();
-        yield return "3";
-        await Task.Yield();
-    }
+    //public async Task Test1()
+    //{
+    //}
+    //public async IAsyncEnumerable<string> Test3([EnumeratorCancellation] CancellationToken ct)
+    //{
+    //    yield return "1";
+    //    await Task.Yield();
+    //    yield return "2";
+    //    await Task.Yield();
+    //    yield return "3";
+    //    await Task.Yield();
+    //}
 
-    public async Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
-    {
-        await foreach (var testItem in test)
-        {
-            //await Task.Delay(40000);
-        }
-        await foreach (var testItem in test2)
-        {
-        }
-    }
-    public async IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct)
-    {
-        await foreach (var testItem in test)
-        {
-        }
-        await foreach (var testItem in test2)
-        {
-        }
+    //public async Task Test4(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2)
+    //{
+    //    await foreach (var testItem in test)
+    //    {
+    //        //await Task.Delay(40000);
+    //    }
+    //    await foreach (var testItem in test2)
+    //    {
+    //    }
+    //}
+    //public async IAsyncEnumerable<string> Test6(string name, IAsyncEnumerable<string> test, IAsyncEnumerable<string> test2, [EnumeratorCancellation] CancellationToken ct)
+    //{
+    //    await foreach (var testItem in test)
+    //    {
+    //    }
+    //    await foreach (var testItem in test2)
+    //    {
+    //    }
 
-        yield return "1";
-        yield return "2";
-        yield return "3";
-    }
+    //    yield return "1";
+    //    yield return "2";
+    //    yield return "3";
+    //}
 
-    public async Task StartTest(CancellationToken ct)
-    {
-        var state = await authenticatedHttpClient.GetStateAsync();
-        state.Index++;
+    //public async Task StartTest(CancellationToken ct)
+    //{
+    //    var state = await authenticatedHttpClient.GetStateAsync();
+    //    state.Index++;
 
-        async IAsyncEnumerable<string> test()
-        {
-            yield return "1";
-            yield return "2";
-            yield return "3";
-        }
+    //    async IAsyncEnumerable<string> test()
+    //    {
+    //        yield return "1";
+    //        yield return "2";
+    //        yield return "3";
+    //    }
 
-        //var tries = 10;
-        //var watch = Stopwatch.StartNew();
-        //for (int i = 0; i < tries; i++)
-        //{
-        // Call naar server
-        var list = testApi.Test6(
-            "test",
-            test(),
-            test(),
-            ct);
+    //    //var tries = 10;
+    //    //var watch = Stopwatch.StartNew();
+    //    //for (int i = 0; i < tries; i++)
+    //    //{
+    //    // Call naar server
+    //    var list = testApi.Test6(
+    //        "test",
+    //        test(),
+    //        test(),
+    //        ct);
 
-        await foreach (var item in list)
-        {
+    //    await foreach (var item in list)
+    //    {
 
-        }
-        //}
-        //var avg = watch.ElapsedMilliseconds /
-        //    tries;
-        var avg = 0;
-        Console.WriteLine(avg);
-    }
+    //    }
+    //    //}
+    //    //var avg = watch.ElapsedMilliseconds /
+    //    //    tries;
+    //    var avg = 0;
+    //    Console.WriteLine(avg);
+    //}
 }

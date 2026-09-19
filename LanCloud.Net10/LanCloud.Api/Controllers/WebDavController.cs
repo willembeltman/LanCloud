@@ -447,7 +447,7 @@ public class WebDavController(
         var username = decoded[..separator];
         var password = decoded[(separator + 1)..];
 
-        if (!await fileSystem.Authenticate(
+        if (!await fileSystem.IsAuthenticated(
                 username,
                 password,
                 ct))

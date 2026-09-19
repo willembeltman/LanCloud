@@ -4,9 +4,8 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<!-- Zorgt ervoor dat gegenereerde code fysiek op schijf wordt opgeslagen -->
+		
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<!-- Verplaatst de output naar een nette map in je projectroot in plaats van diep in obj -->
 		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
 	</PropertyGroup>
 
@@ -19,13 +18,12 @@
 	</Target>
 	
 	<ItemGroup>
-		<!-- Zorgt ervoor dat de compiler de fysieke bestanden niet dubbel meeneemt -->
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<!--<ProjectReference Include="..\gAPI\gAPI.Core\gAPI.Core.csproj" />-->
-		<PackageReference Include="gAPI.Core" Version="0.0.1-beta" />
+		<PackageReference Include="gAPI.Core" Version="0.0.2-beta" />
 	</ItemGroup>
 
 </Project>

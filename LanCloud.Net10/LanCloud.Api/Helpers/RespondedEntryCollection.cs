@@ -2,13 +2,13 @@ using LanCloud.Api.Models;
 
 namespace LanCloud.Api.Helpers;
 
-public class EntryCollection
+public class RespondedEntryCollection
 {
     private readonly Lock _lock = new();
 
-    public Dictionary<string, Entry> RespondedEntries { get; } = [];
+    public Dictionary<string, RespondedEntry> RespondedEntries { get; } = [];
 
-    public void Responded(string path, Entry entry)
+    public void Responded(string path, RespondedEntry entry)
     {
         lock (_lock)
         {
@@ -16,7 +16,7 @@ public class EntryCollection
         }
     }
 
-    public bool TryGet(string path, out Entry? entry)
+    public bool TryGet(string path, out RespondedEntry? entry)
     {
         lock (_lock)
         {

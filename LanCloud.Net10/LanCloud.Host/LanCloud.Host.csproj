@@ -5,9 +5,8 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<!-- Zorgt ervoor dat gegenereerde code fysiek op schijf wordt opgeslagen -->
+		
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<!-- Verplaatst de output naar een nette map in je projectroot in plaats van diep in obj -->
 		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
 	</PropertyGroup>
 
@@ -20,7 +19,6 @@
 	</Target>
 	
 	<ItemGroup>
-		<!-- Zorgt ervoor dat de compiler de fysieke bestanden niet dubbel meeneemt -->
 		<Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
 	</ItemGroup>
 
@@ -30,23 +28,23 @@
 
 	<ItemGroup>
 		<!--<ProjectReference Include="..\gAPI\gAPI.Core.Client\gAPI.Core.Client.csproj" />-->
-		<PackageReference Include="gAPI.Core.Client" Version="0.0.1-beta" />
+		<PackageReference Include="gAPI.Core.Client" Version="0.0.2-beta" />
 		
 		<!--<ProjectReference Include="..\gAPI\gAPI.AutoWss.Client\gAPI.AutoWss.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
-		<PackageReference Include="gAPI.AutoWss.Client" Version="0.0.1-beta">
+		<PackageReference Include="gAPI.AutoWss.Client" Version="0.0.2-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 
 		<!--<ProjectReference Include="..\gAPI\gAPI.AutoAuth.Client\gAPI.AutoAuth.Client.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
-		<PackageReference Include="gAPI.AutoAuth.Client" Version="0.0.1-beta">
+		<PackageReference Include="gAPI.AutoAuth.Client" Version="0.0.2-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
 	</ItemGroup>
 
 </Project>

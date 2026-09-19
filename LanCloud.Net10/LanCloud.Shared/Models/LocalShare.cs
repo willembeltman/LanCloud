@@ -1,6 +1,7 @@
 using gAPI.Core.Dtos;
 using gAPI.Core.Ids;
 using LanCloud.Shared.Dtos;
+using Microsoft.Extensions.Options;
 using System.Runtime.CompilerServices;
 
 namespace LanCloud.Shared.Models;
@@ -14,7 +15,7 @@ public class LocalShare
 
     public string LocalFullName { get; set; } = string.Empty;
 
-    public async IAsyncEnumerable<ShareEntryDto> ListDirectory(
+    public async IAsyncEnumerable<HubEntryDto> ListDirectory(
         string relativePath,
         SessionId? sessionId,
         [EnumeratorCancellation] CancellationToken ct)
@@ -40,7 +41,7 @@ public class LocalShare
     }
 
     public async Task<bool> Exist(
-        string relativeFullName, 
+        string relativeFullName,
         CancellationToken ct)
     {
         var path = CreateLocalFullName(relativeFullName);
@@ -53,7 +54,7 @@ public class LocalShare
         return false;
     }
 
-    public async IAsyncEnumerable<ShareEntryDto> Get(
+    public async IAsyncEnumerable<HubEntryDto> Get(
         string relativeFullName,
         SessionId? sessionId,
         [EnumeratorCancellation] CancellationToken ct)
@@ -212,6 +213,26 @@ public class LocalShare
 
         await incomingStream.CopyToAsync(diskStream, ct);
     }
+    public async Task Append(string path, Stream incomingStream, CancellationToken ct)
+    {
+        var fullName = CreateLocalFullName(path);
+
+        var directory = Path.GetDirectoryName(fullName);
+
+        if (directory is not null)
+            Directory.CreateDirectory(directory);
+
+        await using var diskStream = new FileStream(
+            fullName,
+            FileMode.Append,
+            FileAccess.Write,
+            FileShare.None,
+            bufferSize: 8 * 1024 * 1024,
+            options: FileOptions.Asynchronous);
+
+        await incomingStream.CopyToAsync(diskStream, ct);
+    }
+
 
     private string CreateLocalFullName(
         string relativeName)
@@ -247,7 +268,7 @@ public class LocalShare
         return fullPath;
     }
 
-    private static ShareEntryDto CreateEntry(
+    private static HubEntryDto CreateEntry(
         string fullName,
         string relativeParent,
         SessionId? sessionId)
@@ -283,7 +304,7 @@ public class LocalShare
             ? name
             : $"{relativeParent.Trim('/')}/{name}";
 
-        return new ShareEntryDto
+        return new HubEntryDto
         {
             Name = name,
             Path = relativePath,

@@ -4,7 +4,6 @@ using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Extensions;
 using gAPI.Core.Server.Interfaces;
-using LanCloud.Api.Authentication;
 using LanCloud.Shared.Dtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -110,7 +109,7 @@ public static class AddAutoAuthServerExtension
         services.AddScoped<gAPI.Core.Interfaces.IStateParser<LanCloud.Shared.Dtos.StateDto>>(sp => sp.GetRequiredService<gAPI.Generated.StateParser>());
 
         // Register StateMapper
-        services.AddScoped<gAPI.Core.Server.Interfaces.IStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>, StateMapping>();
+        services.AddScoped<gAPI.Core.Server.Interfaces.IStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>, AuthenticationStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>>();
         return services;
     }
 

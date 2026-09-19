@@ -3,7 +3,6 @@ using gAPI.Core.Client.Config;
 using gAPI.Core.Client.Extensions;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Interfaces;
-using LanCloud.Shared.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Configuration;
@@ -46,10 +45,10 @@ public static class AddAutoWssClientExtension
         services.AddScoped<ClientConnection>(sp => 
             new ClientConnection(sp.GetRequiredService<IClientAuthenticatedHttpClient>(), wssBackendUrl));
         services.AddScoped<IClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
+        services.AddScoped<IWssClientConnection>(sp => sp.GetRequiredService<ClientConnection>());
         services.AddScoped<IClientLoggerFactory>(sp => sp.GetRequiredService<ClientConnection>());
         
         // Api clients
-        services.AddScoped<ITestApi>(sp => sp.GetRequiredService<ClientConnection>().TestApi);
         
         // Minimal api clients
         services.AddScoped<IAccountService, AccountService>();
