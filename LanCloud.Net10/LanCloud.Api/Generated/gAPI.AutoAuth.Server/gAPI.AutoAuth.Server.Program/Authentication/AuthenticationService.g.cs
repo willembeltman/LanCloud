@@ -14,13 +14,13 @@ namespace gAPI.Generated;
 public class AuthenticationService(
     IAuthenticationStateFactory<gAPI.Core.Server.Entities.AuthUser> authenticationStateFactory,
     IUserTokenFactory<gAPI.Core.Server.Entities.AuthUser> userTokenFactory,
-    IStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto> stateMapping,
-    IStateParser<LanCloud.Shared.Dtos.StateDto> stateSerializer,
+    IStateMapping<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto> stateMapping,
+    IStateParser<gAPI.Core.Dtos.AuthStateDto> stateSerializer,
     IHostEnvironment hostEnvironment,
     IEnumerable<gAPI.Core.Server.Fabric.FabricClient> fabricClient,
     AuthenticationOptions authenticationOptions,
-    IEnumerable<gAPI.Core.Server.Interfaces.IAuthenticationCheck<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>> authenticationChecks) 
-    : gAPI.Core.Server.Authentication.AuthenticationService<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>(
+    IEnumerable<gAPI.Core.Server.Interfaces.IAuthenticationCheck<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>> authenticationChecks) 
+    : gAPI.Core.Server.Authentication.AuthenticationService<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>(
         authenticationStateFactory,
         userTokenFactory,
         stateMapping,

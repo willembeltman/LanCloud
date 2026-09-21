@@ -1,7 +1,9 @@
-using LanCloud.Api.Models;
-using LanCloud.Api.Services;
+using LanCloud.Api.Interfaces;
+using LanCloud.Shared.Dtos;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Xml.Linq;
 
@@ -10,7 +12,7 @@ namespace LanCloud.Api.Controllers;
 [ApiController]
 [Route("dav")]
 public class WebDavController(
-    FileSystem fileSystem,
+    IFileSystemDirect fileSystem,
     ILogger<WebDavController> logger)
     : ControllerBase
 {
@@ -447,10 +449,10 @@ public class WebDavController(
         var username = decoded[..separator];
         var password = decoded[(separator + 1)..];
 
-        if (!await fileSystem.IsAuthenticated(
+        if ((await fileSystem.AuthenticateUser(
                 username,
                 password,
-                ct))
+                ct)) == null)
         {
             return UnauthorizedDav(auth.Realm);
         }

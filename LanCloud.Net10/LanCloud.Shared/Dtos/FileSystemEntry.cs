@@ -1,4 +1,4 @@
-﻿namespace LanCloud.Api.Models;
+﻿namespace LanCloud.Shared.Dtos;
 
 public record FileSystemEntry(
     string Name,

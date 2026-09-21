@@ -1,18 +1,17 @@
-﻿using gAPI.Core.Attributes;
-using gAPI.Core.Ids;
+﻿using gAPI.Core.Ids;
 
 namespace LanCloud.Shared.Dtos;
 
-public class HubEntryDto
+public record HubEntryDto(
+    string Name,
+    string Path,
+    bool IsDirectory,
+    long Size,
+    DateTime Created,
+    DateTime LastModified,
+    SessionId? SessionId) 
+    : FileSystemEntry(Name, Path, IsDirectory, Size, Created, LastModified)
 {
-    public string Name { get; set; } = string.Empty;
-    public string Path { get; set; } = string.Empty;
-    public bool IsDirectory { get; set; }
-    public long Size { get; set; }
-    public DateTime Created { get; set; }
-    public DateTime LastModified { get; set; }
-    public SessionId? SessionId { get; set; }
-
     public DateTime GetLastDate()
     {
         if (Created > LastModified) return Created;

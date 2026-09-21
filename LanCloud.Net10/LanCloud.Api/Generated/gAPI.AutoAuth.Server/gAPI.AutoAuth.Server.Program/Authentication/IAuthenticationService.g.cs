@@ -5,7 +5,7 @@
 namespace gAPI.Generated;
 
 public interface IAuthenticationService
-    : gAPI.Core.Server.Interfaces.IAuthenticationService<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>
+    : gAPI.Core.Server.Interfaces.IAuthenticationService<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>
     , gAPI.Core.Interfaces.IServerAuthenticationService
 {
 }

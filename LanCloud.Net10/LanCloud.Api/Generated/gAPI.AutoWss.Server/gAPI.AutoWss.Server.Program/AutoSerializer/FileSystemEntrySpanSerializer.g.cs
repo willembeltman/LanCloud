@@ -1,6 +1,5 @@
 ﻿using gAPI.Core.Attributes;
 using gAPI.Core.AttributesSerializers;
-using gAPI.Core.Ids;
 using gAPI.Core.Serializers;
 using LanCloud.Shared.Dtos;
 using System;
@@ -10,14 +9,14 @@ using System.Text;
 #nullable enable
 namespace gAPI.Generated;
 
-public static class HubEntryDtoSpanSerializer
+public static class FileSystemEntrySpanSerializer
 {
     public const ushort Magic = (ushort)0x4741;
-    public const uint TypeId = 0x32C1AA85;
-    public const uint SchemaHash = 0x1C31B869;
+    public const uint TypeId = 0x98324D22;
+    public const uint SchemaHash = 0x5B84E01C;
 
     [IsSpanSerializerWrite]
-    public static void Write(this ref Span<byte> ___span, ref int ___offset, HubEntryDto value)
+    public static void Write(this ref Span<byte> ___span, ref int ___offset, FileSystemEntry value)
     {
         PrimitivesSpanSerializer.WriteUShort(ref ___span, ref ___offset, Magic); // Magic string `GA` => it's a gAPI stream
         PrimitivesSpanSerializer.WriteUInt(ref ___span, ref ___offset, TypeId); // Type identifier
@@ -29,13 +28,10 @@ public static class HubEntryDtoSpanSerializer
         PrimitivesSpanSerializer.WriteInt64(ref ___span, ref ___offset, value.Size);
         DateTimeSerializers.Write(ref ___span, ref ___offset, value.Created);
         DateTimeSerializers.Write(ref ___span, ref ___offset, value.LastModified);
-        PrimitivesSpanSerializer.WriteBoolean(ref ___span, ref ___offset, value.SessionId != null);
-        if (value.SessionId != null)
-            SessionIdSpanSerializer.Write(ref ___span, ref ___offset, value.SessionId);
     }
 
     [IsSpanSerializerRead]
-    public static HubEntryDto ReadHubEntryDto(this ReadOnlySpan<byte> ___span, ref int ___offset)
+    public static FileSystemEntry ReadFileSystemEntry(this ReadOnlySpan<byte> ___span, ref int ___offset)
     {
         var magicCheck = PrimitivesSpanSerializer.ReadUShort(___span, ref ___offset);// Magic string `GA` => it's a gAPI stream
         if (magicCheck != Magic) throw new InvalidDataException($"magic does not match, expected: `0x{Magic:X4}`, got: `0x{magicCheck:X4}`");
@@ -44,18 +40,17 @@ public static class HubEntryDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        return new HubEntryDto(
+        return new FileSystemEntry(
             PrimitivesSpanSerializer.ReadString(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadString(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
 			PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset), 
 			DateTimeSerializers.ReadDateTime(___span, ref ___offset), 
-			DateTimeSerializers.ReadDateTime(___span, ref ___offset), 
-			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset));
+			DateTimeSerializers.ReadDateTime(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]
-    public static int Length(ref int ___offset, HubEntryDto value)
+    public static int Length(ref int ___offset, FileSystemEntry value)
     {
         ___offset += 10;
         PrimitivesSpanSerializer.LengthString(ref ___offset, value.Name);
@@ -64,9 +59,6 @@ public static class HubEntryDtoSpanSerializer
         PrimitivesSpanSerializer.LengthInt64(ref ___offset, value.Size);
         DateTimeSerializers.Length(ref ___offset, value.Created);
         DateTimeSerializers.Length(ref ___offset, value.LastModified);
-        PrimitivesSpanSerializer.LengthBoolean(ref ___offset, value.SessionId != null);
-        if (value.SessionId != null)
-            SessionIdSpanSerializer.Length(ref ___offset, value.SessionId);
         return ___offset;
     }
 }

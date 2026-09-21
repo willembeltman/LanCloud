@@ -1,7 +1,7 @@
-﻿using gAPI.Core.Server.Authentication;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Extensions;
-using LanCloud.Shared.Dtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;

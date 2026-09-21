@@ -7,11 +7,11 @@ using System.Security.Claims;
 namespace gAPI.Generated;
 
 public class NoDbAuthenticationService(
-    gAPI.Core.Server.Interfaces.IStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto> stateMapping,
-    gAPI.Core.Interfaces.IStateParser<LanCloud.Shared.Dtos.StateDto> stateSerializer,
+    gAPI.Core.Server.Interfaces.IStateMapping<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto> stateMapping,
+    gAPI.Core.Interfaces.IStateParser<gAPI.Core.Dtos.AuthStateDto> stateSerializer,
     gAPI.Core.Server.Fabric.FabricClient fabricClient,
     AuthenticationOptions authenticationOptions) 
-    : gAPI.Core.Server.Authentication.NoDbServerAuthenticationService<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>(
+    : gAPI.Core.Server.Authentication.NoDbServerAuthenticationService<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>(
         stateMapping,
         stateSerializer,
         fabricClient,

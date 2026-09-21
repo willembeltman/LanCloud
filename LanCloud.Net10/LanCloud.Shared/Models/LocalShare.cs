@@ -304,16 +304,14 @@ public class LocalShare
             ? name
             : $"{relativeParent.Trim('/')}/{name}";
 
-        return new HubEntryDto
-        {
-            Name = name,
-            Path = relativePath,
-            IsDirectory = isDirectory,
-            Size = size,
-            Created = created,
-            LastModified = modified,
-            SessionId = sessionId
-        };
+        return new HubEntryDto(
+            name, 
+            relativePath, 
+            isDirectory,
+            size, 
+            created, 
+            modified, 
+            sessionId);
     }
 
 }

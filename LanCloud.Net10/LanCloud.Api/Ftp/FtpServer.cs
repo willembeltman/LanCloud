@@ -1,11 +1,11 @@
-﻿using LanCloud.Api.Models;
+﻿using LanCloud.Api.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 
-namespace LanCloud.Api.Services;
+namespace LanCloud.Api.Ftp;
 
 public class FtpServer(
-    ApiConfig apiConfig,
+    LanCloudApiConfig apiConfig,
     IServiceProvider serviceProvider,
     ILoggerFactory loggerFactory)
     : IHostedService
@@ -57,8 +57,8 @@ public class FtpServer(
 
             var client = Listener.EndAcceptTcpClient(result);
             var scope = serviceProvider.CreateAsyncScope();
-            var fileSystem = scope.ServiceProvider.GetRequiredService<FileSystem>();
-            var connection = new FtpConnection(loggerFactory, fileSystem, client, apiConfig.CertificateFilename);
+            var fileSystem = scope.ServiceProvider.GetRequiredService<IFileSystemDirect>();
+            var connection = new FtpConnection(scope, loggerFactory, fileSystem, client, apiConfig.CertificateFilename);
 
             ActiveConnections.Add(connection);
 

@@ -1,8 +1,8 @@
 using LanCloud.Api.Models;
 
-namespace LanCloud.Api.Helpers;
+namespace LanCloud.Api.Collections;
 
-public class RespondedEntryCollection
+internal class RespondedEntryCollection
 {
     private readonly Lock _lock = new();
 

@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Server.Entities;
+﻿using gAPI.Core.Dtos;
+using LanCloud.Api.Interfaces;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
@@ -7,7 +8,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace LanCloud.Api.Services;
+namespace LanCloud.Api.Ftp;
 
 public enum TransferType
 {
@@ -22,9 +23,10 @@ public enum DataConnectionType
     Active,
 }
 
-public class FtpConnection(
+internal class FtpConnection(
+    AsyncServiceScope scope,
     ILoggerFactory loggerFactory,
-    FileSystem fileSystem,
+    IFileSystemDirect fileSystem,
     TcpClient client,
     string? certificateFilename = null)
 {
@@ -41,7 +43,7 @@ public class FtpConnection(
     X509Certificate? Cert;
     SslStream? SslStream;
     string CurrentPath = "/";
-    AuthUser? CurrentUser;
+    AuthStateUserDto? CurrentUser;
     string? StoredUserName;
     string? StoredRenameFrom = null;
     HashSet<string> AnomiousAllowedCommands = ["AUTH", "USER", "PASS", "QUIT", "HELP", "NOOP"];
@@ -178,6 +180,7 @@ public class FtpConnection(
             ControlReader?.Close();
             ControlWriter?.Close();
             cts.Dispose();
+            await scope.DisposeAsync();
         }
     }
     private async Task<string> HandleCommand(string[] commands, string command, string? arguments, CancellationToken ct)
@@ -284,7 +287,7 @@ public class FtpConnection(
 
     private async Task<string> Password(string? password, CancellationToken ct)
     {
-        CurrentUser = await fileSystem.ValidateUser(StoredUserName, password, ct);
+        CurrentUser = await fileSystem.AuthenticateUser(StoredUserName, password, ct);
 
         if (CurrentUser != null)
         {

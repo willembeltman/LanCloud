@@ -44,15 +44,14 @@ public static class HubEntryDtoSpanSerializer
         var schemaHashCheck = PrimitivesSpanSerializer.ReadUInt(___span, ref ___offset); // Schema identifier
         if (schemaHashCheck != SchemaHash) throw new InvalidDataException($"SchemaHashCheck does not match, expected: `0x{SchemaHash:X8}`, got: `0x{schemaHashCheck:X8}`");
         
-        var value = new HubEntryDto();
-        value.Name = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-        value.Path = PrimitivesSpanSerializer.ReadString(___span, ref ___offset);
-        value.IsDirectory = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset);
-        value.Size = PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset);
-        value.Created = DateTimeSerializers.ReadDateTime(___span, ref ___offset);
-        value.LastModified = DateTimeSerializers.ReadDateTime(___span, ref ___offset);
-        value.SessionId = PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset);
-        return value;
+        return new HubEntryDto(
+            PrimitivesSpanSerializer.ReadString(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadString(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadInt64(___span, ref ___offset), 
+			DateTimeSerializers.ReadDateTime(___span, ref ___offset), 
+			DateTimeSerializers.ReadDateTime(___span, ref ___offset), 
+			PrimitivesSpanSerializer.ReadBoolean(___span, ref ___offset) == false ? null : SessionIdSpanSerializer.ReadSessionId(___span, ref ___offset));
     }
 
     [IsSpanSerializerLength]

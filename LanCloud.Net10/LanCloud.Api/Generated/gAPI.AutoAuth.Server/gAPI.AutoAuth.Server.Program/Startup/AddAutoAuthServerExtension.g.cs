@@ -1,10 +1,10 @@
-﻿using gAPI.Core.Interfaces;
+﻿using gAPI.Core.Dtos;
+using gAPI.Core.Interfaces;
 using gAPI.Core.Server.Authentication;
 using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Entities;
 using gAPI.Core.Server.Extensions;
 using gAPI.Core.Server.Interfaces;
-using LanCloud.Shared.Dtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -70,8 +70,8 @@ public static class AddAutoAuthServerExtension
             services.AddScoped<gAPI.Generated.IAuthenticationService>(sp => sp.GetRequiredService<gAPI.Generated.AuthenticationService>());
 
             services.AddScoped<gAPI.Core.Interfaces.IAuthenticationSecurity>(sp => 
-                new gAPI.Core.Server.Authentication.AuthenticationSecurity<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>(
-                    sp.GetRequiredService<IAuthenticationService<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>>(),
+                new gAPI.Core.Server.Authentication.AuthenticationSecurity<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>(
+                    sp.GetRequiredService<IAuthenticationService<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>>(),
                     sp.GetRequiredService<IDbContextFactory<gAPI.Core.Server.Entities.AuthenticationDbContext<gAPI.Core.Server.Entities.AuthUser>>>(),
                     sp.GetRequiredService<TimeProvider>(),
                     loginMaxAttempt, 
@@ -92,7 +92,7 @@ public static class AddAutoAuthServerExtension
                     useMemoryDatabase));
 
             services.AddScoped<gAPI.Core.Server.Authentication.IUserTokenFactory<gAPI.Core.Server.Entities.AuthUser>, UserTokenFactory<gAPI.Core.Server.Entities.AuthUser>>();
-            services.AddScoped<gAPI.Core.Interfaces.IAccountService, gAPI.Core.Server.Authentication.AccountService<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>>();
+            services.AddScoped<gAPI.Core.Interfaces.IAccountService, gAPI.Core.Server.Authentication.AccountService<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>>();
 
             services.AddDatabase(useMemoryDatabase, dbConnectionString);
         }
@@ -100,16 +100,16 @@ public static class AddAutoAuthServerExtension
         services.AddAuthentication("gAPI")
                 .AddScheme<AuthenticationSchemeOptions, gAPI.Core.Server.Authentication.AuthenticationHandler>("gAPI", _ => { });
 
-        services.AddScoped<gAPI.Core.Server.Interfaces.IAuthenticationService<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>>(sp => sp.GetRequiredService<gAPI.Generated.IAuthenticationService>());
+        services.AddScoped<gAPI.Core.Server.Interfaces.IAuthenticationService<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>>(sp => sp.GetRequiredService<gAPI.Generated.IAuthenticationService>());
         services.AddScoped<gAPI.Core.Interfaces.IServerAuthenticationService>(sp => sp.GetRequiredService<gAPI.Generated.IAuthenticationService>());
 
         // Register StateParser
         services.AddScoped<gAPI.Generated.StateParser>();
         services.AddScoped<gAPI.Generated.IStateParser>(sp => sp.GetRequiredService<gAPI.Generated.StateParser>());
-        services.AddScoped<gAPI.Core.Interfaces.IStateParser<LanCloud.Shared.Dtos.StateDto>>(sp => sp.GetRequiredService<gAPI.Generated.StateParser>());
+        services.AddScoped<gAPI.Core.Interfaces.IStateParser<gAPI.Core.Dtos.AuthStateDto>>(sp => sp.GetRequiredService<gAPI.Generated.StateParser>());
 
         // Register StateMapper
-        services.AddScoped<gAPI.Core.Server.Interfaces.IStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>, AuthenticationStateMapping<gAPI.Core.Server.Entities.AuthUser, LanCloud.Shared.Dtos.StateDto>>();
+        services.AddScoped<gAPI.Core.Server.Interfaces.IStateMapping<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>, AuthenticationStateMapping<gAPI.Core.Server.Entities.AuthUser, gAPI.Core.Dtos.AuthStateDto>>();
         return services;
     }
 

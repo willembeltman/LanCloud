@@ -2,19 +2,22 @@ using gAPI.Core.Dtos;
 using gAPI.Core.Helpers;
 using gAPI.Core.Server.Entities;
 using gAPI.Generated;
-using LanCloud.Api.Helpers;
+using LanCloud.Api.Collections;
+using LanCloud.Api.Interfaces;
 using LanCloud.Api.Models;
 using LanCloud.Shared.Dtos;
+using LanCloud.Shared.Interfaces;
 using LanCloud.Shared.Models;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 
 namespace LanCloud.Api.Services;
 
-public class FileSystem(
+internal class FileSystem(
     IClientContext clientContext,
     RespondedEntryCollection entryCollection,
-    ApiConfig apiConfig)
+    LanCloudApiConfig apiConfig) 
+    : IFileSystemApi, IFileSystemDirect
+
 {
     LocalShare LocalShare => apiConfig.LocalShare;
 
@@ -25,13 +28,9 @@ public class FileSystem(
             Realm: "LanCloud");
     }
 
-    public async Task<bool> IsAuthenticated(string username, string password, CancellationToken ct)
+    public async Task<AuthStateUserDto?> AuthenticateUser(string? userName, string? password, CancellationToken ct)
     {
-        return true;
-    }
-    public async Task<AuthUser?> ValidateUser(string? userName, string? password, CancellationToken ct)
-    {
-        return new AuthUser()
+        return new AuthStateUserDto()
         {
             Email = userName ?? "",
             UserName = userName ?? ""
@@ -83,12 +82,7 @@ public class FileSystem(
                 DateTime.UtcNow,
                 DateTime.UtcNow);
 
-            var rootShareEntry = new HubEntryDto
-            {
-                Name = "",
-                Path = "",
-                IsDirectory = true
-            };
+            var rootShareEntry = new HubEntryDto("", "", true, 0, DateTime.Now, DateTime.Now, null);
 
             var rootEntry = new RespondedEntry(
                 rootFsEntry,
@@ -182,7 +176,7 @@ public class FileSystem(
             if (entry.ShareEntryDto.SessionId == null)
             {
                 return LocalShare.ReadFile(
-                    entry.ReadPath,
+                    entry.Path,
                     startOffset,
                     streamCt);
             }
@@ -190,7 +184,7 @@ public class FileSystem(
             return clientContext.HostHub
                 .ToSession(entry.ShareEntryDto.SessionId)
                 .ReadFile(
-                    entry.ReadPath,
+                    entry.Path,
                     startOffset,
                     streamCt);
         }
@@ -200,7 +194,6 @@ public class FileSystem(
             entry.FileSystemEntry.Size,
             ct);
     }
-
     public Task Write(string path, Stream stream, CancellationToken ct)
     {
         return LocalShare.Write(path, stream, ct);
@@ -208,6 +201,30 @@ public class FileSystem(
     public Task Append(string path, Stream stream, CancellationToken ct)
     {
         return LocalShare.Append(path, stream, ct);
+    }
+
+    async IAsyncEnumerable<byte[]> IFileSystemApi.OpenRead(string path, long startOffset, [EnumeratorCancellation] CancellationToken ct)
+    {
+        var buffer = new byte[8 * 1024 * 1024];
+        using var stream = await OpenRead(path, ct);
+        if (stream == null)
+            yield break;
+        while (true)
+        {
+            var read = await stream.ReadAsync(buffer.AsMemory(), ct);
+            if (read <= 0)
+                yield break;
+
+            yield return buffer[..read];
+        }
+    }
+    Task IFileSystemApi.Write(string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+    Task IFileSystemApi.Append(string path, IAsyncEnumerable<byte[]> stream, CancellationToken ct)
+    {
+        throw new NotImplementedException();
     }
 
     private async Task<FileSystemEntry> CreateFileSystemEntry(
