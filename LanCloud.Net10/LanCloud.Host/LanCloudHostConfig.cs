@@ -6,5 +6,6 @@ namespace LanCloud.Host;
 public record LanCloudHostConfig(
     string ApiBackendUrl,
     string WssBackendUrl,
+    int? MaxPackageSize,
     LocalShare[] Shares)
-    : ClientConfig(ApiBackendUrl, WssBackendUrl);
+    : ClientConfig(ApiBackendUrl, WssBackendUrl, MaxPackageSize);

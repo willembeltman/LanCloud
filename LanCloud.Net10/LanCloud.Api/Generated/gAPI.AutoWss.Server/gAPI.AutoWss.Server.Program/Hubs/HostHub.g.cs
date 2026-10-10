@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 #nullable enable
 namespace gAPI.Generated;
 
+[IsHubProxyAttribute]
 public class HostHub(
     FabricClient ___fabricClient,
     ILoggerFactory ___loggerFactory,
@@ -33,10 +34,12 @@ public class HostHub(
 
     public async IAsyncEnumerable<HubEntryDto> ListDirectory(string relativePath, [EnumeratorCancellation] CancellationToken ct)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("ListDirectory({relativePath})", relativePath);
+        //if (___Logger.IsEnabled(LogLevel.Trace))
+        //    ___Logger.LogTrace("{now}, ListDirectory({relativePath})", DateTime.Now.ToString("HH:mm:ss.fff"), relativePath);
 
         var ___routing = new RoutingDto(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("ListDirectory"),
@@ -81,10 +84,12 @@ public class HostHub(
 
     public async IAsyncEnumerable<HubEntryDto> Get(string relativeFullName, [EnumeratorCancellation] CancellationToken ct)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Get({relativeFullName})", relativeFullName);
+        //if (___Logger.IsEnabled(LogLevel.Trace))
+        //    ___Logger.LogTrace("{now}, Get({relativeFullName})", DateTime.Now.ToString("HH:mm:ss.fff"), relativeFullName);
 
         var ___routing = new RoutingDto(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("Get"),
@@ -129,10 +134,12 @@ public class HostHub(
 
     public async IAsyncEnumerable<DataChunkDto> ReadFile(string relativeFullName, long startOffset, [EnumeratorCancellation] CancellationToken ct)
     {
-        if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("ReadFile({relativeFullName}, {startOffset})", relativeFullName, startOffset);
+        //if (___Logger.IsEnabled(LogLevel.Trace))
+        //    ___Logger.LogTrace("{now}, ReadFile({relativeFullName}, {startOffset})", DateTime.Now.ToString("HH:mm:ss.fff"), relativeFullName, startOffset);
 
         var ___routing = new RoutingDto(
+            ___fabricClient.FabricManagerId,
+            ___fabricClient.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("ReadFile"),

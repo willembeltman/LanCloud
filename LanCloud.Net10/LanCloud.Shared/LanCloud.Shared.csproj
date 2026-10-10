@@ -23,7 +23,7 @@
 
 	<ItemGroup>
 		<!--<ProjectReference Include="..\gAPI\gAPI.Core\gAPI.Core.csproj" />-->
-		<PackageReference Include="gAPI.Core" Version="0.0.2-beta" />
+		<PackageReference Include="gAPI.Core" Version="0.0.3-beta" />
 	</ItemGroup>
 
 </Project>

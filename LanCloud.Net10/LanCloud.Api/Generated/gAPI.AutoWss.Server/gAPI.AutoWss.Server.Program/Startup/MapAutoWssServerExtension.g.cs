@@ -43,7 +43,7 @@ public static class MapAutoWssServerExtension
 
         // Minimal api endpoints
 
-        app.MapAccountServiceEndpoints();
+        app.MapAccountServiceApiEndpoints();
 
         return app;
     }

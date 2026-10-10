@@ -15,18 +15,19 @@ using System.Threading.Tasks;
 #nullable enable
 namespace gAPI.Core.Interfaces;
 
-public static class AccountServiceEndpointsExtensions
+public static class AccountServiceApiEndpointsExtensions
 {
-    public static IEndpointRouteBuilder MapAccountServiceEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapAccountServiceApiEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapAccountServiceRegisterAsync();
-        app.MapAccountServiceLoginAsync();
-        app.MapAccountServiceLogoffAsync();
+        app.MapAccountServiceApiRegisterAsync();
+        app.MapAccountServiceApiLoginAsync();
+        app.MapAccountServiceApiChangePasswordAsync();
+        app.MapAccountServiceApiLogoffAsync();
         return app;
     }
-    public static IEndpointRouteBuilder MapAccountServiceRegisterAsync(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapAccountServiceApiRegisterAsync(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/accountservice/registerasync", async (
+        app.MapPost("/accountserviceapi/registerasync", async (
             [FromForm] string userName, 
             [FromForm] string email, 
             [FromForm] string password, 
@@ -38,18 +39,18 @@ public static class AccountServiceEndpointsExtensions
             HttpContext ___httpContext, 
             [FromServices] TimeProvider ___dateTime, 
             [FromServices] IHostEnvironment ___hostEnvironment, 
-            [FromServices] IAccountService accountService) =>
+            [FromServices] IAccountServiceApi accountServiceApi) =>
         {
-            var response = await accountService.RegisterAsync(userName, email, password, passwordRepeat, ct);
+            var response = await accountServiceApi.RegisterAsync(userName, email, password, passwordRepeat, ct);
             return Results.Ok(response);
         })
         .AllowAnonymous()
         .DisableAntiforgery();
         return app;
     }
-    public static IEndpointRouteBuilder MapAccountServiceLoginAsync(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapAccountServiceApiLoginAsync(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/accountservice/loginasync", async (
+        app.MapPost("/accountserviceapi/loginasync", async (
             [FromForm] string email, 
             [FromForm] string password, 
             CancellationToken ct, 
@@ -59,18 +60,21 @@ public static class AccountServiceEndpointsExtensions
             HttpContext ___httpContext, 
             [FromServices] TimeProvider ___dateTime, 
             [FromServices] IHostEnvironment ___hostEnvironment, 
-            [FromServices] IAccountService accountService) =>
+            [FromServices] IAccountServiceApi accountServiceApi) =>
         {
-            var response = await accountService.LoginAsync(email, password, ct);
+            var response = await accountServiceApi.LoginAsync(email, password, ct);
             return Results.Ok(response);
         })
         .AllowAnonymous()
         .DisableAntiforgery();
         return app;
     }
-    public static IEndpointRouteBuilder MapAccountServiceLogoffAsync(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapAccountServiceApiChangePasswordAsync(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/accountservice/logoffasync", async (
+        app.MapPost("/accountserviceapi/changepasswordasync", async (
+            [FromForm] string oldPassword, 
+            [FromForm] string password, 
+            [FromForm] string passwordRepeat, 
             CancellationToken ct, 
             [FromHeader(Name = "X-SessionId")] string ___sessionId, 
             [FromHeader(Name = "X-StateData")] string? ___stateData, 
@@ -78,9 +82,28 @@ public static class AccountServiceEndpointsExtensions
             HttpContext ___httpContext, 
             [FromServices] TimeProvider ___dateTime, 
             [FromServices] IHostEnvironment ___hostEnvironment, 
-            [FromServices] IAccountService accountService) =>
+            [FromServices] IAccountServiceApi accountServiceApi) =>
         {
-            var response = await accountService.LogoffAsync(ct);
+            var response = await accountServiceApi.ChangePasswordAsync(oldPassword, password, passwordRepeat, ct);
+            return Results.Ok(response);
+        })
+        .RequireAuthorization()
+        .DisableAntiforgery();
+        return app;
+    }
+    public static IEndpointRouteBuilder MapAccountServiceApiLogoffAsync(this IEndpointRouteBuilder app)
+    {
+        app.MapGet("/accountserviceapi/logoffasync", async (
+            CancellationToken ct, 
+            [FromHeader(Name = "X-SessionId")] string ___sessionId, 
+            [FromHeader(Name = "X-StateData")] string? ___stateData, 
+            [FromServices] IServerAuthenticationService ___authentication, 
+            HttpContext ___httpContext, 
+            [FromServices] TimeProvider ___dateTime, 
+            [FromServices] IHostEnvironment ___hostEnvironment, 
+            [FromServices] IAccountServiceApi accountServiceApi) =>
+        {
+            var response = await accountServiceApi.LogoffAsync(ct);
             return Results.Ok(response);
         })
         .RequireAuthorization()

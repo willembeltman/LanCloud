@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 #nullable enable
 namespace gAPI.Generated;
 
+[IsApiProxyAttribute]
 public sealed class FileSystemApi(
     IWssClientConnection ___clientConnection,
     IClientLoggerFactory ___loggerFactory,
@@ -40,6 +41,8 @@ public sealed class FileSystemApi(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("AuthenticateUser"),
@@ -100,6 +103,8 @@ public sealed class FileSystemApi(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("CreateDirectory"),
@@ -138,6 +143,8 @@ public sealed class FileSystemApi(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("Delete"),
@@ -176,6 +183,8 @@ public sealed class FileSystemApi(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("Get"),
@@ -226,6 +235,8 @@ public sealed class FileSystemApi(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("GetAuthenticationInfo"),
@@ -266,6 +277,8 @@ public sealed class FileSystemApi(
 
         var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             ___requestId,
             ___ServiceId,
             new("ListDirectory"),
@@ -314,6 +327,8 @@ public sealed class FileSystemApi(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("Move"),
@@ -353,6 +368,8 @@ public sealed class FileSystemApi(
 
         var ___requestId = RequestId.New();
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             ___requestId,
             ___ServiceId,
             new("OpenRead"),
@@ -403,6 +420,8 @@ public sealed class FileSystemApi(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("Write"),
@@ -461,6 +480,8 @@ public sealed class FileSystemApi(
         using var ___activityCts = CancellationTokenSource.CreateLinkedTokenSource(___Cts.Token, ct);
 
         var ___routing = new RoutingDto(
+            ___clientConnection.FabricManagerId,
+            ___clientConnection.FabricConnectionId,
             RequestId.New(),
             ___ServiceId,
             new("Append"),

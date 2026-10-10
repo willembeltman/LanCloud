@@ -1,4 +1,5 @@
 ﻿using gAPI.Core.Attributes;
+using gAPI.Core.Client.Config;
 using gAPI.Core.Client.Interfaces;
 using gAPI.Core.Client.Wss;
 using gAPI.Core.Dtos;
@@ -25,16 +26,17 @@ public class ClientConnection
     : WssClientConnection, IClientConnection
 {
     public ClientConnection(
-        IClientAuthenticatedHttpClient httpClient,
-        string wssBackendUrl)
-        : base(httpClient, wssBackendUrl)
+        ClientConfig clientConfig,
+        IClientAuthenticatedHttpClient httpClient)
+        : base(clientConfig, httpClient)
     {
         ___Logger = ((IClientLoggerFactory)this).CreateLogger<ClientConnection>();
         FileSystemApi = new FileSystemApi(this, this, httpClient);
+        ___Buffer = new byte[clientConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
 
     readonly ILogger ___Logger;
-    readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
+    readonly byte[] ___Buffer;
     
     
     public FileSystemApi FileSystemApi { get; }
@@ -64,7 +66,7 @@ public class ClientConnection
         if (implementation is IHostHub hostHub)
         {
             if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace(DateTime.Now.ToString("HH:mm:ss.fff") + " SubscribeAsync({serviceId})", "IHostHub");
+                ___Logger.LogTrace("{now} SubscribeAsync({serviceId})", DateTime.Now.ToString("HH:mm:ss.fff"), "IHostHub");
 
             await HostHubsLock.WaitAsync(___ct);
             try
@@ -91,7 +93,7 @@ public class ClientConnection
         if (implementation is IHostHub hostHub)
         {
             if (___Logger.IsEnabled(LogLevel.Trace))
-                ___Logger.LogTrace("UnsubscribeAsync({serviceId})", "IHostHub");
+                ___Logger.LogTrace("{now} UnsubscribeAsync({serviceId})", DateTime.Now.ToString("HH:mm:ss.fff"), "IHostHub");
 
             await HostHubsLock.WaitAsync(___ct);
             try
@@ -114,7 +116,7 @@ public class ClientConnection
     protected override async Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Send_SendRequest_ToServiceAsync({___sendRequest})", ___sendRequest);
+            ___Logger.LogTrace("{now} Send_SendRequest_ToServiceAsync({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
         
 
         throw new Exception($"Service \"{___sendRequest.Routing.ServiceId.Value}\" / Method \"{___sendRequest.Routing.MethodId.Value}\" not found");
@@ -122,7 +124,7 @@ public class ClientConnection
     protected override async IAsyncEnumerable<byte[]> Send_InvokeRequest_ToServiceAsync(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {
         if (___Logger.IsEnabled(LogLevel.Trace))
-            ___Logger.LogTrace("Send_InvokeRequest_ToServiceAsync({___invokeRequest})", ___invokeRequest);
+            ___Logger.LogTrace("{now} Send_InvokeRequest_ToServiceAsync({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
 
 
         switch (___invokeRequest.Routing.ServiceId.Value)

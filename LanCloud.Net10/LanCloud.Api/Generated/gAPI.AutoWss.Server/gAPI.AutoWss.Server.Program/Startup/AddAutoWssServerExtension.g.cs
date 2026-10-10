@@ -48,19 +48,9 @@ public static class AddAutoWssServerExtension
         ServerConfig config,
         TimeProvider? dateTime = null)
     {
-        return AddAutoWssServer(
-            services, 
-            config.FabricConnectionString,
-            config.FrontendUrl,
-            dateTime);
-    }
-
-    public static IServiceCollection AddAutoWssServer(
-        this IServiceCollection services,
-        string? fabricConnectionString = null,
-        string? frontendUrl = null,
-        TimeProvider? dateTime = null)
-    {
+        string? fabricConnectionString = config.FabricConnectionString;
+        string? frontendUrl = config.FrontendUrl;
+        services.AddSingleton(config);
         services.AddSingleton(dateTime ?? TimeProvider.System);
 
         services.AddHttpContextAccessor();
@@ -80,6 +70,8 @@ public static class AddAutoWssServerExtension
             });
         }
 
+        //services.AddSingleton<IServiceRouter, ServiceRouter>();
+
         var sessionCache = new SessionCache();
         services.AddSingleton(sessionCache);
 
@@ -97,6 +89,7 @@ public static class AddAutoWssServerExtension
             sessionCache,
             requestCache,
             serviceSubscriptionCollection,
+            //sp.GetRequiredService<IServiceRouter>(),
             sp.GetRequiredService<ILoggerFactory>(), 
             fabricConnectionString));
 

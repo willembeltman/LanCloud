@@ -4,6 +4,7 @@ using gAPI.Core.Ids;
 using gAPI.Core.Interfaces;
 using gAPI.Core.Serializers;
 using gAPI.Core.Server.Collections;
+using gAPI.Core.Server.Config;
 using gAPI.Core.Server.Fabric;
 using gAPI.Core.Server.Wss;
 using LanCloud.Api.Models;
@@ -28,10 +29,12 @@ public class ServerConnection : WssServerConnection
     readonly ILogger ___logger;
     readonly IServerAuthenticationService ___authenticationService;
     readonly IFileSystemApi FileSystemApi;
-    readonly byte[] ___Buffer = new byte[10 * 1024 * 1024];
+    readonly byte[] ___Buffer;
     readonly FabricClient ___fabricClient;
+    public ServerConfig ___config { get; set; }
 
     public ServerConnection(
+        ServerConfig serverConfig,
         IServerAuthenticationService authenticationService,
         ServiceSubscriptionCollection serviceSubscriptions,
         ServerConnectionCollection connections,
@@ -39,12 +42,14 @@ public class ServerConnection : WssServerConnection
         FabricClient fabricClient,
         IFileSystemApi fileSystemApi,
         ILoggerFactory loggerFactory) 
-        : base(authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
+        : base(serverConfig, authenticationService, serviceSubscriptions, connections, requestCache, fabricClient, loggerFactory)
     {
+        this.___config = serverConfig;
         this.___fabricClient = fabricClient;
         this.___authenticationService = authenticationService;
         this.FileSystemApi = fileSystemApi;
         this.___logger = loggerFactory.CreateLogger<ServerConnection>();
+        this.___Buffer = new byte[serverConfig.MaxPackageSize ?? 8 * 1024 * 1024];
     }
     
     protected override Task Send_SendRequest_ToServiceAsync(SendRequestDto ___sendRequest, CancellationToken ___ct)
@@ -56,6 +61,7 @@ public class ServerConnection : WssServerConnection
             case "IFileSystemApi":
                 switch (___sendRequest.Routing.MethodId.Value)
                 {
+            
                     case "CreateDirectory":
                         return IFileSystemApi_CreateDirectory(
                             ___sendRequest,
@@ -134,15 +140,18 @@ public class ServerConnection : WssServerConnection
     
     public async IAsyncEnumerable<byte[]> IFileSystemApi_AuthenticateUser(InvokeRequestDto ___invokeRequest, string? userName, string? password, [EnumeratorCancellation] CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_AuthenticateUser({___invokeRequest})", ___invokeRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_AuthenticateUser({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
 
         var ___responseTask = FileSystemApi.AuthenticateUser(
             userName,
             password,
             ___ct);
 
-        yield return IFileSystemApi_AuthenticateUser_Serializer(await ___responseTask);
+        var ___responseTaskResult = await ___responseTask;
+        if (___responseTaskResult == null) yield break;
+
+        yield return IFileSystemApi_AuthenticateUser_Serializer(___responseTaskResult);
     }
     public byte[] IFileSystemApi_AuthenticateUser_Serializer(AuthStateUserDto value)
     {
@@ -156,30 +165,33 @@ public class ServerConnection : WssServerConnection
 
     public Task IFileSystemApi_CreateDirectory(SendRequestDto ___sendRequest, string path, CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_CreateDirectory({___sendRequest})", ___sendRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_CreateDirectory({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
        
         return FileSystemApi.CreateDirectory(path, ___ct);
     }
 
     public Task IFileSystemApi_Delete(SendRequestDto ___sendRequest, string path, CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Delete({___sendRequest})", ___sendRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_Delete({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
        
         return FileSystemApi.Delete(path, ___ct);
     }
 
     public async IAsyncEnumerable<byte[]> IFileSystemApi_Get(InvokeRequestDto ___invokeRequest, string path, [EnumeratorCancellation] CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Get({___invokeRequest})", ___invokeRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_Get({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
 
         var ___responseTask = FileSystemApi.Get(
             path,
             ___ct);
 
-        yield return IFileSystemApi_Get_Serializer(await ___responseTask);
+        var ___responseTaskResult = await ___responseTask;
+        if (___responseTaskResult == null) yield break;
+
+        yield return IFileSystemApi_Get_Serializer(___responseTaskResult);
     }
     public byte[] IFileSystemApi_Get_Serializer(FileSystemEntry value)
     {
@@ -193,13 +205,16 @@ public class ServerConnection : WssServerConnection
 
     public async IAsyncEnumerable<byte[]> IFileSystemApi_GetAuthenticationInfo(InvokeRequestDto ___invokeRequest, [EnumeratorCancellation] CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_GetAuthenticationInfo({___invokeRequest})", ___invokeRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_GetAuthenticationInfo({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
 
         var ___responseTask = FileSystemApi.GetAuthenticationInfo(
             ___ct);
 
-        yield return IFileSystemApi_GetAuthenticationInfo_Serializer(await ___responseTask);
+        var ___responseTaskResult = await ___responseTask;
+        if (___responseTaskResult == null) yield break;
+
+        yield return IFileSystemApi_GetAuthenticationInfo_Serializer(___responseTaskResult);
     }
     public byte[] IFileSystemApi_GetAuthenticationInfo_Serializer(AuthenticationInfo value)
     {
@@ -211,8 +226,8 @@ public class ServerConnection : WssServerConnection
 
     public async IAsyncEnumerable<byte[]> IFileSystemApi_ListDirectory(InvokeRequestDto ___invokeRequest, string path, [EnumeratorCancellation] CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_ListDirectory({___invokeRequest})", ___invokeRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_ListDirectory({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
 
         var ___responseList = FileSystemApi.ListDirectory(
             path,
@@ -232,16 +247,16 @@ public class ServerConnection : WssServerConnection
 
     public Task IFileSystemApi_Move(SendRequestDto ___sendRequest, string sourcePath, string destinationPath, CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Move({___sendRequest})", ___sendRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_Move({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
        
         return FileSystemApi.Move(sourcePath, destinationPath, ___ct);
     }
 
     public async IAsyncEnumerable<byte[]> IFileSystemApi_OpenRead(InvokeRequestDto ___invokeRequest, string path, long startOffset, [EnumeratorCancellation] CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_OpenRead({___invokeRequest})", ___invokeRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_OpenRead({___invokeRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___invokeRequest);
 
         var ___responseList = FileSystemApi.OpenRead(
             path,
@@ -262,8 +277,8 @@ public class ServerConnection : WssServerConnection
 
     public Task IFileSystemApi_Write(SendRequestDto ___sendRequest, string path, long startOffset, IAsyncEnumerable<byte[]> stream, CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Write({___sendRequest})", ___sendRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_Write({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
        
         return FileSystemApi.Write(path, startOffset, stream, ___ct);
     }
@@ -276,8 +291,8 @@ public class ServerConnection : WssServerConnection
 
     public Task IFileSystemApi_Append(SendRequestDto ___sendRequest, string path, IAsyncEnumerable<byte[]> stream, CancellationToken ___ct)
     {
-        if (___logger.IsEnabled(LogLevel.Trace))
-            ___logger.LogTrace("IFileSystemApi_Append({___sendRequest})", ___sendRequest);
+        //if (___logger.IsEnabled(LogLevel.Trace))
+        //    ___logger.LogTrace("{now} IFileSystemApi_Append({___sendRequest})", DateTime.Now.ToString("HH:mm:ss.fff"), ___sendRequest);
        
         return FileSystemApi.Append(path, stream, ___ct);
     }

@@ -1,4 +1,6 @@
-﻿using gAPI.Generated;
+﻿using gAPI.Core.Server.Config;
+using gAPI.Core.Server.Extensions;
+using gAPI.Generated;
 using LanCloud.Api.Collections;
 using LanCloud.Api.Ftp;
 using LanCloud.Api.Interfaces;
@@ -17,12 +19,16 @@ public static class AddStorageLanCloudExtension
         }
 
         builder.Configuration.AddEnvironmentVariables();
-        builder.Services.AddAutoWssServer();
-        builder.Services.AddAutoAuthServer();
+
+        var serverConfig = builder.Configuration.CreateServerConfig();
+
+        builder.Services.AddAutoWssServer(builder.Configuration);
+        builder.Services.AddAutoAuthServer(builder.Configuration);
         builder.Services.AddControllers(); // For the WebDav controller
         builder.Services.AddHostedService<FtpServer>();
         builder.Services.AddScoped<IFileSystemDirect, FileSystem>();
         builder.Services.AddSingleton<RespondedEntryCollection>();
+        builder.Services.AddConsoleDashboard(serverConfig);
 
         var localShareDirectory = Path.Combine(Environment.CurrentDirectory, "LocalData");
         var localShare = new LocalShare(localShareDirectory);

@@ -1,4 +1,5 @@
-﻿using gAPI.Core.Dtos;
+﻿using gAPI.Core.Attributes;
+using gAPI.Core.Dtos;
 using gAPI.Core.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -12,9 +13,10 @@ using System.Threading.Tasks;
 #nullable enable
 namespace gAPI.Core.Interfaces;
 
-public class AccountService(
+[IsApiProxyAttribute]
+public class AccountServiceApi(
     gAPI.Core.Client.Interfaces.IClientAuthenticatedHttpClient clientAuthenticationService) 
-    : IAccountService
+    : IAccountServiceApi
     , IDisposable
 {
     private readonly CancellationTokenSource Cts = new();
@@ -32,7 +34,7 @@ public class AccountService(
         ___content.Add(new StringContent(password), $"password");
         ___content.Add(new StringContent(passwordRepeat), $"passwordRepeat");
 
-        using var response = await clientAuthenticationService.PostAsync("/AccountService/RegisterAsync", ___content, ct);
+        using var response = await clientAuthenticationService.PostAsync("/AccountServiceApi/RegisterAsync", ___content, ct);
         response.EnsureSuccessStatusCode();
 
         var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)
@@ -49,7 +51,26 @@ public class AccountService(
         ___content.Add(new StringContent(email), $"email");
         ___content.Add(new StringContent(password), $"password");
 
-        using var response = await clientAuthenticationService.PostAsync("/AccountService/LoginAsync", ___content, ct);
+        using var response = await clientAuthenticationService.PostAsync("/AccountServiceApi/LoginAsync", ___content, ct);
+        response.EnsureSuccessStatusCode();
+
+        var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)
+            ?? throw new Exception("Could not cast response data");
+        return responseData;
+    }
+
+    public async Task<BaseResponse> ChangePasswordAsync(
+        string oldPassword,
+        string password,
+        string passwordRepeat,
+        CancellationToken ct)
+    {
+        var ___content = new MultipartFormDataContent();
+        ___content.Add(new StringContent(oldPassword), $"oldPassword");
+        ___content.Add(new StringContent(password), $"password");
+        ___content.Add(new StringContent(passwordRepeat), $"passwordRepeat");
+
+        using var response = await clientAuthenticationService.PostAsync("/AccountServiceApi/ChangePasswordAsync", ___content, ct);
         response.EnsureSuccessStatusCode();
 
         var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)
@@ -62,7 +83,7 @@ public class AccountService(
     {
         var ___content = new MultipartFormDataContent();
 
-        using var response = await clientAuthenticationService.GetAsync("/AccountService/LogoffAsync", ct);
+        using var response = await clientAuthenticationService.GetAsync("/AccountServiceApi/LogoffAsync", ct);
         response.EnsureSuccessStatusCode();
 
         var responseData = await response.Content.ReadFromJsonAsync<BaseResponse>(ct)

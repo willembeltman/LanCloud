@@ -27,16 +27,16 @@
 	
 	<ItemGroup>
 		<!--<ProjectReference Include="..\gAPI\gAPI.Core.Server\gAPI.Core.Server.csproj" />-->
-		<PackageReference Include="gAPI.Core.Server" Version="0.0.2-beta" />
+		<PackageReference Include="gAPI.Core.Server" Version="0.0.3-beta" />
 		
 		<!--<ProjectReference Include="..\gAPI\gAPI.AutoWss.Server\gAPI.AutoWss.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
-		<PackageReference Include="gAPI.AutoWss.Server" Version="0.0.2-beta">
+		<PackageReference Include="gAPI.AutoWss.Server" Version="0.0.3-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		
 		<!--<ProjectReference Include="..\gAPI\gAPI.AutoAuth.Server\gAPI.AutoAuth.Server.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
-		<PackageReference Include="gAPI.AutoAuth.Server" Version="0.0.2-beta">
+		<PackageReference Include="gAPI.AutoAuth.Server" Version="0.0.3-beta">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
@@ -46,6 +46,8 @@
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
+	  <PackageReference Include="Npgsql" Version="10.0.3" />
+	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
 	</ItemGroup>
 
 </Project>
